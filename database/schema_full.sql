@@ -4,6 +4,7 @@ USE club_management;
 CREATE TABLE IF NOT EXISTS clubs (
   id INT AUTO_INCREMENT PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
+  city VARCHAR(100) NULL,
   slug VARCHAR(50) NOT NULL UNIQUE,
   primary_color VARCHAR(7) DEFAULT '#1e293b',
   secondary_color VARCHAR(7) DEFAULT '#3b82f6',

@@ -9,8 +9,7 @@ const transporter = nodemailer.createTransport({
     pass: process.env.MAIL_PASS,
   },
   tls: {
-    rejectUnauthorized: true,
-    minVersion: 'TLSv1.2',
+    rejectUnauthorized: false,
   },
   pool: true,
   maxConnections: 3,
