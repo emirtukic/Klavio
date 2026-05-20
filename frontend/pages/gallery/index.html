@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Galerija | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+  <style>
+    .gallery-card {
+      border: none; border-radius: 12px; overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.09); transition: transform 0.18s, box-shadow 0.18s;
+    }
+    .gallery-card:hover { transform: translateY(-3px); box-shadow: 0 6px 18px rgba(0,0,0,0.13); }
+    .gallery-img-wrap {
+      position: relative; overflow: hidden; background: #e2e8f0;
+      aspect-ratio: 4/3; cursor: pointer;
+    }
+    .gallery-img-wrap img {
+      width: 100%; height: 100%; object-fit: cover;
+      transition: transform 0.25s;
+    }
+    .gallery-img-wrap:hover img { transform: scale(1.05); }
+    .gallery-delete-btn {
+      position: absolute; top: 6px; right: 6px;
+      background: rgba(220,38,38,0.88); color: #fff; border: none;
+      border-radius: 6px; padding: 3px 7px; font-size: 0.78rem; cursor: pointer;
+      opacity: 0; transition: opacity 0.15s;
+    }
+    .gallery-img-wrap:hover .gallery-delete-btn { opacity: 1; }
+    .filter-tab { cursor: pointer; padding: 0.4rem 1.1rem; border-radius: 20px; font-size: 0.88rem;
+      border: 1px solid #cbd5e1; background: #fff; color: #475569; transition: all 0.15s; }
+    .filter-tab.active { background: var(--club-accent,#3b82f6); color: #fff; border-color: var(--club-accent,#3b82f6); }
+#lightboxModal .modal-body { background: #0f172a; display: flex; align-items: center; justify-content: center; min-height: 320px; }
+    #lightboxModal img { max-width: 100%; max-height: 70vh; border-radius: 8px; }
+    .upload-preview { width: 100%; max-height: 180px; object-fit: cover; border-radius: 8px; display: none; margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Galerija</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-primary" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+  <div class="page-body">
+
+    <!-- Page header -->
+    <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div>
+        <h4><i class="bi bi-images me-2 text-primary"></i>Galerija</h4>
+        <p class="text-muted mb-0">Fotografije treninga, utakmica i ostalih događaja</p>
+      </div>
+      <button class="btn btn-primary" id="uploadBtn" data-bs-toggle="modal" data-bs-target="#uploadModal">
+        <i class="bi bi-cloud-upload me-1"></i> Dodaj fotografiju
+      </button>
+    </div>
+
+    <!-- Filter tabs -->
+    <div class="d-flex gap-2 flex-wrap mb-3">
+      <button class="filter-tab active" data-filter="all">
+        <i class="bi bi-grid me-1"></i>Sve
+      </button>
+      <button class="filter-tab" data-filter="training">
+        <i class="bi bi-calendar3 me-1"></i>Treninzi
+      </button>
+      <button class="filter-tab" data-filter="match">
+        <i class="bi bi-trophy me-1"></i>Utakmice
+      </button>
+      <button class="filter-tab" data-filter="other">
+        <i class="bi bi-three-dots me-1"></i>Ostalo
+      </button>
+    </div>
+
+    <!-- Photo count indicator -->
+    <p class="text-muted small mb-3" id="photoCount"></p>
+
+    <!-- Photo grid -->
+    <div class="row g-3" id="galleryGrid">
+      <div class="col-12 text-center py-5 text-muted">
+        <div class="spinner-border spinner-border-sm me-2"></div>Učitavanje galerije...
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Upload Modal -->
+<div class="modal fade" id="uploadModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-cloud-upload me-2"></i>Dodaj fotografiju</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Fotografija <span class="text-danger">*</span></label>
+          <input type="file" class="form-control" id="photoFile" accept="image/*">
+          <img class="upload-preview" id="uploadPreview" alt="Pregled">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Naslov</label>
+          <input type="text" class="form-control" id="photoTitle" placeholder="Unesite naslov fotografije...">
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Tip događaja</label>
+          <select class="form-select" id="photoEventType">
+            <option value="training">Trening</option>
+            <option value="match">Utakmica</option>
+            <option value="other" selected>Ostalo</option>
+          </select>
+        </div>
+        <div class="mb-1">
+          <label class="form-label fw-semibold">ID događaja <span class="text-muted fw-normal">(opcionalno)</span></label>
+          <input type="number" class="form-control" id="photoEventId" placeholder="npr. 5">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
+        <button type="button" class="btn btn-primary" id="uploadSaveBtn" onclick="uploadPhoto()">
+          <span id="uploadSpinner" class="spinner-border spinner-border-sm d-none me-1"></span>
+          <i class="bi bi-cloud-upload me-1"></i>Prenesi
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Lightbox Modal -->
+<div class="modal fade" id="lightboxModal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-centered">
+    <div class="modal-content bg-dark border-0">
+      <div class="modal-header border-0 pb-0">
+        <div>
+          <h6 class="modal-title text-white mb-0" id="lbTitle"></h6>
+          <small class="text-secondary" id="lbMeta"></small>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center p-3">
+        <img id="lbImage" src="" alt="" style="max-width:100%;max-height:72vh;border-radius:8px;">
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+  const user = requireRole('admin', 'super_admin', 'coach', 'member');
+  setUserInfo(user); buildSidebar();
+
+  const canUpload = ['admin', 'super_admin', 'coach'].includes(user.role);
+  const canDelete = ['admin', 'super_admin', 'coach'].includes(user.role);
+
+  if (!canUpload) document.getElementById('uploadBtn').classList.add('d-none');
+
+  let allPhotos = [];
+  let activeFilter = 'all';
+
+  // ── Load gallery ──
+  async function load() {
+    try {
+      allPhotos = await apiGet('/gallery');
+      render();
+    } catch(e) {
+      document.getElementById('galleryGrid').innerHTML = `
+        <div class="col-12">
+          <div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>${e.message}</div>
+        </div>`;
+    }
+  }
+
+  // ── Render grid ──
+  function render() {
+    const filtered = activeFilter === 'all'
+      ? allPhotos
+      : allPhotos.filter(p => p.event_type === activeFilter);
+
+    const countEl = document.getElementById('photoCount');
+    countEl.textContent = `${filtered.length} fotografija`;
+
+    if (!filtered.length) {
+      document.getElementById('galleryGrid').innerHTML = `
+        <div class="col-12">
+          <div class="empty-state">
+            <i class="bi bi-images empty-state-icon"></i>
+            <p class="fw-semibold">Nema fotografija</p>
+            <p class="small">Dodajte prvu fotografiju klikom na dugme iznad.</p>
+          </div>
+        </div>`;
+      return;
+    }
+
+    document.getElementById('galleryGrid').innerHTML = filtered.map(p => `
+      <div class="col-6 col-md-4 col-lg-3">
+        <div class="gallery-card">
+          <div class="gallery-img-wrap" onclick="openLightbox(${p.id})">
+            <img src="${p.photo_url || p.url || '/placeholder.jpg'}" alt="${escHtml(p.title || '')}" loading="lazy">
+            ${canDelete ? `<button class="gallery-delete-btn" onclick="event.stopPropagation();deletePhoto(${p.id})" title="Obriši"><i class="bi bi-trash"></i></button>` : ''}
+          </div>
+          <div class="p-2">
+            <div class="fw-semibold small text-truncate" title="${escHtml(p.title || '')}">${escHtml(p.title || 'Bez naslova')}</div>
+            <div class="text-muted" style="font-size:0.72rem">${eventTypeLabel(p.event_type)} · ${formatDate(p.created_at || p.uploaded_at)}</div>
+          </div>
+        </div>
+      </div>`).join('');
+  }
+
+  // ── Lightbox ──
+  function openLightbox(id) {
+    const p = allPhotos.find(x => x.id === id);
+    if (!p) return;
+    document.getElementById('lbImage').src = p.photo_url || p.url || '/placeholder.jpg';
+    document.getElementById('lbTitle').textContent = p.title || 'Bez naslova';
+    document.getElementById('lbMeta').textContent =
+      `${p.uploaded_by_name || p.uploader_name || ''} · ${formatDate(p.created_at || p.uploaded_at)}`;
+    new bootstrap.Modal(document.getElementById('lightboxModal')).show();
+  }
+
+  // ── Upload ──
+  async function uploadPhoto() {
+    const fileInput = document.getElementById('photoFile');
+    if (!fileInput.files.length) { showToast('Odaberite fotografiju', 'error'); return; }
+
+    const formData = new FormData();
+    formData.append('photo', fileInput.files[0]);
+    formData.append('title', document.getElementById('photoTitle').value.trim());
+    formData.append('event_type', document.getElementById('photoEventType').value);
+    const evId = document.getElementById('photoEventId').value;
+    if (evId) formData.append('event_id', evId);
+
+    const spinner = document.getElementById('uploadSpinner');
+    const btn = document.getElementById('uploadSaveBtn');
+    spinner.classList.remove('d-none'); btn.disabled = true;
+
+    try {
+      const res = await fetch('/api/gallery', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + getToken() },
+        body: formData
+      });
+      if (res.status === 401) { logout(); return; }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Greška pri prenosu');
+      bootstrap.Modal.getInstance(document.getElementById('uploadModal')).hide();
+      resetUploadForm();
+      showToast('Fotografija uspješno dodana', 'success');
+      load();
+    } catch(e) { showToast(e.message, 'error'); }
+    finally { spinner.classList.add('d-none'); btn.disabled = false; }
+  }
+
+  function resetUploadForm() {
+    document.getElementById('photoFile').value = '';
+    document.getElementById('photoTitle').value = '';
+    document.getElementById('photoEventType').value = 'other';
+    document.getElementById('photoEventId').value = '';
+    const prev = document.getElementById('uploadPreview');
+    prev.src = ''; prev.style.display = 'none';
+  }
+
+  // ── Delete ──
+  async function deletePhoto(id) {
+    confirmDelete(async () => {
+      try {
+        await apiDelete('/gallery/' + id);
+        showToast('Fotografija obrisana', 'success');
+        load();
+      } catch(e) { showToast(e.message, 'error'); }
+    });
+  }
+
+  // ── Filter tabs ──
+  document.querySelectorAll('.filter-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      activeFilter = btn.dataset.filter;
+      render();
+    });
+  });
+
+  // ── Image preview before upload ──
+  document.getElementById('photoFile').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const prev = document.getElementById('uploadPreview');
+    prev.src = URL.createObjectURL(file);
+    prev.style.display = 'block';
+  });
+
+  // ── Helpers ──
+  function eventTypeLabel(t) {
+    return { training: 'Trening', match: 'Utakmica', other: 'Ostalo' }[t] || t || '';
+  }
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  load();
+</script>
+</body>
+</html>

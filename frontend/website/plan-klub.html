@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Klub Plan — Klavio | 60 KM/mj za profesionalne klubove</title>
+  <meta name="description" content="Klavio Klub plan — neograničeni članovi i selekcije, medicinski dosijei, oprema, backup podataka i prioritetna podrška. Sve za profesionalne fudbalske klubove.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--blue:#2563eb;--blue-d:#1d4ed8;--blue-l:#3b82f6;--dark:#0a0f1e;--dark2:#111827;--dark3:#1e293b;--slate:#334155;--muted:#64748b;--light:#f1f5f9;--white:#fff;--green:#22c55e;--amber:#f59e0b;--r:14px}
+    html{scroll-behavior:smooth}
+    body{font-family:'Inter',system-ui,sans-serif;background:#fff;color:#111827;line-height:1.6;overflow-x:hidden}
+    .container{max-width:1160px;margin:0 auto;padding:0 24px}
+    .tag{display:inline-flex;align-items:center;gap:6px;font-size:0.73rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:5px 13px;border-radius:20px;margin-bottom:18px}
+    .tag-blue{background:#dbeafe;color:#1d4ed8}.tag-green{background:#dcfce7;color:#166534}.tag-amber{background:#fef3c7;color:#92400e}.tag-white{background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.9)}
+    h2.st{font-size:clamp(1.8rem,3.5vw,2.6rem);font-weight:800;line-height:1.15;letter-spacing:-0.022em;color:#111827}
+    h2.st.light{color:#fff} p.ss{font-size:1.05rem;color:#64748b;margin-top:12px;max-width:540px}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:13px 26px;border-radius:10px;font-size:0.95rem;font-weight:700;cursor:pointer;text-decoration:none;border:none;transition:all 0.18s;white-space:nowrap}
+    .btn-primary{background:#2563eb;color:#fff;box-shadow:0 4px 16px rgba(37,99,235,0.35)}.btn-primary:hover{background:#1d4ed8;transform:translateY(-1px)}
+    .btn-ghost{background:rgba(255,255,255,0.1);color:#fff;border:1.5px solid rgba(255,255,255,0.25)}.btn-ghost:hover{background:rgba(255,255,255,0.18)}
+    .btn-outline{background:transparent;color:#2563eb;border:1.5px solid #2563eb}.btn-outline:hover{background:#2563eb;color:#fff}
+    .btn-lg{padding:15px 32px;font-size:1rem}.btn-sm{padding:9px 18px;font-size:0.85rem;border-radius:8px}
+    nav{position:fixed;top:0;left:0;right:0;z-index:900;transition:all 0.3s;padding:10px 0}
+    nav.scrolled{background:rgba(10,15,30,0.95);backdrop-filter:blur(24px) saturate(1.4);border-bottom:1px solid rgba(255,255,255,0.07);padding:6px 0;box-shadow:0 4px 32px rgba(0,0,0,0.3)}
+    .nav-inner{max-width:1160px;margin:0 auto;padding:0 24px;display:flex;align-items:center;height:56px;gap:8px}
+    .nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;margin-right:20px;flex-shrink:0}
+    .nav-logo-img{height:36px;width:auto;filter:brightness(0) invert(1);opacity:0.92}
+    .nav-links-wrap{flex:1;display:flex;justify-content:center}
+    .nav-links{display:flex;align-items:center;gap:2px;list-style:none;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:30px;padding:4px}
+    .nav-links a{display:block;color:rgba(255,255,255,0.65);text-decoration:none;font-size:0.875rem;font-weight:500;padding:6px 16px;border-radius:24px;transition:all 0.15s}
+    .nav-links a:hover{color:#fff;background:rgba(255,255,255,0.1)}.nav-links a.active{color:#fff;background:#2563eb}
+    .nav-ctas{display:flex;align-items:center;gap:8px;flex-shrink:0}
+    .nav-login{color:rgba(255,255,255,0.75);text-decoration:none;font-size:0.875rem;font-weight:600;padding:8px 16px;border-radius:8px;transition:all 0.15s}
+    .nav-login:hover{color:#fff;background:rgba(255,255,255,0.08)}
+    .nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px;margin-left:auto;background:none;border:none}
+    .nav-hamburger span{display:block;width:22px;height:2px;background:rgba(255,255,255,0.8);border-radius:2px;transition:all 0.25s}
+    .nav-mob-overlay{display:none;position:fixed;inset:0;z-index:998;background:rgba(0,0,0,0.5);backdrop-filter:blur(3px)}
+    .nav-mob-overlay.open{display:block}
+    .nav-mobile{display:flex;flex-direction:column;position:fixed;top:0;right:-100%;width:min(340px,90vw);height:100%;z-index:999;background:#0a0f1e;border-left:1px solid rgba(255,255,255,0.07);transition:right 0.35s cubic-bezier(0.4,0,0.2,1);overflow-y:auto}
+    .nav-mobile.open{right:0}
+    .nav-mobile-hd{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0}
+    .nav-mobile-hd a{display:flex;align-items:center;gap:10px;text-decoration:none}
+    .nav-mobile-hd img{height:28px;filter:brightness(0) invert(1);opacity:0.9}
+    .nav-mobile-close{background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.65);width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;transition:all 0.15s;flex-shrink:0}
+    .nav-mobile-close:hover{background:rgba(255,255,255,0.12);color:#fff}
+    .nav-mobile-links{flex:1;padding:8px 0}
+    .nav-mobile-link{display:flex;align-items:center;justify-content:space-between;color:rgba(255,255,255,0.75);text-decoration:none;font-size:1rem;font-weight:600;padding:15px 24px;border-bottom:1px solid rgba(255,255,255,0.04);transition:color 0.15s,background 0.15s,padding-left 0.15s;letter-spacing:-0.01em}
+    .nav-mobile-link:hover{color:#fff;background:rgba(255,255,255,0.05);padding-left:28px}
+    .nav-mobile-link .arr{color:rgba(255,255,255,0.2);font-size:0.85rem}
+    .nav-mobile-ft{padding:20px 24px;border-top:1px solid rgba(255,255,255,0.07);display:flex;flex-direction:column;gap:10px;flex-shrink:0}
+    .nav-login-m{display:block;text-align:center;color:rgba(255,255,255,0.7);text-decoration:none;font-size:0.9rem;font-weight:600;padding:12px;border:1.5px solid rgba(255,255,255,0.12);border-radius:10px;transition:all 0.15s}
+    .nav-login-m:hover{background:rgba(255,255,255,0.05);color:#fff}
+    .nav-mobile-ft .btn-primary{display:block;text-align:center}
+    @media(max-width:860px){.nav-links-wrap,.nav-ctas{display:none}.nav-hamburger{display:flex}}
+    footer{background:#0a0f1e;border-top:1px solid rgba(255,255,255,0.06);padding:52px 0 32px}
+    .footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:48px}
+    @media(max-width:720px){.footer-grid{grid-template-columns:1fr 1fr}}@media(max-width:480px){.footer-grid{grid-template-columns:1fr}}
+    .footer-logo{display:flex;align-items:center;gap:9px;text-decoration:none;margin-bottom:14px}
+    .footer-logo img{height:28px;filter:brightness(0) invert(1);opacity:0.85}
+    .footer-tagline{font-size:0.84rem;color:rgba(255,255,255,0.38);line-height:1.6;max-width:220px}
+    .footer-col h4{font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.82);text-transform:uppercase;letter-spacing:0.07em;margin-bottom:14px}
+    .footer-col ul{list-style:none;display:flex;flex-direction:column;gap:9px}
+    .footer-col ul a{color:rgba(255,255,255,0.42);text-decoration:none;font-size:0.86rem;transition:color 0.15s}
+    .footer-col ul a:hover{color:rgba(255,255,255,0.82)}
+    .footer-bottom{border-top:1px solid rgba(255,255,255,0.06);padding-top:24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+    .footer-copy{font-size:0.78rem;color:rgba(255,255,255,0.28)}
+    .reveal{opacity:0;transform:translateY(28px);transition:opacity 0.6s ease,transform 0.6s ease}
+    .reveal.visible{opacity:1;transform:translateY(0)}
+    .reveal-delay-1{transition-delay:0.1s}.reveal-delay-2{transition-delay:0.2s}.reveal-delay-3{transition-delay:0.3s}.reveal-delay-4{transition-delay:0.4s}.reveal-delay-5{transition-delay:0.5s}
+
+    .plan-hero { background: var(--dark); background-image: radial-gradient(ellipse 70% 60% at 50% -10%, rgba(139,92,246,0.3) 0%, transparent 65%); padding: 140px 0 80px; text-align: center; }
+    .plan-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(139,92,246,0.18); border: 1px solid rgba(139,92,246,0.35); border-radius: 20px; padding: 6px 16px; font-size: 0.77rem; font-weight: 700; color: #c4b5fd; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 20px; }
+    .plan-hero h1 { font-size: clamp(2.4rem, 5vw, 3.6rem); font-weight: 900; color: #fff; letter-spacing: -0.03em; line-height: 1.08; }
+    .plan-hero h1 em { font-style: normal; background: linear-gradient(90deg, #a78bfa, #e879f9); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .plan-hero-price { font-size: clamp(3.5rem, 7vw, 5rem); font-weight: 900; color: #fff; letter-spacing: -0.04em; line-height: 1; margin: 24px 0 8px; }
+    .plan-hero-price sub { font-size: 1.1rem; font-weight: 500; color: rgba(255,255,255,0.4); vertical-align: bottom; margin-bottom: 8px; }
+    .plan-hero-sub { font-size: 1.05rem; color: rgba(255,255,255,0.5); margin-bottom: 36px; }
+    .plan-ctas { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    .btn-purple { background: #7c3aed; color: #fff; box-shadow: 0 4px 16px rgba(124,58,237,0.35); }
+    .btn-purple:hover { background: #6d28d9; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(124,58,237,0.45); }
+
+    .features-section { padding: 88px 0; background: #fff; }
+    .feat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; margin-top: 52px; }
+    @media(max-width:900px){ .feat-grid { grid-template-columns: repeat(2,1fr); } }
+    @media(max-width:540px){ .feat-grid { grid-template-columns: 1fr; } }
+    .feat-card { border: 1.5px solid #e8edf3; border-radius: 16px; padding: 28px 24px; background: #fff; transition: box-shadow 0.2s, transform 0.2s; }
+    .feat-card:hover { box-shadow: 0 12px 40px rgba(0,0,0,0.08); transform: translateY(-3px); }
+    .feat-card.new { border-color: #e9d5ff; }
+    .feat-icon { font-size: 2rem; margin-bottom: 14px; }
+    .feat-card h3 { font-size: 1rem; font-weight: 700; color: var(--dark2); margin-bottom: 8px; }
+    .feat-card p { font-size: 0.85rem; color: var(--muted); line-height: 1.65; }
+    .feat-card .badge-incl { display: inline-block; background: #dcfce7; color: #166534; font-size: 0.67rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin-bottom: 10px; }
+    .feat-card .badge-new { display: inline-block; background: #ede9fe; color: #6d28d9; font-size: 0.67rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin-bottom: 10px; }
+
+    .limits-section { padding: 72px 0; background: var(--light); }
+    .limits-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-top: 40px; }
+    @media(max-width:720px){ .limits-grid { grid-template-columns: repeat(2,1fr); } }
+    .limit-card { background: #fff; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 24px 20px; text-align: center; }
+    .limit-card.accent { border-color: #ddd6fe; background: linear-gradient(135deg, #f5f3ff, #fff); }
+    .limit-val { font-size: 2.2rem; font-weight: 900; color: var(--dark2); line-height: 1; }
+    .limit-card.accent .limit-val { color: #7c3aed; }
+    .limit-lbl { font-size: 0.8rem; color: var(--muted); margin-top: 6px; }
+
+    .compare-section { padding: 88px 0; background: #fff; }
+    .compare-table { width: 100%; border-collapse: collapse; margin-top: 48px; font-size: 0.88rem; }
+    .compare-table th { padding: 14px 20px; text-align: center; font-weight: 800; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; background: var(--dark2); color: rgba(255,255,255,0.9); }
+    .compare-table th:first-child { text-align: left; background: var(--dark3); }
+    .compare-table th.highlight { background: #7c3aed; }
+    .compare-table td { padding: 12px 20px; border-bottom: 1px solid #f1f5f9; color: var(--dark3); }
+    .compare-table td:first-child { font-weight: 600; font-size: 0.85rem; }
+    .compare-table td:not(:first-child) { text-align: center; }
+    .compare-table tr:last-child td { border-bottom: none; }
+    .compare-table tr:nth-child(even) td { background: #fafbfc; }
+    .compare-table .c-yes { color: #16a34a; font-size: 1.1rem; font-weight: 700; }
+    .compare-table .c-no { color: #cbd5e1; font-size: 1.1rem; }
+    .compare-table .c-hl { background: rgba(124,58,237,0.04); }
+    .compare-table .highlight-row { background: rgba(124,58,237,0.04); }
+    .tbl-wrap { overflow-x: auto; border-radius: 14px; border: 1.5px solid #e2e8f0; overflow: hidden; }
+
+    .faq-section { padding: 80px 0; background: var(--light); }
+    .faq-list { max-width: 700px; margin: 40px auto 0; display: flex; flex-direction: column; gap: 14px; }
+    .faq-item { background: #fff; border: 1.5px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
+    .faq-q { padding: 18px 24px; font-weight: 700; font-size: 0.95rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 12px; user-select: none; }
+    .faq-q:hover { background: #f8fafc; }
+    .faq-a { padding: 0 24px 18px; color: var(--muted); font-size: 0.88rem; line-height: 1.7; display: none; }
+    .faq-item.open .faq-a { display: block; }
+    .faq-arrow { transition: transform 0.2s; flex-shrink: 0; color: var(--muted); }
+    .faq-item.open .faq-arrow { transform: rotate(180deg); }
+
+    .plan-cta-section { background: var(--dark); background-image: radial-gradient(ellipse 60% 60% at 50% 50%, rgba(124,58,237,0.2) 0%, transparent 70%); padding: 96px 0; text-align: center; }
+    .plan-cta-section h2 { font-size: clamp(2rem, 4vw, 2.8rem); font-weight: 900; color: #fff; letter-spacing: -0.02em; margin-bottom: 14px; }
+    .plan-cta-section p { color: rgba(255,255,255,0.48); font-size: 1rem; margin-bottom: 34px; }
+
+    .prev-feats-section { padding: 72px 0; background: var(--light); }
+    .prev-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 36px; }
+    @media(max-width:720px){ .prev-grid { grid-template-columns: repeat(2,1fr); } }
+    @media(max-width:480px){ .prev-grid { grid-template-columns: 1fr; } }
+    .prev-feat { display: flex; align-items: center; gap: 10px; background: #fff; border: 1.5px solid #e8edf3; border-radius: 10px; padding: 14px 16px; font-size: 0.85rem; font-weight: 600; color: var(--dark3); }
+    .prev-feat .sf-icon { width: 28px; height: 28px; border-radius: 8px; background: #dcfce7; color: #16a34a; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; flex-shrink: 0; }
+
+    .support-strip { background: linear-gradient(135deg, #1e1b4b, #2e1065); padding: 48px 0; text-align: center; }
+    .support-strip h3 { font-size: 1.4rem; font-weight: 800; color: #fff; margin-bottom: 10px; }
+    .support-strip p { color: rgba(255,255,255,0.5); font-size: 0.9rem; max-width: 500px; margin: 0 auto 24px; }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="mainNav">
+  <div class="nav-inner">
+    <a href="/website/" class="nav-logo"><img src="/assets/img/klavio-icon.svg" alt="Klavio" class="nav-logo-img"></a>
+    <div class="nav-links-wrap">
+      <ul class="nav-links">
+        <li><a href="/website/#modules">Moduli</a></li>
+        <li><a href="/website/#features">Funkcije</a></li>
+        <li><a href="/website/about.html">O nama</a></li>
+        <li><a href="/website/#pricing" class="active">Cijene</a></li>
+        <li><a href="/website/contact.html">Kontakt</a></li>
+      </ul>
+    </div>
+    <div class="nav-ctas">
+      <a href="/" class="nav-login">Prijava</a>
+      <a href="/website/register.html" class="btn btn-primary btn-sm">Registruj klub</a>
+    </div>
+    <button class="nav-hamburger" id="hamburger" aria-label="Menu" onclick="toggleMenu()">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+<div class="nav-mob-overlay" id="mobileOverlay" onclick="toggleMenu()"></div>
+<div class="nav-mobile" id="mobileMenu">
+  <div class="nav-mobile-hd">
+    <a href="/website/"><img src="/assets/img/klavio-icon.svg" alt="Klavio"></a>
+    <button class="nav-mobile-close" onclick="toggleMenu()" aria-label="Zatvori">✕</button>
+  </div>
+  <div class="nav-mobile-links">
+    <a href="/website/#modules" class="nav-mobile-link" onclick="toggleMenu()">Moduli<span class="arr">→</span></a>
+    <a href="/website/#features" class="nav-mobile-link" onclick="toggleMenu()">Funkcije<span class="arr">→</span></a>
+    <a href="/website/about.html" class="nav-mobile-link" onclick="toggleMenu()">O nama<span class="arr">→</span></a>
+    <a href="/website/#pricing" class="nav-mobile-link" onclick="toggleMenu()">Cijene<span class="arr">→</span></a>
+    <a href="/website/contact.html" class="nav-mobile-link" onclick="toggleMenu()">Kontakt<span class="arr">→</span></a>
+  </div>
+  <div class="nav-mobile-ft">
+    <a href="/" class="nav-login-m">Prijava</a>
+    <a href="/website/register.html" class="btn btn-primary">Registruj klub</a>
+  </div>
+</div>
+
+<!-- HERO -->
+<section class="plan-hero">
+  <div class="container">
+    <div class="plan-badge">👑 Klub Plan</div>
+    <h1>Bez granica.<br><em>Profesionalno.</em></h1>
+    <div class="plan-hero-price">60 KM<sub>/mj</sub></div>
+    <p class="plan-hero-sub">Neograničeni članovi i selekcije. Medicinski dosijei, oprema, backup i prioritetna podrška. Sve što profesionalni klub zahtijeva.</p>
+    <div class="plan-ctas">
+      <a href="/website/contact.html" class="btn btn-purple btn-lg">
+        Naručite Klub plan
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+      </a>
+      <a href="/website/#pricing" class="btn btn-ghost btn-lg">Uporedi planove</a>
+    </div>
+  </div>
+</section>
+
+<!-- LIMITS -->
+<div class="limits-section">
+  <div class="container">
+    <div style="text-align:center" class="reveal">
+      <div class="tag tag-blue">📊 Kapaciteti plana</div>
+      <h2 class="st">Klub plan u brojevima</h2>
+    </div>
+    <div class="limits-grid">
+      <div class="limit-card accent reveal">
+        <div class="limit-val">∞</div>
+        <div class="limit-lbl">Neograničeni članovi</div>
+      </div>
+      <div class="limit-card accent reveal reveal-delay-1">
+        <div class="limit-val">∞</div>
+        <div class="limit-lbl">Neograničene selekcije</div>
+      </div>
+      <div class="limit-card reveal reveal-delay-2">
+        <div class="limit-val">24/7</div>
+        <div class="limit-lbl">Prioritetna podrška</div>
+      </div>
+      <div class="limit-card reveal reveal-delay-3">
+        <div class="limit-val">100%</div>
+        <div class="limit-lbl">Backup podataka</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NEW KLUB FEATURES -->
+<section class="features-section">
+  <div class="container">
+    <div style="text-align:center" class="reveal">
+      <div class="tag tag-blue" style="background:#ede9fe;color:#6d28d9">👑 Ekskluzivno u Klub planu</div>
+      <h2 class="st">Vrhunske funkcije za profesionalce</h2>
+      <p class="ss" style="margin:12px auto 0;text-align:center">Pet novih modula koji čine razliku između hobija i profesionalnog upravljanja klubom.</p>
+    </div>
+    <div class="feat-grid">
+      <div class="feat-card new reveal reveal-delay-1">
+        <div class="feat-icon">🏥</div>
+        <span class="badge-new">Samo Klub</span>
+        <h3>Medicinski dosijei</h3>
+        <p>Evidentujte povrede, oporavke, preglede i medicinski status svakog igrača. Trener zna ko je spreman za meč, a ko je na rehabilitaciji.</p>
+      </div>
+      <div class="feat-card new reveal reveal-delay-2">
+        <div class="feat-icon">👕</div>
+        <span class="badge-new">Samo Klub</span>
+        <h3>Evidencija opreme</h3>
+        <p>Pratite dresove, lopte, sportsku opremu. Ko ima šta, u kakvom stanju, kada treba zamjena. Kraj izgubljenoj opremi i haotičnom skladištu.</p>
+      </div>
+      <div class="feat-card new reveal reveal-delay-3">
+        <div class="feat-icon">🤝</div>
+        <span class="badge-new">Samo Klub</span>
+        <h3>Sponzori i termini</h3>
+        <p>Upravljajte sponzorskim ugovorima i terminima. Evidentirajte susrete, obaveze i finansijske uvjete svakog sponzorskog angažmana.</p>
+      </div>
+      <div class="feat-card new reveal reveal-delay-4">
+        <div class="feat-icon">💾</div>
+        <span class="badge-new">Samo Klub</span>
+        <h3>Automatski backup</h3>
+        <p>Svi podaci se automatski backupuju svakodnevno. U slučaju tehničkog problema, vaši podaci su sigurni i mogu se u potpunosti obnoviti.</p>
+      </div>
+      <div class="feat-card new reveal reveal-delay-1">
+        <div class="feat-icon">🎯</div>
+        <span class="badge-new">Samo Klub</span>
+        <h3>Prioritetna podrška</h3>
+        <p>Direktna linija s Klavio timom. Odgovaramo u roku od 2 sata radnim danom. Za hitne slučajeve — i van radnog vremena.</p>
+      </div>
+      <div class="feat-card new reveal reveal-delay-2">
+        <div class="feat-icon">📊</div>
+        <span class="badge-new">Samo Klub</span>
+        <h3>Napredni izvještaji</h3>
+        <p>Detaljni izvještaji o financijama, prisustvu, statistikama i razvoju — sve u jednom exportu za upravu kluba ili skupštinu.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PREV FEATS INCLUDED -->
+<section class="prev-feats-section">
+  <div class="container">
+    <div style="text-align:center" class="reveal">
+      <div class="tag tag-green">✅ Sve iz Starter + Pro plana</div>
+      <h2 class="st">Plus sve što već poznajete</h2>
+      <p class="ss" style="margin:12px auto 0;text-align:center">Klub plan uključuje svaku funkciju iz Starter i Pro plana. Nema kompromisa.</p>
+    </div>
+    <div class="prev-grid reveal" style="margin-top:40px">
+      <div class="prev-feat"><span class="sf-icon">✓</span> Upravljanje članovima</div>
+      <div class="prev-feat"><span class="sf-icon">✓</span> Raspored treninga</div>
+      <div class="prev-feat"><span class="sf-icon">✓</span> Evidencija prisustva</div>
+      <div class="prev-feat"><span class="sf-icon">✓</span> Utakmice i rezultati</div>
+      <div class="prev-feat"><span class="sf-icon">✓</span> Vizualna postava</div>
+      <div class="prev-feat"><span class="sf-icon">✓</span> Obavijesti i oglasi</div>
+      <div class="prev-feat"><span class="sf-icon">✓</span> Finansije i članarine</div>
+      <div class="prev-feat"><span class="sf-icon">✓</span> Galerija fotografija</div>
+      <div class="prev-feat"><span class="sf-icon">✓</span> Statistike igrača</div>
+      <div class="prev-feat"><span class="sf-icon">✓</span> Razvoj igrača</div>
+      <div class="prev-feat"><span class="sf-icon">✓</span> Digitalni obrazci</div>
+      <div class="prev-feat"><span class="sf-icon">✓</span> Brendiranje kluba</div>
+      <div class="prev-feat"><span class="sf-icon">✓</span> PWA — mobilni pristup</div>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARE TABLE -->
+<section class="compare-section">
+  <div class="container">
+    <div style="text-align:center" class="reveal">
+      <div class="tag tag-blue">📋 Poređenje planova</div>
+      <h2 class="st">Starter vs Pro vs Klub</h2>
+      <p class="ss" style="margin:12px auto 0;text-align:center">Vidite tačno šta dobijate u svakom planu.</p>
+    </div>
+    <div class="tbl-wrap reveal" style="margin-top:48px">
+      <table class="compare-table">
+        <thead>
+          <tr>
+            <th style="width:40%">Funkcija</th>
+            <th>Starter</th>
+            <th>Pro</th>
+            <th class="highlight">👑 Klub</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Cijena / mj.</td><td>0 KM</td><td>40 KM</td><td class="c-hl"><strong style="color:#7c3aed">60 KM</strong></td></tr>
+          <tr class="highlight-row"><td>Maksimum članova</td><td>25</td><td>150</td><td class="c-hl"><strong>Neograničeno</strong></td></tr>
+          <tr><td>Selekcije</td><td>1</td><td>5</td><td class="c-hl"><strong>Neograničeno</strong></td></tr>
+          <tr class="highlight-row"><td>Treninzi i prisustvo</td><td><span class="c-yes">✓</span></td><td><span class="c-yes">✓</span></td><td class="c-hl"><span class="c-yes">✓</span></td></tr>
+          <tr><td>Utakmice i rezultati</td><td><span class="c-yes">✓</span></td><td><span class="c-yes">✓</span></td><td class="c-hl"><span class="c-yes">✓</span></td></tr>
+          <tr class="highlight-row"><td>Vizualna postava</td><td><span class="c-yes">✓</span></td><td><span class="c-yes">✓</span></td><td class="c-hl"><span class="c-yes">✓</span></td></tr>
+          <tr><td>Obavijesti i oglasi</td><td><span class="c-yes">✓</span></td><td><span class="c-yes">✓</span></td><td class="c-hl"><span class="c-yes">✓</span></td></tr>
+          <tr class="highlight-row"><td>Finansije i članarine</td><td><span class="c-no">✗</span></td><td><span class="c-yes">✓</span></td><td class="c-hl"><span class="c-yes">✓</span></td></tr>
+          <tr><td>Statistike igrača</td><td><span class="c-no">✗</span></td><td><span class="c-yes">✓</span></td><td class="c-hl"><span class="c-yes">✓</span></td></tr>
+          <tr class="highlight-row"><td>Galerija fotografija</td><td><span class="c-no">✗</span></td><td><span class="c-yes">✓</span></td><td class="c-hl"><span class="c-yes">✓</span></td></tr>
+          <tr><td>Razvoj igrača</td><td><span class="c-no">✗</span></td><td><span class="c-yes">✓</span></td><td class="c-hl"><span class="c-yes">✓</span></td></tr>
+          <tr class="highlight-row"><td>Digitalni obrazci</td><td><span class="c-no">✗</span></td><td><span class="c-yes">✓</span></td><td class="c-hl"><span class="c-yes">✓</span></td></tr>
+          <tr><td>Medicinski dosijei</td><td><span class="c-no">✗</span></td><td><span class="c-no">✗</span></td><td class="c-hl"><span class="c-yes">✓</span></td></tr>
+          <tr><td>Evidencija opreme</td><td><span class="c-no">✗</span></td><td><span class="c-no">✗</span></td><td class="c-hl"><span class="c-yes">✓</span></td></tr>
+          <tr class="highlight-row"><td>Sponzori i termini</td><td><span class="c-no">✗</span></td><td><span class="c-no">✗</span></td><td class="c-hl"><span class="c-yes">✓</span></td></tr>
+          <tr><td>Backup podataka</td><td><span class="c-no">✗</span></td><td><span class="c-no">✗</span></td><td class="c-hl"><span class="c-yes">✓</span></td></tr>
+          <tr class="highlight-row"><td>Prioritetna podrška</td><td><span class="c-no">✗</span></td><td><span class="c-no">✗</span></td><td class="c-hl"><span class="c-yes">✓</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="display:flex;gap:14px;justify-content:center;margin-top:36px;flex-wrap:wrap">
+      <a href="/website/plan-starter.html" class="btn btn-outline">Pogledaj Starter plan</a>
+      <a href="/website/plan-pro.html" class="btn btn-outline">Pogledaj Pro plan</a>
+    </div>
+  </div>
+</section>
+
+<!-- SUPPORT STRIP -->
+<div class="support-strip">
+  <div class="container reveal">
+    <h3>Prioritetna podrška uključena</h3>
+    <p>Svaki Klub plan korisnik ima direktnu liniju s našim timom. Odgovaramo brzo — jer znamo koliko je vaš klub važan.</p>
+    <a href="/website/contact.html" class="btn btn-ghost btn-lg">Kontaktirajte nas</a>
+  </div>
+</div>
+
+<!-- FAQ -->
+<section class="faq-section">
+  <div class="container">
+    <div style="text-align:center" class="reveal">
+      <div class="tag tag-blue">❓ Česta pitanja</div>
+      <h2 class="st">Sve što trebate znati o Klub planu</h2>
+    </div>
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Za koga je Klub plan pravi izbor? <span class="faq-arrow">▼</span></div>
+        <div class="faq-a">Klub plan je idealan za etablirane fudbalske klubove s više selekcija (U12, U14, U17, Seniori, Ženska ekipa...), profesionalnim medicinskim timom i aktivnim upravljanjem opremom i sponzorima.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Kako funkcioniše backup podataka? <span class="faq-arrow">▼</span></div>
+        <div class="faq-a">Svake noći automatski pravimo backup cijele vaše baze podataka. Čuvamo posljednjih 30 dana backupa. U slučaju problema, podaci se mogu obnoviti u roku od nekoliko sati.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Šta znači prioritetna podrška u praksi? <span class="faq-arrow">▼</span></div>
+        <div class="faq-a">Vaši upiti imaju prioritet u redu čekanja. Garantujemo odgovor unutar 2 radna sata. Za hitne slučajeve (npr. problem uoči utakmice) dostupni smo i van radnog vremena putem direktnog kanala.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Može li više administratora upravljati klubom? <span class="faq-arrow">▼</span></div>
+        <div class="faq-a">Da, broj administratora i trenera nije ograničen ni u jednom planu. Svaki korisnik ima svoju ulogu i odgovarajuća prava pristupa.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">Da li postoji godišnji ugovor? <span class="faq-arrow">▼</span></div>
+        <div class="faq-a">Ne. Plaćate mjesečno i možete otkazati u bilo kom trenutku. Nema penala, nema obaveza. Ako platite godinu unaprijed, dobijate popust od 10%.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="plan-cta-section">
+  <div class="container reveal">
+    <div class="tag tag-white" style="margin:0 auto 20px;background:rgba(167,139,250,0.15);color:#c4b5fd;">👑 Klub — 60 KM/mj</div>
+    <h2>Vaš klub zaslužuje<br>profesionalne alate.</h2>
+    <p>Neograničeni kapaciteti, svi moduli, backup i prioritetna podrška — sve na jednom mjestu.</p>
+    <div class="plan-ctas">
+      <a href="/website/contact.html" class="btn btn-purple btn-lg">
+        Naručite Klub plan →
+      </a>
+      <a href="/website/plan-pro.html" class="btn btn-ghost btn-lg">Pogledaj Pro plan</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <a href="/website/" class="footer-logo"><img src="/assets/img/klavio-icon.svg" alt="Klavio"></a>
+        <p class="footer-tagline">Platforma za upravljanje fudbalskim klubovima u BiH i regiji.</p>
+      </div>
+      <div class="footer-col"><h4>Planovi</h4><ul>
+        <li><a href="/website/plan-starter.html">Starter — Besplatno</a></li>
+        <li><a href="/website/plan-pro.html">Pro — 40 KM/mj</a></li>
+        <li><a href="/website/plan-klub.html">Klub — 60 KM/mj</a></li>
+      </ul></div>
+      <div class="footer-col"><h4>Kompanija</h4><ul>
+        <li><a href="/website/about.html">O nama</a></li>
+        <li><a href="/website/contact.html">Kontakt</a></li>
+      </ul></div>
+      <div class="footer-col"><h4>Pravno</h4><ul>
+        <li><a href="/website/terms.html">Uvjeti korištenja</a></li>
+        <li><a href="/website/privacy.html">Politika privatnosti</a></li>
+        <li><a href="/website/gdpr.html">GDPR</a></li>
+      </ul></div>
+    </div>
+    <div class="footer-bottom">
+      <span class="footer-copy">© 2026 Klavio. Sva prava pridržana.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const nav = document.getElementById('mainNav');
+  window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 30), { passive: true });
+  nav.classList.toggle('scrolled', window.scrollY > 30);
+  function toggleMenu() {
+    const m = document.getElementById('mobileMenu');
+    const o = document.getElementById('mobileOverlay');
+    const isOpen = m.classList.toggle('open');
+    if(o) o.classList.toggle('open', isOpen);
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+  }
+  function toggleFaq(el) {
+    el.parentElement.classList.toggle('open');
+  }
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

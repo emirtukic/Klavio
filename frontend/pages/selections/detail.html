@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Selekcija | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+  <style>
+    .tab-pane-custom { display:none; }
+    .tab-pane-custom.active { display:block; }
+    .stat-mini { text-align:center; padding:12px 8px; }
+    .stat-mini .num { font-size:1.6rem; font-weight:700; line-height:1; }
+    .stat-mini .lbl { font-size:0.7rem; color:#94a3b8; margin-top:2px; }
+    .match-row-result { width:28px; height:28px; border-radius:6px; display:inline-flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700; }
+    .result-win   { background:#dcfce7; color:#16a34a; }
+    .result-draw  { background:#fef9c3; color:#ca8a04; }
+    .result-loss  { background:#fee2e2; color:#dc2626; }
+    .result-pend  { background:#f1f5f9; color:#64748b; }
+    .filter-bar   { background:#f8fafc; border-radius:10px; padding:10px 14px; }
+    [data-theme="dark"] .filter-bar { background:#1e293b; }
+    [data-theme="dark"] .stat-mini .lbl { color:#64748b; }
+  </style>
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title" id="pageTitle">Selekcija</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-primary" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+  <div class="page-body">
+
+    <!-- Page header -->
+    <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-2">
+      <div class="d-flex align-items-center gap-2">
+        <a href="list.html" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+        <div>
+          <h4 class="mb-0" id="selName">-</h4>
+          <p class="text-muted mb-0 small" id="selDesc"></p>
+        </div>
+      </div>
+      <button class="btn btn-outline-secondary btn-sm" onclick="openEdit()">
+        <i class="bi bi-pencil me-1"></i>Uredi selekciju
+      </button>
+    </div>
+
+    <!-- Stat cards -->
+    <div class="card mb-4">
+      <div class="card-body py-2">
+        <div class="row g-0 text-center">
+          <div class="col stat-mini border-end">
+            <div class="num text-primary" id="stMembers">-</div>
+            <div class="lbl">Igrači</div>
+          </div>
+          <div class="col stat-mini border-end">
+            <div class="num text-info" id="stCoaches">-</div>
+            <div class="lbl">Treneri</div>
+          </div>
+          <div class="col stat-mini border-end">
+            <div class="num text-success" id="stTrainings">-</div>
+            <div class="lbl">Treninzi</div>
+          </div>
+          <div class="col stat-mini border-end">
+            <div class="num text-warning" id="stMatches">-</div>
+            <div class="lbl">Utakmice</div>
+          </div>
+          <div class="col stat-mini border-end">
+            <div class="num text-success" id="stWins">-</div>
+            <div class="lbl">Pobjede</div>
+          </div>
+          <div class="col stat-mini border-end">
+            <div class="num text-secondary" id="stDraws">-</div>
+            <div class="lbl">Nerješeno</div>
+          </div>
+          <div class="col stat-mini">
+            <div class="num text-danger" id="stLosses">-</div>
+            <div class="lbl">Porazi</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-3" id="mainTabs">
+      <li class="nav-item"><button class="nav-link active" data-tab="pregled"   onclick="showTab('pregled')"><i class="bi bi-grid me-1"></i>Pregled</button></li>
+      <li class="nav-item"><button class="nav-link"        data-tab="igraci"    onclick="showTab('igraci')"><i class="bi bi-people me-1"></i>Igrači <span class="badge bg-secondary ms-1" id="badgeM">0</span></button></li>
+      <li class="nav-item"><button class="nav-link"        data-tab="treneri"   onclick="showTab('treneri')"><i class="bi bi-person-badge me-1"></i>Treneri <span class="badge bg-secondary ms-1" id="badgeC">0</span></button></li>
+      <li class="nav-item"><button class="nav-link"        data-tab="treninzi"  onclick="showTab('treninzi')"><i class="bi bi-calendar3 me-1"></i>Treninzi</button></li>
+      <li class="nav-item"><button class="nav-link"        data-tab="utakmice"  onclick="showTab('utakmice')"><i class="bi bi-trophy me-1"></i>Utakmice</button></li>
+      <li class="nav-item"><button class="nav-link"        data-tab="statistike" onclick="showTab('statistike')"><i class="bi bi-bar-chart me-1"></i>Statistike</button></li>
+    </ul>
+
+    <!-- ── Pregled ── -->
+    <div id="tab-pregled" class="tab-pane-custom active">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="card h-100">
+            <div class="card-header fw-semibold small py-2"><i class="bi bi-trophy me-2 text-warning"></i>Posljednjih 5 utakmica</div>
+            <div id="recentMatchesList" class="list-group list-group-flush"></div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card h-100">
+            <div class="card-header fw-semibold small py-2"><i class="bi bi-calendar3 me-2 text-primary"></i>Nadolazeći treninzi</div>
+            <div id="upcomingTrainingsList" class="list-group list-group-flush"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Igrači ── -->
+    <div id="tab-igraci" class="tab-pane-custom">
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center py-2">
+          <span class="fw-semibold small">Igrači selekcije</span>
+          <input type="text" class="form-control form-control-sm" id="mSearch" style="width:200px"
+            placeholder="Pretraži..." oninput="renderMembers()">
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead><tr><th>#</th><th>Ime</th><th>Broj dresa</th><th>Pozicija</th><th>Status</th><th>Akcije</th></tr></thead>
+            <tbody id="membersBody"></tbody>
+          </table>
+        </div>
+        <div class="card-footer">
+          <p class="fw-semibold mb-2 small text-muted text-uppercase">Dodaj igrača u selekciju</p>
+          <div class="d-flex gap-2 flex-wrap">
+            <select class="form-select form-select-sm flex-grow-1" id="addMemberSelect"><option value="">- Odaberi igrača -</option></select>
+            <button class="btn btn-primary btn-sm" onclick="addMember()"><i class="bi bi-plus me-1"></i>Dodaj</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Treneri ── -->
+    <div id="tab-treneri" class="tab-pane-custom">
+      <div class="card">
+        <div class="card-header fw-semibold small py-2">Treneri selekcije</div>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead><tr><th>Ime</th><th>Specijalizacija</th><th>E-mail</th><th>Telefon</th><th>Akcije</th></tr></thead>
+            <tbody id="coachesBody"></tbody>
+          </table>
+        </div>
+        <div class="card-footer">
+          <p class="fw-semibold mb-2 small text-muted text-uppercase">Dodaj trenera u selekciju</p>
+          <div class="d-flex gap-2 flex-wrap">
+            <select class="form-select form-select-sm flex-grow-1" id="addCoachSelect"><option value="">- Odaberi trenera -</option></select>
+            <button class="btn btn-primary btn-sm" onclick="addCoach()"><i class="bi bi-plus me-1"></i>Dodaj</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Treninzi ── -->
+    <div id="tab-treninzi" class="tab-pane-custom">
+      <div class="filter-bar mb-3">
+        <div class="row g-2 align-items-end">
+          <div class="col-sm-4">
+            <input type="text" class="form-control form-control-sm" id="tSearch" placeholder="Pretraži naziv..." oninput="renderTrainings()">
+          </div>
+          <div class="col-auto">
+            <select class="form-select form-select-sm" id="tStatus" onchange="renderTrainings()">
+              <option value="">Svi statusi</option>
+              <option value="scheduled">Zakazan</option>
+              <option value="completed">Završen</option>
+              <option value="cancelled">Otkazan</option>
+            </select>
+          </div>
+          <div class="col-auto">
+            <input type="date" class="form-control form-control-sm" id="tFrom" onchange="renderTrainings()">
+          </div>
+          <div class="col-auto">
+            <input type="date" class="form-control form-control-sm" id="tTo" onchange="renderTrainings()">
+          </div>
+          <div class="col-auto">
+            <button class="btn btn-outline-secondary btn-sm" onclick="resetTFilters()"><i class="bi bi-x-lg"></i></button>
+          </div>
+        </div>
+      </div>
+      <div class="card table-card">
+        <div class="card-header d-flex justify-content-between align-items-center py-2">
+          <span class="fw-semibold small"><i class="bi bi-calendar3 me-2"></i>Treninzi selekcije</span>
+          <span class="text-muted small" id="trainingCount"></span>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead><tr><th>Datum</th><th>Naziv</th><th>Trener</th><th>Lokacija</th><th>Status</th><th>Sudionici</th></tr></thead>
+            <tbody id="trainingsBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Utakmice ── -->
+    <div id="tab-utakmice" class="tab-pane-custom">
+      <div class="filter-bar mb-3">
+        <div class="row g-2 align-items-end">
+          <div class="col-sm-4">
+            <input type="text" class="form-control form-control-sm" id="mfSearch" placeholder="Pretraži protivnika..." oninput="renderMatches()">
+          </div>
+          <div class="col-auto">
+            <select class="form-select form-select-sm" id="mfResult" onchange="renderMatches()">
+              <option value="">Svi rezultati</option>
+              <option value="win">Pobjeda</option>
+              <option value="draw">Nerješeno</option>
+              <option value="loss">Poraz</option>
+              <option value="pending">Na čekanju</option>
+            </select>
+          </div>
+          <div class="col-auto">
+            <select class="form-select form-select-sm" id="mfType" onchange="renderMatches()">
+              <option value="">Sve vrste</option>
+              <option value="league">Liga</option>
+              <option value="cup">Kup</option>
+              <option value="friendly">Prijateljska</option>
+            </select>
+          </div>
+          <div class="col-auto">
+            <input type="date" class="form-control form-control-sm" id="mfFrom" onchange="renderMatches()">
+          </div>
+          <div class="col-auto">
+            <input type="date" class="form-control form-control-sm" id="mfTo" onchange="renderMatches()">
+          </div>
+          <div class="col-auto">
+            <button class="btn btn-outline-secondary btn-sm" onclick="resetMFilters()"><i class="bi bi-x-lg"></i></button>
+          </div>
+        </div>
+      </div>
+      <div class="card table-card">
+        <div class="card-header d-flex justify-content-between align-items-center py-2">
+          <span class="fw-semibold small"><i class="bi bi-trophy me-2"></i>Utakmice selekcije</span>
+          <span class="text-muted small" id="matchCount"></span>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead><tr><th>Datum</th><th>Protivnik</th><th>Vrsta</th><th>H/G</th><th>Rezultat</th><th>Ishod</th></tr></thead>
+            <tbody id="matchesBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Statistike ── -->
+    <div id="tab-statistike" class="tab-pane-custom">
+      <div class="row g-3">
+        <div class="col-md-5">
+          <div class="card h-100">
+            <div class="card-header fw-semibold small py-2"><i class="bi bi-pie-chart me-2"></i>Bilans utakmica</div>
+            <div class="card-body d-flex align-items-center justify-content-center" style="min-height:260px">
+              <canvas id="resultChart" style="max-width:260px;max-height:260px"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-7">
+          <div class="card h-100">
+            <div class="card-header fw-semibold small py-2"><i class="bi bi-award me-2"></i>Strijelci selekcije</div>
+            <div class="table-responsive">
+              <table class="table table-hover mb-0">
+                <thead><tr><th>#</th><th>Igrač</th><th>Golovi</th><th>Asistencije</th><th>Utakmice</th><th>Žuti</th><th>Crveni</th></tr></thead>
+                <tbody id="scorersBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header fw-semibold small py-2"><i class="bi bi-bar-chart me-2"></i>Treninzi po mjesecu</div>
+            <div class="card-body" style="height:220px">
+              <canvas id="trainingsChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Uredi selekciju</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Naziv <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="editName">
+        </div>
+        <div class="mb-1">
+          <label class="form-label">Opis</label>
+          <input type="text" class="form-control" id="editDesc">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
+        <button class="btn btn-primary" onclick="saveEdit()">
+          <span id="editSpinner" class="spinner-border spinner-border-sm d-none me-1"></span>Spremi
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+const user = requireRole('super_admin', 'admin');
+setUserInfo(user); buildSidebar();
+
+const selId = new URLSearchParams(location.search).get('id');
+if (!selId) { window.location.href = 'list.html'; }
+
+let sel = null;
+let selMembers = [], selCoaches = [], allMembers = [], allCoaches = [];
+let allTrainings = [], allMatches = [], allStats = null;
+let resultChart = null, trainingsChart = null;
+let statsLoaded = false;
+
+async function loadAll() {
+  try {
+    [sel, selMembers, selCoaches, allMembers, allCoaches, allTrainings, allMatches] = await Promise.all([
+      apiGet('/selections/' + selId),
+      apiGet('/selections/' + selId + '/members'),
+      apiGet('/selections/' + selId + '/coaches'),
+      apiGet('/members'),
+      apiGet('/coaches'),
+      apiGet('/training?selection_id=' + selId),
+      apiGet('/matches?selection_id=' + selId),
+    ]);
+    renderHeader();
+    renderStatCards();
+    renderPregled();
+    renderMembers();
+    renderCoaches();
+    renderTrainings();
+    renderMatches();
+    populateAddDropdowns();
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+function renderHeader() {
+  document.title = sel.name + ' | Klavio';
+  document.getElementById('pageTitle').textContent = sel.name;
+  document.getElementById('selName').textContent = sel.name;
+  document.getElementById('selDesc').textContent = sel.description || '';
+}
+
+function renderStatCards() {
+  const total = parseInt(sel.match_count || 0);
+  document.getElementById('stMembers').textContent   = sel.member_count;
+  document.getElementById('stCoaches').textContent   = sel.coach_count;
+  document.getElementById('stTrainings').textContent = sel.training_count;
+  document.getElementById('stMatches').textContent   = total;
+  document.getElementById('stWins').textContent      = sel.win_count || 0;
+  document.getElementById('stDraws').textContent     = sel.draw_count || 0;
+  document.getElementById('stLosses').textContent    = sel.loss_count || 0;
+  document.getElementById('badgeM').textContent      = selMembers.length;
+  document.getElementById('badgeC').textContent      = selCoaches.length;
+}
+
+function renderPregled() {
+  const recent = [...allMatches].sort((a,b) => new Date(b.match_date) - new Date(a.match_date)).slice(0, 5);
+  const rEl = document.getElementById('recentMatchesList');
+  if (!recent.length) {
+    rEl.innerHTML = '<div class="list-group-item text-center text-muted small py-3">Nema odigranih utakmica</div>';
+  } else {
+    rEl.innerHTML = recent.map(m => {
+      const score = (m.goals_for != null && m.goals_against != null) ? `${m.goals_for}:${m.goals_against}` : '-';
+      const res = m.result === 'win' ? 'result-win' : m.result === 'draw' ? 'result-draw' : m.result === 'loss' ? 'result-loss' : 'result-pend';
+      const resLabel = { win:'P', draw:'N', loss:'I', pending:'?' }[m.result] || '?';
+      return `<div class="list-group-item d-flex justify-content-between align-items-center py-2">
+        <div>
+          <div class="fw-semibold small">${m.opponent}</div>
+          <div class="text-muted" style="font-size:0.72rem">${formatDate(m.match_date)} · ${matchTypeBadge(m.match_type)}</div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <span class="fw-bold small">${score}</span>
+          <span class="match-row-result ${res}">${resLabel}</span>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  const today = new Date().toISOString().slice(0,10);
+  const upcoming = allTrainings.filter(t => (t.session_date||'').slice(0,10) >= today && t.status !== 'cancelled')
+    .sort((a,b) => new Date(a.session_date) - new Date(b.session_date)).slice(0, 5);
+  const tEl = document.getElementById('upcomingTrainingsList');
+  if (!upcoming.length) {
+    tEl.innerHTML = '<div class="list-group-item text-center text-muted small py-3">Nema zakazanih treninga</div>';
+  } else {
+    tEl.innerHTML = upcoming.map(t => `
+      <div class="list-group-item py-2">
+        <div class="fw-semibold small">${t.title}</div>
+        <div class="text-muted" style="font-size:0.72rem">${formatDate(t.session_date)} · ${t.start_time ? t.start_time.slice(0,5) : '-'}${t.location ? ' · ' + t.location : ''}</div>
+      </div>`).join('');
+  }
+}
+
+function renderMembers() {
+  const q = (document.getElementById('mSearch').value || '').toLowerCase();
+  const rows = selMembers.filter(m =>
+    !q || m.name.toLowerCase().includes(q) || (m.membership_number||'').toLowerCase().includes(q)
+  );
+  document.getElementById('membersBody').innerHTML = rows.length
+    ? rows.map((m, i) => `
+      <tr>
+        <td class="text-muted small">${i + 1}</td>
+        <td>
+          <a href="../members/detail.html?id=${m.id}" class="fw-semibold text-decoration-none">${m.name}</a>
+          <div class="text-muted" style="font-size:0.72rem">${m.membership_number || '-'}</div>
+        </td>
+        <td>${m.jersey_number ? `<code>#${m.jersey_number}</code>` : '-'}</td>
+        <td>${m.position || '-'}</td>
+        <td>${statusBadge(m.status)}</td>
+        <td><button class="btn btn-sm btn-outline-danger" onclick="removeMember(${m.id})"><i class="bi bi-x-lg"></i></button></td>
+      </tr>`).join('')
+    : `<tr><td colspan="6" class="text-center text-muted py-4"><i class="bi bi-people fs-3 d-block mb-2"></i>Nema igrača</td></tr>`;
+}
+
+function renderCoaches() {
+  document.getElementById('coachesBody').innerHTML = selCoaches.length
+    ? selCoaches.map(c => `
+      <tr>
+        <td class="fw-semibold">${c.name}</td>
+        <td>${c.specialization || '-'}</td>
+        <td class="text-muted small">${c.email || '-'}</td>
+        <td class="text-muted small">${c.phone || '-'}</td>
+        <td><button class="btn btn-sm btn-outline-danger" onclick="removeCoach(${c.id})"><i class="bi bi-x-lg"></i></button></td>
+      </tr>`).join('')
+    : `<tr><td colspan="5" class="text-center text-muted py-4"><i class="bi bi-person-badge fs-3 d-block mb-2"></i>Nema trenera</td></tr>`;
+}
+
+function filteredTrainings() {
+  const q  = (document.getElementById('tSearch').value || '').toLowerCase();
+  const st = document.getElementById('tStatus').value;
+  const fr = document.getElementById('tFrom').value;
+  const to = document.getElementById('tTo').value;
+  return allTrainings.filter(t => {
+    const d = (t.session_date || '').slice(0,10);
+    return (!q || (t.title||'').toLowerCase().includes(q) || (t.coach_name||'').toLowerCase().includes(q)) &&
+      (!st || t.status === st) && (!fr || d >= fr) && (!to || d <= to);
+  });
+}
+
+function renderTrainings() {
+  const rows = filteredTrainings();
+  document.getElementById('trainingCount').textContent = rows.length + ' treninga';
+  document.getElementById('trainingsBody').innerHTML = rows.length
+    ? rows.map(t => `
+      <tr>
+        <td>${formatDate(t.session_date)}</td>
+        <td class="fw-semibold">${t.title}</td>
+        <td>${t.coach_name || '-'}</td>
+        <td>${t.location || '-'}</td>
+        <td>${trainingStatusBadge(t.status)}</td>
+        <td class="text-muted small">${t.participant_count || 0} / ${t.max_participants || '-'}</td>
+      </tr>`).join('')
+    : `<tr><td colspan="6" class="text-center text-muted py-4"><i class="bi bi-calendar3 fs-3 d-block mb-2"></i>Nema treninga</td></tr>`;
+}
+
+function filteredMatches() {
+  const q  = (document.getElementById('mfSearch').value || '').toLowerCase();
+  const re = document.getElementById('mfResult').value;
+  const tp = document.getElementById('mfType').value;
+  const fr = document.getElementById('mfFrom').value;
+  const to = document.getElementById('mfTo').value;
+  return allMatches.filter(m => {
+    const d = (m.match_date || '').slice(0,10);
+    return (!q || (m.opponent||'').toLowerCase().includes(q)) &&
+      (!re || m.result === re) && (!tp || m.match_type === tp) &&
+      (!fr || d >= fr) && (!to || d <= to);
+  });
+}
+
+function renderMatches() {
+  const rows = filteredMatches();
+  document.getElementById('matchCount').textContent = rows.length + ' utakmica';
+  document.getElementById('matchesBody').innerHTML = rows.length
+    ? rows.map(m => {
+        const score = (m.goals_for != null && m.goals_against != null) ? `${m.goals_for}:${m.goals_against}` : '-';
+        const haLabel = { home:'Domaćin', away:'Gost', neutral:'Neutral' }[m.home_away] || m.home_away;
+        return `<tr>
+          <td class="text-muted small">${formatDate(m.match_date)}</td>
+          <td class="fw-semibold">${m.opponent}</td>
+          <td>${matchTypeBadge(m.match_type)}</td>
+          <td class="text-muted small">${haLabel}</td>
+          <td class="fw-bold">${score}</td>
+          <td>${matchResultBadge(m.result)}</td>
+        </tr>`;
+      }).join('')
+    : `<tr><td colspan="6" class="text-center text-muted py-4"><i class="bi bi-trophy fs-3 d-block mb-2"></i>Nema utakmica</td></tr>`;
+}
+
+function resetTFilters() {
+  ['tSearch','tFrom','tTo'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('tStatus').value = '';
+  renderTrainings();
+}
+
+function resetMFilters() {
+  ['mfSearch','mfFrom','mfTo'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('mfResult').value = '';
+  document.getElementById('mfType').value = '';
+  renderMatches();
+}
+
+function populateAddDropdowns() {
+  const assignedM = new Set(selMembers.map(m => m.id));
+  const assignedC = new Set(selCoaches.map(c => c.id));
+  document.getElementById('addMemberSelect').innerHTML =
+    '<option value="">- Odaberi igrača -</option>' +
+    allMembers.filter(m => !assignedM.has(m.id)).map(m =>
+      `<option value="${m.id}">${m.name}${m.selection_id ? ' (druga selekcija)' : ''}</option>`).join('');
+  document.getElementById('addCoachSelect').innerHTML =
+    '<option value="">- Odaberi trenera -</option>' +
+    allCoaches.filter(c => !assignedC.has(c.id)).map(c =>
+      `<option value="${c.id}">${c.name}${c.selection_id ? ' (druga selekcija)' : ''}</option>`).join('');
+}
+
+async function addMember() {
+  const id = document.getElementById('addMemberSelect').value;
+  if (!id) { showToast('Odaberite igrača', 'error'); return; }
+  try {
+    await apiPost('/selections/' + selId + '/members', { member_id: id });
+    showToast('Igrač dodat', 'success');
+    [sel, selMembers, allMembers] = await Promise.all([
+      apiGet('/selections/' + selId),
+      apiGet('/selections/' + selId + '/members'),
+      apiGet('/members')
+    ]);
+    renderStatCards();
+    renderMembers();
+    populateAddDropdowns();
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function removeMember(memberId) {
+  try {
+    await apiDelete('/selections/' + selId + '/members/' + memberId);
+    showToast('Igrač uklonjen', 'success');
+    [sel, selMembers, allMembers] = await Promise.all([
+      apiGet('/selections/' + selId),
+      apiGet('/selections/' + selId + '/members'),
+      apiGet('/members')
+    ]);
+    renderStatCards();
+    renderMembers();
+    populateAddDropdowns();
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function addCoach() {
+  const id = document.getElementById('addCoachSelect').value;
+  if (!id) { showToast('Odaberite trenera', 'error'); return; }
+  try {
+    await apiPost('/selections/' + selId + '/coaches', { coach_id: id });
+    showToast('Trener dodat', 'success');
+    [sel, selCoaches, allCoaches] = await Promise.all([
+      apiGet('/selections/' + selId),
+      apiGet('/selections/' + selId + '/coaches'),
+      apiGet('/coaches')
+    ]);
+    renderStatCards();
+    renderCoaches();
+    populateAddDropdowns();
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function removeCoach(coachId) {
+  try {
+    await apiDelete('/selections/' + selId + '/coaches/' + coachId);
+    showToast('Trener uklonjen', 'success');
+    [sel, selCoaches, allCoaches] = await Promise.all([
+      apiGet('/selections/' + selId),
+      apiGet('/selections/' + selId + '/coaches'),
+      apiGet('/coaches')
+    ]);
+    renderStatCards();
+    renderCoaches();
+    populateAddDropdowns();
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function loadStats() {
+  if (statsLoaded) return;
+  statsLoaded = true;
+  try {
+    allStats = await apiGet('/stats');
+    renderResultChart();
+    renderScorers();
+    renderTrainingsChart();
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+function renderResultChart() {
+  const wins   = parseInt(sel.win_count  || 0);
+  const draws  = parseInt(sel.draw_count || 0);
+  const losses = parseInt(sel.loss_count || 0);
+  const ctx = document.getElementById('resultChart');
+  if (resultChart) resultChart.destroy();
+  if (wins + draws + losses === 0) {
+    ctx.parentElement.innerHTML = '<p class="text-center text-muted py-5">Nema odigranih utakmica</p>';
+    return;
+  }
+  resultChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Pobjede', 'Nerješeno', 'Porazi'],
+      datasets: [{ data: [wins, draws, losses], backgroundColor: ['#22c55e','#eab308','#ef4444'], borderWidth: 2, borderColor: '#fff' }]
+    },
+    options: { responsive:true, maintainAspectRatio:true, plugins:{ legend:{ position:'bottom' } } }
+  });
+}
+
+function renderScorers() {
+  const memberIds = new Set(selMembers.map(m => m.id));
+  const scorers = (allStats.topScorers || []).filter(s => memberIds.has(s.member_id));
+  document.getElementById('scorersBody').innerHTML = scorers.length
+    ? scorers.map((s, i) => `
+      <tr>
+        <td class="text-muted small">${i + 1}</td>
+        <td class="fw-semibold">${s.name}</td>
+        <td><span class="badge bg-success">${s.goals}</span></td>
+        <td>${s.assists}</td>
+        <td class="text-muted small">${s.matches}</td>
+        <td>${s.yellow_cards > 0 ? `<span class="badge" style="background:#eab308">${s.yellow_cards}</span>` : '-'}</td>
+        <td>${s.red_cards > 0 ? `<span class="badge bg-danger">${s.red_cards}</span>` : '-'}</td>
+      </tr>`).join('')
+    : `<tr><td colspan="7" class="text-center text-muted py-4">Nema podataka o statistikama</td></tr>`;
+}
+
+function renderTrainingsChart() {
+  const counts = {};
+  allTrainings.forEach(t => {
+    const m = (t.session_date || '').slice(0,7);
+    if (m) counts[m] = (counts[m] || 0) + 1;
+  });
+  const labels = Object.keys(counts).sort().slice(-12);
+  const data = labels.map(l => counts[l]);
+  const ctx = document.getElementById('trainingsChart');
+  if (trainingsChart) trainingsChart.destroy();
+  if (!labels.length) {
+    ctx.parentElement.innerHTML = '<p class="text-center text-muted py-4">Nema podataka</p>';
+    return;
+  }
+  trainingsChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels.map(l => { const [y,m] = l.split('-'); return ['Jan','Feb','Mar','Apr','Maj','Jun','Jul','Aug','Sep','Okt','Nov','Dec'][parseInt(m)-1]+' '+y; }),
+      datasets: [{ label:'Treninzi', data, backgroundColor:'rgba(99,102,241,0.7)', borderRadius:5 }]
+    },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, ticks:{ stepSize:1 } } } }
+  });
+}
+
+function matchTypeBadge(type) {
+  const map = { league:'<span class="badge bg-primary">Liga</span>', cup:'<span class="badge bg-warning text-dark">Kup</span>', friendly:'<span class="badge bg-secondary">Prijateljska</span>' };
+  return map[type] || `<span class="badge bg-secondary">${type||'-'}</span>`;
+}
+
+function matchResultBadge(result) {
+  const map = {
+    win:     '<span class="badge bg-success">Pobjeda</span>',
+    draw:    '<span class="badge bg-warning text-dark">Nerješeno</span>',
+    loss:    '<span class="badge bg-danger">Poraz</span>',
+    pending: '<span class="badge bg-secondary">Na čekanju</span>'
+  };
+  return map[result] || '<span class="badge bg-secondary">-</span>';
+}
+
+function trainingStatusBadge(status) {
+  const map = {
+    scheduled:  '<span class="badge bg-primary">Zakazan</span>',
+    completed:  '<span class="badge bg-success">Završen</span>',
+    cancelled:  '<span class="badge bg-danger">Otkazan</span>'
+  };
+  return map[status] || `<span class="badge bg-secondary">${status||'-'}</span>`;
+}
+
+function showTab(tab) {
+  document.querySelectorAll('.tab-pane-custom').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelectorAll('#mainTabs .nav-link').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  if (tab === 'statistike') loadStats();
+}
+
+function openEdit() {
+  document.getElementById('editName').value = sel.name;
+  document.getElementById('editDesc').value = sel.description || '';
+  (bootstrap.Modal.getInstance(document.getElementById('editModal')) || new bootstrap.Modal(document.getElementById('editModal'))).show();
+}
+
+async function saveEdit() {
+  const name = document.getElementById('editName').value.trim();
+  const description = document.getElementById('editDesc').value.trim();
+  if (!name) { showToast('Naziv je obavezan', 'error'); return; }
+  const spinner = document.getElementById('editSpinner');
+  spinner.classList.remove('d-none');
+  try {
+    await apiPut('/selections/' + selId, { name, description });
+    sel.name = name; sel.description = description;
+    renderHeader();
+    bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+    showToast('Selekcija ažurirana', 'success');
+  } catch(e) { showToast(e.message, 'error'); }
+  finally { spinner.classList.add('d-none'); }
+}
+
+loadAll();
+</script>
+</body>
+</html>

@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Postava | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+  <style>
+    /* ═══════════════════════════════════════════
+       PITCH
+    ═══════════════════════════════════════════ */
+    .pitch-wrap {
+      position: relative;
+      width: 100%;
+      padding-bottom: 62%;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(0,0,0,0.32), 0 2px 8px rgba(0,0,0,0.14);
+    }
+    .pitch {
+      position: absolute;
+      inset: 0;
+      background-color: #1a7a30;
+      background-image:
+        repeating-linear-gradient(
+          180deg,
+          transparent 0%, transparent 10%,
+          rgba(0,0,0,0.07) 10%, rgba(0,0,0,0.07) 20%
+        );
+    }
+    /* radial vignette for depth */
+    .pitch::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 50%, transparent 45%, rgba(0,0,0,0.28) 100%);
+      pointer-events: none;
+    }
+    .pitch-svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    /* Direction labels */
+    .pitch-label {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.38);
+      pointer-events: none;
+      z-index: 5;
+    }
+    .pitch-label.top { top: 5px; }
+    .pitch-label.bot { bottom: 5px; }
+    #pitchSlots {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+    }
+
+    /* ═══════════════════════════════════════════
+       SLOT TOKENS
+    ═══════════════════════════════════════════ */
+    :root { --sz: 46px; }
+    @media (max-width: 992px) { :root { --sz: 40px; } }
+    @media (max-width: 768px) { :root { --sz: 34px; } }
+    @media (max-width: 480px) { :root { --sz: 28px; } }
+
+    .field-slot {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      z-index: 10;
+    }
+    .slot-token {
+      width: var(--sz);
+      height: var(--sz);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: calc(var(--sz) * 0.34);
+      font-weight: 800;
+      transition: transform 0.15s, box-shadow 0.15s;
+      position: relative;
+      line-height: 1;
+    }
+    /* Empty slot */
+    .field-slot.empty .slot-token {
+      background: rgba(255,255,255,0.1);
+      border: 2px dashed rgba(255,255,255,0.55);
+      color: rgba(255,255,255,0.7);
+      font-size: calc(var(--sz) * 0.42);
+      backdrop-filter: blur(1px);
+    }
+    .field-slot.empty:hover .slot-token {
+      background: rgba(255,255,255,0.22);
+      border-color: rgba(255,255,255,0.85);
+      transform: scale(1.12);
+    }
+    /* Filled slot - outfield player */
+    .field-slot.filled .slot-token {
+      background: linear-gradient(145deg, #3b82f6, #1d4ed8);
+      border: 2.5px solid rgba(255,255,255,0.6);
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(29,78,216,0.55), 0 2px 6px rgba(0,0,0,0.3);
+    }
+    .field-slot.filled:hover .slot-token {
+      transform: scale(1.12);
+      box-shadow: 0 6px 20px rgba(29,78,216,0.65), 0 2px 8px rgba(0,0,0,0.35);
+    }
+    /* GK */
+    .field-slot.gk .slot-token {
+      background: linear-gradient(145deg, #f59e0b, #d97706) !important;
+      border-color: rgba(255,255,255,0.55) !important;
+      box-shadow: 0 4px 16px rgba(217,119,6,0.55), 0 2px 6px rgba(0,0,0,0.3) !important;
+    }
+    /* Active / selected */
+    .field-slot.active .slot-token {
+      box-shadow:
+        0 0 0 3px #fff,
+        0 0 0 6px rgba(99,179,237,0.75),
+        0 4px 20px rgba(0,0,0,0.4) !important;
+      transform: scale(1.18) !important;
+      animation: pulse-slot 1.6s ease-in-out infinite;
+    }
+    @keyframes pulse-slot {
+      0%,100% { box-shadow: 0 0 0 3px #fff, 0 0 0 6px rgba(99,179,237,0.75), 0 4px 20px rgba(0,0,0,0.4); }
+      50%      { box-shadow: 0 0 0 3px #fff, 0 0 0 10px rgba(99,179,237,0.35), 0 4px 20px rgba(0,0,0,0.4); }
+    }
+    /* Fill pop animation */
+    @keyframes just-filled {
+      0%   { transform: scale(1.35); }
+      60%  { transform: scale(0.95); }
+      100% { transform: scale(1); }
+    }
+    .field-slot.just-filled .slot-token { animation: just-filled 0.35s ease; }
+
+    /* Remove button */
+    .slot-remove-btn {
+      position: absolute;
+      top: -5px; right: -5px;
+      width: 18px; height: 18px;
+      background: #ef4444;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 900;
+      color: #fff;
+      cursor: pointer;
+      z-index: 20;
+      line-height: 1;
+    }
+    .field-slot.filled:hover .slot-remove-btn,
+    .field-slot.filled:focus-within .slot-remove-btn { display: flex; }
+
+    /* Name + position labels */
+    .slot-pill {
+      margin-top: 4px;
+      padding: 1px 6px;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(4px);
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.14);
+      max-width: calc(var(--sz) * 1.9);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: center;
+    }
+    .slot-name {
+      font-size: calc(var(--sz) * 0.22);
+      color: rgba(255,255,255,0.96);
+      font-weight: 600;
+      display: block;
+      line-height: 1.2;
+    }
+    .slot-pos {
+      font-size: calc(var(--sz) * 0.18);
+      color: rgba(255,255,255,0.62);
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      display: block;
+      line-height: 1.1;
+    }
+    .slot-pos-only {
+      margin-top: 4px;
+      font-size: calc(var(--sz) * 0.19);
+      color: rgba(255,255,255,0.58);
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* ═══════════════════════════════════════════
+       BENCH
+    ═══════════════════════════════════════════ */
+    .bench-card {
+      background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+      border-radius: 14px;
+      border: 1px solid #e2e8f0;
+      overflow: hidden;
+    }
+    [data-theme="dark"] .bench-card {
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      border-color: #334155;
+    }
+    .bench-header {
+      padding: 10px 16px;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    [data-theme="dark"] .bench-header { border-color: rgba(255,255,255,0.07); }
+    .bench-body { padding: 14px 16px; }
+    .bench-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-start; }
+    .bench-slot {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      gap: 3px;
+    }
+    .bench-token {
+      width: 50px; height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      font-weight: 800;
+      position: relative;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .bench-num-badge {
+      position: absolute;
+      bottom: -1px; left: -1px;
+      width: 16px; height: 16px;
+      background: #64748b;
+      border: 1.5px solid #fff;
+      border-radius: 50%;
+      font-size: 0.6rem;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .bench-slot.empty .bench-token {
+      background: #fff;
+      border: 2px dashed #cbd5e1;
+      color: #94a3b8;
+      font-size: 1.1rem;
+    }
+    [data-theme="dark"] .bench-slot.empty .bench-token {
+      background: #0f172a;
+      border-color: #334155;
+    }
+    .bench-slot.empty:hover .bench-token {
+      background: #f1f5f9;
+      border-color: #94a3b8;
+      transform: scale(1.06);
+    }
+    [data-theme="dark"] .bench-slot.empty:hover .bench-token { background: #1e293b; }
+    .bench-slot.filled .bench-token {
+      background: linear-gradient(145deg, #64748b, #475569);
+      border: 2.5px solid rgba(255,255,255,0.7);
+      color: #fff;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.18);
+    }
+    .bench-slot.filled:hover .bench-token {
+      transform: scale(1.08);
+      box-shadow: 0 5px 14px rgba(0,0,0,0.25);
+    }
+    .bench-slot.active .bench-token {
+      box-shadow: 0 0 0 3px #3b82f6, 0 0 0 6px rgba(59,130,246,0.3) !important;
+      animation: pulse-bench 1.6s ease-in-out infinite;
+    }
+    @keyframes pulse-bench {
+      0%,100% { box-shadow: 0 0 0 3px #3b82f6, 0 0 0 6px rgba(59,130,246,0.3); }
+      50%      { box-shadow: 0 0 0 3px #3b82f6, 0 0 0 10px rgba(59,130,246,0.12); }
+    }
+    .bench-remove-btn {
+      position: absolute;
+      top: -5px; right: -5px;
+      width: 17px; height: 17px;
+      background: #ef4444;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+      font-weight: 900;
+      color: #fff;
+      cursor: pointer;
+      z-index: 5;
+    }
+    .bench-slot.filled:hover .bench-remove-btn { display: flex; }
+    .bench-label {
+      font-size: 0.62rem;
+      color: #64748b;
+      max-width: 54px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: center;
+      font-weight: 500;
+      line-height: 1.2;
+    }
+    [data-theme="dark"] .bench-label { color: #94a3b8; }
+
+    /* ═══════════════════════════════════════════
+       PLAYER PICKER POPUP
+    ═══════════════════════════════════════════ */
+    .player-picker {
+      position: fixed;
+      z-index: 9999;
+      width: 270px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 16px 48px rgba(0,0,0,0.22), 0 4px 12px rgba(0,0,0,0.1);
+      border: 1px solid rgba(0,0,0,0.07);
+      overflow: hidden;
+      display: none;
+      animation: picker-in 0.18s ease;
+    }
+    @keyframes picker-in {
+      from { opacity: 0; transform: scale(0.94) translateY(-6px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    [data-theme="dark"] .player-picker { background: #1e293b; border-color: rgba(255,255,255,0.1); }
+    .pp-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 11px 14px 9px;
+      background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+    [data-theme="dark"] .pp-header {
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      border-color: rgba(255,255,255,0.07);
+    }
+    .pp-header-left { display: flex; flex-direction: column; }
+    .pp-title { font-size: 0.76rem; font-weight: 700; color: #374151; line-height: 1.2; }
+    [data-theme="dark"] .pp-title { color: #e2e8f0; }
+    .pp-subtitle { font-size: 0.67rem; color: #94a3b8; font-weight: 500; margin-top: 1px; }
+    .pp-pos-tag {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: #1d4ed8;
+      color: #fff;
+      padding: 2px 7px;
+      border-radius: 20px;
+      flex-shrink: 0;
+    }
+    .pp-close {
+      background: rgba(0,0,0,0.07); border: none; cursor: pointer;
+      width: 22px; height: 22px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem; color: #64748b;
+      transition: background 0.12s, color 0.12s;
+    }
+    .pp-close:hover { background: #fecaca; color: #ef4444; }
+    .pp-search-wrap {
+      position: relative;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+    [data-theme="dark"] .pp-search-wrap { border-color: rgba(255,255,255,0.07); }
+    .pp-search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #94a3b8;
+      font-size: 0.78rem;
+      pointer-events: none;
+    }
+    .pp-search {
+      width: 100%; padding: 8px 12px 8px 32px;
+      border: none;
+      font-size: 0.82rem; outline: none; background: transparent;
+      color: inherit;
+    }
+    .pp-list { max-height: 240px; overflow-y: auto; }
+    .pp-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 14px;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(0,0,0,0.04);
+      transition: background 0.1s;
+    }
+    .pp-item:last-child { border-bottom: none; }
+    .pp-item:hover { background: #eff6ff; }
+    [data-theme="dark"] .pp-item:hover { background: #334155; }
+    .pp-num {
+      width: 28px; height: 28px;
+      background: linear-gradient(145deg, #3b82f6, #1d4ed8);
+      border-radius: 50%;
+      font-size: 0.72rem; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; color: #fff;
+    }
+    .pp-info { flex: 1; min-width: 0; }
+    .pp-name { font-size: 0.83rem; font-weight: 600; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    [data-theme="dark"] .pp-name { color: #e2e8f0; }
+    .pp-pos {
+      font-size: 0.67rem; color: #94a3b8; font-weight: 500;
+      background: #f1f5f9; padding: 1px 6px; border-radius: 20px;
+      display: inline-block; margin-top: 2px;
+    }
+    [data-theme="dark"] .pp-pos { background: #0f172a; }
+    .pp-empty { padding: 20px; text-align: center; color: #94a3b8; font-size: 0.82rem; }
+
+    /* ═══════════════════════════════════════════
+       AVAILABLE PLAYERS PANEL
+    ═══════════════════════════════════════════ */
+    .avail-list { max-height: 500px; overflow-y: auto; }
+    .avail-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 14px;
+      border-bottom: 1px solid rgba(0,0,0,0.04);
+      transition: background 0.1s;
+    }
+    .avail-item:last-child { border-bottom: none; }
+    .avail-item:hover { background: #f8fafc; }
+    [data-theme="dark"] .avail-item:hover { background: #1e293b; }
+    .av-num {
+      width: 32px; height: 32px;
+      background: linear-gradient(145deg, #475569, #334155);
+      border-radius: 50%;
+      font-size: 0.75rem; font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; color: #fff;
+    }
+    .av-info { flex: 1; min-width: 0; }
+    .av-name { font-size: 0.85rem; font-weight: 600; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    [data-theme="dark"] .av-name { color: #e2e8f0; }
+    .av-pos {
+      font-size: 0.67rem; color: #64748b;
+      background: #f1f5f9;
+      padding: 1px 6px; border-radius: 20px;
+      display: inline-block; margin-top: 2px; font-weight: 500;
+    }
+    [data-theme="dark"] .av-pos { background: #0f172a; color: #94a3b8; }
+    .av-btns { display: flex; gap: 4px; flex-shrink: 0; }
+    .av-btn {
+      width: 30px; height: 30px;
+      border-radius: 8px; cursor: pointer;
+      border: 1.5px solid;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.78rem;
+      transition: all 0.12s;
+    }
+    .av-btn-field {
+      background: #eff6ff; border-color: #bfdbfe; color: #1d4ed8;
+    }
+    .av-btn-field:hover { background: #dbeafe; border-color: #3b82f6; }
+    .av-btn-bench {
+      background: #f8fafc; border-color: #cbd5e1; color: #64748b;
+    }
+    .av-btn-bench:hover { background: #e2e8f0; border-color: #94a3b8; }
+
+    /* ═══════════════════════════════════════════
+       FORMATION BUTTONS
+    ═══════════════════════════════════════════ */
+    .formation-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+    .fm-btn {
+      padding: 5px 12px; border-radius: 20px;
+      font-size: 0.78rem; font-weight: 700;
+      cursor: pointer; border: 1.5px solid #e2e8f0;
+      background: #fff; color: #64748b;
+      transition: all 0.14s; line-height: 1.4;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .fm-btn:hover { background: #f8fafc; border-color: #94a3b8; color: #334155; }
+    .fm-btn.active {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      border-color: transparent;
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(37,99,235,0.35);
+    }
+    [data-theme="dark"] .fm-btn { background: #1e293b; border-color: #334155; color: #94a3b8; }
+    [data-theme="dark"] .fm-btn:hover { background: #334155; border-color: #475569; color: #cbd5e1; }
+    [data-theme="dark"] .fm-btn.active { background: linear-gradient(135deg, #2563eb, #1d4ed8); border-color: transparent; color: #fff; }
+
+    /* ═══════════════════════════════════════════
+       MATCH SELECTOR CARD
+    ═══════════════════════════════════════════ */
+    .ctrl-card {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+    }
+    [data-theme="dark"] .ctrl-card { background: #1e293b; border-color: #334155; }
+    .ctrl-card-body { padding: 16px 20px; }
+
+    /* ═══════════════════════════════════════════
+       PITCH CARD
+    ═══════════════════════════════════════════ */
+    .pitch-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    }
+    [data-theme="dark"] .pitch-card { border-color: #334155; }
+    .pitch-card-header {
+      padding: 12px 16px;
+      background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    [data-theme="dark"] .pitch-card-header { background: linear-gradient(135deg, #1e293b, #0f172a); border-color: #334155; }
+    .pitch-card-body { padding: 10px; background: #e5e7eb; }
+    [data-theme="dark"] .pitch-card-body { background: #0f172a; }
+
+    /* ═══════════════════════════════════════════
+       SAVE BUTTON
+    ═══════════════════════════════════════════ */
+    .btn-save-lineup {
+      background: linear-gradient(135deg, #16a34a, #15803d);
+      border: none;
+      color: #fff;
+      font-weight: 700;
+      padding: 10px 28px;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      box-shadow: 0 4px 16px rgba(22,163,74,0.3);
+      transition: transform 0.12s, box-shadow 0.12s;
+    }
+    .btn-save-lineup:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(22,163,74,0.4);
+      color: #fff;
+    }
+    .btn-save-lineup:active { transform: translateY(0); }
+    .btn-save-lineup:disabled { opacity: 0.65; transform: none; }
+
+    /* ═══════════════════════════════════════════
+       MISC
+    ═══════════════════════════════════════════ */
+    #noMatchMsg {
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: center; padding: 5rem 1rem;
+      color: #94a3b8; text-align: center;
+    }
+    #noMatchMsg .nomatch-icon {
+      width: 80px; height: 80px; border-radius: 50%;
+      background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.4rem; color: #94a3b8; margin-bottom: 1.2rem;
+    }
+    [data-theme="dark"] #noMatchMsg .nomatch-icon { background: linear-gradient(135deg, #1e293b, #0f172a); }
+    .starter-badge { transition: background 0.2s; font-size: 0.78rem; }
+    .avail-hint {
+      background: linear-gradient(135deg, #eff6ff, #dbeafe);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 0.75rem;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+    }
+    [data-theme="dark"] .avail-hint {
+      background: linear-gradient(135deg, #1e3a5f, #1e293b);
+      border-color: #1d4ed8;
+      color: #93c5fd;
+    }
+  </style>
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Postava</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-primary" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+  <div class="page-body">
+
+    <!-- Control row: match + formation -->
+    <div class="ctrl-card mb-3">
+      <div class="ctrl-card-body">
+        <div class="row g-3 align-items-end">
+          <div class="col-md-5">
+            <label class="form-label fw-semibold small mb-1 text-muted text-uppercase" style="font-size:0.7rem;letter-spacing:0.06em">Utakmica</label>
+            <select class="form-select" id="matchSelect" onchange="onMatchChange()">
+              <option value="">- Odaberi utakmicu -</option>
+            </select>
+          </div>
+          <div class="col-md-7">
+            <label class="form-label fw-semibold small mb-1 text-muted text-uppercase" style="font-size:0.7rem;letter-spacing:0.06em">Formacija</label>
+            <div class="formation-btns" id="formationBtns"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty state -->
+    <div id="noMatchMsg">
+      <div class="nomatch-icon">
+        <i class="bi bi-grid-3x3-gap"></i>
+      </div>
+      <p class="fw-bold fs-5 mb-1" style="color:#475569">Odaberi utakmicu</p>
+      <p class="small mb-0">Odaberi utakmicu iz padajućeg menija da počneš graditi postavu</p>
+    </div>
+
+    <!-- Lineup layout -->
+    <div id="lineupLayout" style="display:none">
+      <div class="row g-3">
+
+        <!-- LEFT: Pitch + bench + save -->
+        <div class="col-xl-8">
+
+          <!-- Pitch -->
+          <div class="pitch-card mb-3">
+            <div class="pitch-card-header">
+              <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-grid-3x3-gap text-success" style="font-size:1rem"></i>
+                <span class="fw-bold small">
+                  Teren &mdash; <span id="formationLabel" class="text-primary">4-4-2</span>
+                </span>
+              </div>
+              <span class="badge starter-badge" id="starterBadge">0 / 11</span>
+            </div>
+            <div class="pitch-card-body">
+              <div class="pitch-wrap">
+                <div class="pitch">
+                  <!-- Direction labels -->
+                  <span class="pitch-label top">Napad &#9650;</span>
+                  <span class="pitch-label bot">&#9660; Odbrana</span>
+                  <!-- Field markings SVG -->
+                  <svg class="pitch-svg" viewBox="0 0 100 65" preserveAspectRatio="none">
+                    <!-- Halfway line -->
+                    <line x1="0" y1="32.5" x2="100" y2="32.5" stroke="rgba(255,255,255,0.32)" stroke-width="0.4"/>
+                    <!-- Centre circle -->
+                    <circle cx="50" cy="32.5" r="9.5" stroke="rgba(255,255,255,0.3)" stroke-width="0.4" fill="none"/>
+                    <circle cx="50" cy="32.5" r="0.9" fill="rgba(255,255,255,0.5)"/>
+                    <!-- Penalty area top -->
+                    <rect x="28" y="0" width="44" height="15" stroke="rgba(255,255,255,0.3)" stroke-width="0.4" fill="none"/>
+                    <!-- Goal area top -->
+                    <rect x="38" y="0" width="24" height="5.5" stroke="rgba(255,255,255,0.25)" stroke-width="0.4" fill="none"/>
+                    <!-- Penalty spot top -->
+                    <circle cx="50" cy="10.5" r="0.7" fill="rgba(255,255,255,0.45)"/>
+                    <!-- Penalty arc top -->
+                    <path d="M 38 15 A 10 10 0 0 1 62 15" stroke="rgba(255,255,255,0.22)" stroke-width="0.4" fill="none"/>
+                    <!-- Goal top -->
+                    <rect x="40" y="0" width="20" height="2.5" stroke="rgba(255,255,255,0.6)" stroke-width="0.4" fill="rgba(255,255,255,0.1)" rx="0.3"/>
+                    <!-- Penalty area bottom -->
+                    <rect x="28" y="50" width="44" height="15" stroke="rgba(255,255,255,0.3)" stroke-width="0.4" fill="none"/>
+                    <!-- Goal area bottom -->
+                    <rect x="38" y="59.5" width="24" height="5.5" stroke="rgba(255,255,255,0.25)" stroke-width="0.4" fill="none"/>
+                    <!-- Penalty spot bottom -->
+                    <circle cx="50" cy="54.5" r="0.7" fill="rgba(255,255,255,0.45)"/>
+                    <!-- Penalty arc bottom -->
+                    <path d="M 38 50 A 10 10 0 0 0 62 50" stroke="rgba(255,255,255,0.22)" stroke-width="0.4" fill="none"/>
+                    <!-- Goal bottom -->
+                    <rect x="40" y="62.5" width="20" height="2.5" stroke="rgba(255,255,255,0.6)" stroke-width="0.4" fill="rgba(255,255,255,0.1)" rx="0.3"/>
+                    <!-- Corner arcs -->
+                    <path d="M 0 2.5 A 2.5 2.5 0 0 1 2.5 0"   stroke="rgba(255,255,255,0.22)" stroke-width="0.4" fill="none"/>
+                    <path d="M 97.5 0 A 2.5 2.5 0 0 1 100 2.5" stroke="rgba(255,255,255,0.22)" stroke-width="0.4" fill="none"/>
+                    <path d="M 100 62.5 A 2.5 2.5 0 0 1 97.5 65" stroke="rgba(255,255,255,0.22)" stroke-width="0.4" fill="none"/>
+                    <path d="M 2.5 65 A 2.5 2.5 0 0 1 0 62.5"   stroke="rgba(255,255,255,0.22)" stroke-width="0.4" fill="none"/>
+                  </svg>
+                  <div id="pitchSlots"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bench -->
+          <div class="bench-card mb-3">
+            <div class="bench-header">
+              <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-people text-secondary" style="font-size:0.95rem"></i>
+                <span class="fw-bold small">Klupa (zamjene)</span>
+              </div>
+              <span class="badge bg-secondary" id="benchBadge" style="font-size:0.75rem">0 / 7</span>
+            </div>
+            <div class="bench-body">
+              <div class="bench-row" id="benchRow"></div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <button class="btn btn-sm btn-outline-secondary" onclick="clearAll()" style="border-radius:8px">
+              <i class="bi bi-arrow-counterclockwise me-1"></i>Poništi sve
+            </button>
+            <button class="btn-save-lineup" onclick="saveLineup()" id="saveBtn">
+              <i class="bi bi-floppy me-2"></i>Spremi postavu
+            </button>
+          </div>
+        </div>
+
+        <!-- RIGHT: Available players -->
+        <div class="col-xl-4">
+          <div class="card" style="border-radius:14px;border:1px solid #e2e8f0;position:sticky;top:20px;overflow:hidden">
+            <div class="card-header d-flex justify-content-between align-items-center py-2" style="background:linear-gradient(135deg,#f8fafc,#f1f5f9);border-bottom:1px solid #e2e8f0">
+              <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-person-lines-fill text-primary" style="font-size:0.95rem"></i>
+                <span class="fw-bold small">Dostupni igrači</span>
+              </div>
+              <span class="badge bg-primary" id="availBadge" style="font-size:0.75rem">0</span>
+            </div>
+            <div class="p-2" style="border-bottom:1px solid #f1f5f9">
+              <div class="input-group input-group-sm">
+                <span class="input-group-text bg-white border-end-0" style="border-radius:8px 0 0 8px">
+                  <i class="bi bi-search text-muted" style="font-size:0.75rem"></i>
+                </span>
+                <input type="text" class="form-control border-start-0 ps-0" id="availSearch"
+                  placeholder="Pretraži igrača..." oninput="renderAvailable()"
+                  autocomplete="off" style="border-radius:0 8px 8px 0">
+              </div>
+            </div>
+            <div class="avail-list" id="availList">
+              <div class="avail-item sk-row"><div class="av-num"><div class="skeleton" style="height:13px;width:22px;border-radius:4px;"></div></div><div class="av-info"><div class="skeleton mb-1" style="height:13px;width:80%;"></div><div class="skeleton" style="height:11px;width:45%;"></div></div></div>
+              <div class="avail-item sk-row"><div class="av-num"><div class="skeleton" style="height:13px;width:22px;border-radius:4px;"></div></div><div class="av-info"><div class="skeleton mb-1" style="height:13px;width:70%;"></div><div class="skeleton" style="height:11px;width:55%;"></div></div></div>
+              <div class="avail-item sk-row"><div class="av-num"><div class="skeleton" style="height:13px;width:22px;border-radius:4px;"></div></div><div class="av-info"><div class="skeleton mb-1" style="height:13px;width:75%;"></div><div class="skeleton" style="height:11px;width:40%;"></div></div></div>
+            </div>
+          </div>
+          <div class="avail-hint mt-2">
+            <i class="bi bi-lightbulb-fill me-1"></i>
+            Klikni prazno mjesto na terenu ili klupi i odaberi igrača. Lebdi mišem iznad tokena da ga ukloniš.
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Player Picker Popup -->
+<div id="playerPicker" class="player-picker">
+  <div class="pp-header">
+    <div class="pp-header-left">
+      <span class="pp-title" id="ppTitle">Odaberi igrača</span>
+      <span class="pp-subtitle">za poziciju</span>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="pp-pos-tag" id="ppPosTag"></span>
+      <button class="pp-close" onclick="closePicker()"><i class="bi bi-x"></i></button>
+    </div>
+  </div>
+  <div class="pp-search-wrap">
+    <i class="bi bi-search pp-search-icon"></i>
+    <input type="text" class="pp-search" id="ppSearch" placeholder="Pretraži..." oninput="renderPickerList()" autocomplete="off">
+  </div>
+  <div class="pp-list" id="ppList"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+const user = requireRole('admin', 'super_admin', 'coach');
+setUserInfo(user); buildSidebar();
+
+/* ── Formations ──────────────────────────────────────────────── */
+const FORMATIONS = {
+  '4-4-2':   [[2,'FWD'],[4,'MID'],[4,'DEF'],[1,'GK']],
+  '4-3-3':   [[3,'FWD'],[3,'MID'],[4,'DEF'],[1,'GK']],
+  '4-5-1':   [[1,'FWD'],[5,'MID'],[4,'DEF'],[1,'GK']],
+  '4-2-3-1': [[1,'FWD'],[3,'AM'], [2,'DM'], [4,'DEF'],[1,'GK']],
+  '3-5-2':   [[2,'FWD'],[5,'MID'],[3,'DEF'],[1,'GK']],
+  '3-4-3':   [[3,'FWD'],[4,'MID'],[3,'DEF'],[1,'GK']],
+  '5-3-2':   [[2,'FWD'],[3,'MID'],[5,'DEF'],[1,'GK']],
+  '5-4-1':   [[1,'FWD'],[4,'MID'],[5,'DEF'],[1,'GK']],
+};
+const POS_LABELS = {
+  GK:  {1:['GK']},
+  DEF: {3:['LB','CB','RB'], 4:['LB','CB','CB','RB'], 5:['LB','LCB','CB','RCB','RB']},
+  DM:  {2:['DM','DM'], 3:['DM','CM','DM']},
+  MID: {2:['LM','RM'], 3:['LM','CM','RM'], 4:['LM','CM','CM','RM'], 5:['LM','CM','CM','CM','RM']},
+  AM:  {1:['CAM'], 2:['LAM','RAM'], 3:['LAM','CAM','RAM']},
+  FWD: {1:['ST'], 2:['ST','ST'], 3:['LW','ST','RW']},
+};
+const BENCH_SIZE = 7;
+
+/* ── State ───────────────────────────────────────────────────── */
+let currentFormation = '4-4-2';
+let pitchSlots = [];
+let benchSlots = [];
+let allMembers = [];
+let currentMatchId = null;
+let activeSlotId = null;
+
+/* ── Boot ────────────────────────────────────────────────────── */
+async function init() {
+  buildFormationBtns();
+  benchSlots = Array.from({length: BENCH_SIZE}, (_,i) => ({id:'bench-'+i, playerId:null, player:null}));
+  pitchSlots = buildSlots(currentFormation);
+  renderBench();
+
+  try {
+    const [matches, members] = await Promise.all([apiGet('/matches'), apiGet('/members')]);
+    allMembers = members;
+    const sel = document.getElementById('matchSelect');
+    const now = Date.now(), w = 60*864e5;
+    let list = matches.filter(m => Math.abs(new Date(m.match_date)-now) <= w);
+    if (!list.length) list = matches.slice(0,20);
+    list.sort((a,b) => Math.abs(new Date(a.match_date)-now) - Math.abs(new Date(b.match_date)-now));
+    list.forEach(m => sel.add(new Option(matchLabel(m), m.id)));
+    renderAvailable();
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+function matchLabel(m) {
+  const ha = {home:'Dom',away:'Gost',neutral:'N'}[m.home_away] || '';
+  return `${m.opponent} - ${formatDate(m.match_date)}${ha?' ('+ha+')':''}`;
+}
+
+/* ── Formation ───────────────────────────────────────────────── */
+function buildFormationBtns() {
+  const el = document.getElementById('formationBtns');
+  el.innerHTML = Object.keys(FORMATIONS).map(k =>
+    `<button class="fm-btn${k===currentFormation?' active':''}" onclick="setFormation('${k}')">${k}</button>`
+  ).join('');
+}
+
+function setFormation(key, clearPlayers = true) {
+  if (!(key in FORMATIONS)) return;
+  currentFormation = key;
+  document.querySelectorAll('.fm-btn').forEach(b => b.classList.toggle('active', b.textContent === key));
+  document.getElementById('formationLabel').textContent = key;
+  if (clearPlayers) {
+    pitchSlots = buildSlots(key);
+  } else {
+    const newSlots = buildSlots(key);
+    newSlots.forEach(ns => {
+      const old = pitchSlots.find(os => os.posLabel === ns.posLabel && os.playerId && !newSlots.some(x => x !== ns && x.posLabel === ns.posLabel && x.playerId));
+      if (old) { ns.playerId = old.playerId; ns.player = old.player; }
+    });
+    pitchSlots = newSlots;
+  }
+  renderPitch();
+  renderAvailable();
+}
+
+function buildSlots(formKey) {
+  const rows = FORMATIONS[formKey];
+  const nRows = rows.length;
+  return rows.flatMap(([count, role], rowIdx) => {
+    const y = +(10 + (rowIdx / (nRows-1)) * 77).toFixed(1);
+    const labels = (POS_LABELS[role]||{})[count] || Array(count).fill(role);
+    return Array.from({length: count}, (_,i) => ({
+      id: `${role}-${i}-${rowIdx}`,
+      role, posLabel: labels[i],
+      x: +((i+1)/(count+1)*100).toFixed(1), y,
+      playerId: null, player: null
+    }));
+  });
+}
+
+/* ── Render ──────────────────────────────────────────────────── */
+function render() {
+  renderPitch();
+  renderBench();
+  renderAvailable();
+  updateCounters();
+}
+
+function renderPitch() {
+  document.getElementById('pitchSlots').innerHTML = pitchSlots.map(s => {
+    const isGK = s.role === 'GK';
+    const classes = ['field-slot',
+      s.playerId ? 'filled' : 'empty',
+      isGK ? 'gk' : '',
+      s.id === activeSlotId ? 'active' : ''
+    ].filter(Boolean).join(' ');
+
+    const inner = s.playerId
+      ? `<div class="slot-token">
+           ${s.player.jersey_number != null ? s.player.jersey_number : '?'}
+           <span class="slot-remove-btn" onclick="event.stopPropagation();removeFromSlot('${s.id}')">×</span>
+         </div>
+         <div class="slot-pill">
+           <span class="slot-name">${lastName(s.player.name)}</span>
+           <span class="slot-pos">${s.posLabel}</span>
+         </div>`
+      : `<div class="slot-token"><i class="bi bi-plus"></i></div>
+         <span class="slot-pos-only">${s.posLabel}</span>`;
+
+    return `<div class="${classes}" id="slot-${s.id}" style="left:${s.x}%;top:${s.y}%"
+               onclick="onSlotClick('${s.id}')">${inner}</div>`;
+  }).join('');
+}
+
+function renderBench() {
+  document.getElementById('benchRow').innerHTML = benchSlots.map((s, idx) => {
+    const classes = ['bench-slot', s.playerId ? 'filled' : 'empty', s.id === activeSlotId ? 'active' : ''].filter(Boolean).join(' ');
+    const inner = s.playerId
+      ? `<div class="bench-token">
+           ${s.player.jersey_number != null ? s.player.jersey_number : '?'}
+           <span class="bench-num-badge">${idx+1}</span>
+           <span class="bench-remove-btn" onclick="event.stopPropagation();removeFromSlot('${s.id}')">×</span>
+         </div>
+         <span class="bench-label">${lastName(s.player.name)}</span>`
+      : `<div class="bench-token">
+           <span class="bench-num-badge">${idx+1}</span>
+           <i class="bi bi-plus" style="font-size:1rem;color:#94a3b8"></i>
+         </div>
+         <span class="bench-label" style="color:#94a3b8">-</span>`;
+
+    return `<div class="${classes}" id="slot-${s.id}" onclick="onSlotClick('${s.id}')">${inner}</div>`;
+  }).join('');
+}
+
+function renderAvailable() {
+  const q = (document.getElementById('availSearch')?.value || '').toLowerCase();
+  const used = getUsedIds();
+  const avail = allMembers.filter(m => !used.has(m.id) && (!q || m.name.toLowerCase().includes(q)));
+  document.getElementById('availBadge').textContent = avail.length;
+  const el = document.getElementById('availList');
+  if (!avail.length) {
+    el.innerHTML = q
+      ? `<p class="text-center text-muted small py-4">Nema rezultata za "${escHtml(q)}"</p>`
+      : `<p class="text-center text-muted small py-4"><i class="bi bi-check-circle me-1 text-success"></i>Svi igrači su raspoređeni</p>`;
+    return;
+  }
+  el.innerHTML = avail.map(m => `
+    <div class="avail-item">
+      <div class="av-num">${m.jersey_number != null ? m.jersey_number : '?'}</div>
+      <div class="av-info">
+        <div class="av-name">${escHtml(m.name)}</div>
+        ${m.position ? `<span class="av-pos">${escHtml(m.position)}</span>` : ''}
+      </div>
+      <div class="av-btns">
+        <button class="av-btn av-btn-field" onclick="addToField(${m.id})" title="Dodaj na teren"><i class="bi bi-grid-3x3-gap"></i></button>
+        <button class="av-btn av-btn-bench" onclick="addToBench(${m.id})" title="Dodaj na klupu"><i class="bi bi-person-standing"></i></button>
+      </div>
+    </div>`).join('');
+}
+
+function updateCounters() {
+  const starters = pitchSlots.filter(s => s.playerId).length;
+  const badge = document.getElementById('starterBadge');
+  badge.textContent = starters + ' / 11';
+  badge.className = 'badge starter-badge ' + (starters === 11 ? 'bg-success' : starters > 11 ? 'bg-danger' : 'bg-warning text-dark');
+  document.getElementById('benchBadge').textContent = benchSlots.filter(s => s.playerId).length + ' / 7';
+}
+
+/* ── Interactions ────────────────────────────────────────────── */
+function onSlotClick(slotId) {
+  if (activeSlotId === slotId) { closePicker(); return; }
+  activeSlotId = slotId;
+  renderPitch();
+  renderBench();
+  openPicker(slotId);
+}
+
+function openPicker(slotId) {
+  const slot = pitchSlots.find(s => s.id === slotId) || benchSlots.find(s => s.id === slotId);
+  const el = document.getElementById('playerPicker');
+  const slotEl = document.getElementById('slot-' + slotId);
+  if (!slotEl) return;
+  const rect = slotEl.getBoundingClientRect();
+  const W = 270, maxH = 340;
+  let left = rect.left + rect.width/2 - W/2;
+  let top  = rect.bottom + 10;
+  left = Math.max(8, Math.min(left, window.innerWidth - W - 8));
+  if (top + maxH > window.innerHeight - 10) top = Math.max(10, rect.top - maxH - 10);
+  el.style.left = left + 'px';
+  el.style.top  = top + 'px';
+  el.style.display = 'block';
+  const posLabel = slot?.posLabel || 'Igrač';
+  document.getElementById('ppTitle').textContent = `Odaberi igrača`;
+  document.getElementById('ppPosTag').textContent = posLabel;
+  document.getElementById('ppSearch').value = '';
+  renderPickerList();
+  setTimeout(() => document.getElementById('ppSearch').focus(), 80);
+}
+
+function closePicker() {
+  document.getElementById('playerPicker').style.display = 'none';
+  activeSlotId = null;
+  renderPitch();
+  renderBench();
+}
+
+function renderPickerList() {
+  const q = (document.getElementById('ppSearch').value || '').toLowerCase();
+  const used = getUsedIds();
+  const activeSlot = pitchSlots.find(s => s.id === activeSlotId) || benchSlots.find(s => s.id === activeSlotId);
+  if (activeSlot?.playerId) used.delete(activeSlot.playerId);
+  const list = allMembers.filter(m => !used.has(m.id) && (!q || m.name.toLowerCase().includes(q)));
+  const el = document.getElementById('ppList');
+  el.innerHTML = list.length
+    ? list.map(m => `
+      <div class="pp-item" onclick="assignPlayer(${m.id})">
+        <div class="pp-num">${m.jersey_number != null ? m.jersey_number : '?'}</div>
+        <div class="pp-info">
+          <div class="pp-name">${escHtml(m.name)}</div>
+          ${m.position ? `<span class="pp-pos">${escHtml(m.position)}</span>` : ''}
+        </div>
+      </div>`).join('')
+    : `<div class="pp-empty"><i class="bi bi-person-x d-block fs-4 mb-1"></i>Nema dostupnih igrača</div>`;
+}
+
+function assignPlayer(memberId) {
+  if (!activeSlotId) return;
+  const member = allMembers.find(m => m.id === memberId);
+  if (!member) return;
+  const slot = pitchSlots.find(s => s.id === activeSlotId) || benchSlots.find(s => s.id === activeSlotId);
+  if (!slot) return;
+  slot.playerId = member.id;
+  slot.player = { id: member.id, name: member.name, jersey_number: member.jersey_number };
+  closePicker();
+  render();
+}
+
+function removeFromSlot(slotId) {
+  const slot = pitchSlots.find(s => s.id === slotId) || benchSlots.find(s => s.id === slotId);
+  if (slot) { slot.playerId = null; slot.player = null; }
+  render();
+}
+
+function addToField(memberId) {
+  const member = allMembers.find(m => m.id === memberId);
+  if (!member) return;
+  const slot = pitchSlots.find(s => !s.playerId);
+  if (!slot) { showToast('Nema slobodnih mjesta na terenu', 'error'); return; }
+  slot.playerId = member.id;
+  slot.player = { id: member.id, name: member.name, jersey_number: member.jersey_number };
+  render();
+}
+
+function addToBench(memberId) {
+  const member = allMembers.find(m => m.id === memberId);
+  if (!member) return;
+  const slot = benchSlots.find(s => !s.playerId);
+  if (!slot) { showToast('Klupa je puna (7/7)', 'error'); return; }
+  slot.playerId = member.id;
+  slot.player = { id: member.id, name: member.name, jersey_number: member.jersey_number };
+  render();
+}
+
+function clearAll() {
+  pitchSlots.forEach(s => { s.playerId = null; s.player = null; });
+  benchSlots.forEach(s => { s.playerId = null; s.player = null; });
+  render();
+}
+
+/* ── Match change ────────────────────────────────────────────── */
+async function onMatchChange() {
+  const id = document.getElementById('matchSelect').value;
+  currentMatchId = id || null;
+  if (!id) {
+    document.getElementById('noMatchMsg').style.display = '';
+    document.getElementById('lineupLayout').style.display = 'none';
+    return;
+  }
+  document.getElementById('noMatchMsg').style.display = 'none';
+  document.getElementById('lineupLayout').style.display = '';
+  clearAll();
+  try {
+    const { players, formation } = await apiGet('/lineup/' + id);
+    const savedFormation = formation || '4-4-2';
+    setFormation(savedFormation, true);
+    const starters = (players || []).filter(p => p.is_starter);
+    const subs     = (players || []).filter(p => !p.is_starter);
+    for (const p of starters) {
+      let slot = pitchSlots.find(s => !s.playerId && s.posLabel === p.position);
+      if (!slot) slot = pitchSlots.find(s => !s.playerId && s.role === guessRole(p.position));
+      if (!slot) slot = pitchSlots.find(s => !s.playerId);
+      if (slot) {
+        slot.playerId = p.member_id;
+        slot.player = { id: p.member_id, name: p.name, jersey_number: p.jersey_number ?? p.default_jersey };
+      }
+    }
+    for (let i = 0; i < subs.length && i < BENCH_SIZE; i++) {
+      benchSlots[i].playerId = subs[i].member_id;
+      benchSlots[i].player = { id: subs[i].member_id, name: subs[i].name, jersey_number: subs[i].jersey_number ?? subs[i].default_jersey };
+    }
+    render();
+  } catch(e) {
+    render();
+  }
+}
+
+function guessRole(pos) {
+  if (!pos) return 'MID';
+  const p = pos.toUpperCase();
+  if (p === 'GK') return 'GK';
+  if (['LB','CB','RB','LCB','RCB','DEF','WB'].some(x => p.includes(x))) return 'DEF';
+  if (['ST','LW','RW','CF','FWD'].some(x => p.includes(x))) return 'FWD';
+  return 'MID';
+}
+
+/* ── Save ────────────────────────────────────────────────────── */
+async function saveLineup() {
+  if (!currentMatchId) { showToast('Odaberi utakmicu', 'error'); return; }
+  const players = [];
+  pitchSlots.forEach(s => {
+    if (s.playerId) players.push({
+      member_id: s.playerId, position: s.posLabel, is_starter: 1,
+      jersey_number: s.player.jersey_number ?? null
+    });
+  });
+  benchSlots.forEach(s => {
+    if (s.playerId) players.push({
+      member_id: s.playerId, position: null, is_starter: 0,
+      jersey_number: s.player.jersey_number ?? null
+    });
+  });
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" style="width:14px;height:14px"></span>Spašavanje...';
+  try {
+    await apiPost('/lineup/' + currentMatchId, { players, formation: currentFormation });
+    showToast('Postava uspješno spašena', 'success');
+  } catch(e) {
+    showToast('Greška: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-floppy me-2"></i>Spremi postavu';
+  }
+}
+
+/* ── Helpers ─────────────────────────────────────────────────── */
+function getUsedIds() {
+  const ids = new Set();
+  pitchSlots.forEach(s => s.playerId && ids.add(s.playerId));
+  benchSlots.forEach(s => s.playerId && ids.add(s.playerId));
+  return ids;
+}
+function lastName(name) {
+  if (!name) return '?';
+  const parts = name.trim().split(/\s+/);
+  return (parts.length > 1 ? parts[parts.length-1] : parts[0]).slice(0, 9);
+}
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+document.addEventListener('click', e => {
+  const picker = document.getElementById('playerPicker');
+  if (picker.style.display !== 'none' && !picker.contains(e.target) && !e.target.closest('.field-slot') && !e.target.closest('.bench-slot')) {
+    closePicker();
+  }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePicker(); });
+
+init();
+</script>
+</body>
+</html>

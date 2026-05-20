@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Član - Nadzorna ploča | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Moja nadzorna ploča</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-success" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+  <div class="page-body">
+
+    <!-- Profile header card -->
+    <div class="card mb-4">
+      <div class="card-body p-3 p-md-4">
+        <div class="d-flex align-items-center gap-3 gap-md-4 flex-wrap">
+          <div id="profileAvatarWrap" style="width:72px;height:72px;border-radius:50%;overflow:hidden;flex-shrink:0;border:3px solid rgba(0,0,0,0.08);"></div>
+          <div class="flex-grow-1 min-w-0">
+            <h5 class="mb-1 fw-bold" id="profileName">-</h5>
+            <div class="d-flex flex-wrap gap-2 align-items-center">
+              <span class="text-muted small"><i class="bi bi-hash me-1"></i><span id="profileNumber">-</span></span>
+              <span class="text-muted small"><i class="bi bi-person-badge me-1"></i><span id="profilePosition">-</span></span>
+              <span class="text-muted small"><i class="bi bi-hash me-1"></i>Dres: <span id="profileJersey">-</span></span>
+              <span id="profileStatusBadge"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats row: 4 cards -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-xl-3">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3 p-3">
+            <div class="stat-icon bg-success bg-opacity-10 flex-shrink-0">
+              <i class="bi bi-check2-circle text-success"></i>
+            </div>
+            <div class="min-w-0">
+              <div class="stat-kpi-label">Dolaznost (sezona)</div>
+              <div class="stat-kpi-value" id="statAttendance">-</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3 p-3">
+            <div class="stat-icon bg-warning bg-opacity-10 flex-shrink-0">
+              <i class="bi bi-dribbble text-warning"></i>
+            </div>
+            <div class="min-w-0">
+              <div class="stat-kpi-label">Golovi</div>
+              <div class="stat-kpi-value" id="statGoals">-</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3 p-3">
+            <div class="stat-icon bg-info bg-opacity-10 flex-shrink-0">
+              <i class="bi bi-lightning text-info"></i>
+            </div>
+            <div class="min-w-0">
+              <div class="stat-kpi-label">Asistencije</div>
+              <div class="stat-kpi-value" id="statAssists">-</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3 p-3">
+            <div class="stat-icon bg-danger bg-opacity-10 flex-shrink-0">
+              <i class="bi bi-clock-history text-danger"></i>
+            </div>
+            <div class="min-w-0">
+              <div class="stat-kpi-label">Neriješene članarine</div>
+              <div class="stat-kpi-value" id="statPendingFees">-</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts row -->
+    <div class="row g-3 mb-4">
+      <div class="col-lg-7">
+        <div class="card chart-card h-100">
+          <div class="card-header fw-semibold">
+            <i class="bi bi-bar-chart me-2 text-success"></i>Moja dolaznost po mjesecu
+          </div>
+          <div class="card-body">
+            <div style="position:relative;height:230px;"><canvas id="chartAttendance"></canvas></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="card chart-card h-100">
+          <div class="card-header fw-semibold">
+            <i class="bi bi-cash-coin me-2 text-primary"></i>Status članarina
+          </div>
+          <div class="card-body">
+            <div style="position:relative;height:220px;"><canvas id="chartFees"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom row: trainings + matches -->
+    <div class="row g-3 mb-4">
+      <div class="col-lg-6">
+        <div class="card table-card h-100">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-semibold"><i class="bi bi-calendar3 me-1 text-info"></i>Nadolazeći treninzi</span>
+            <a href="/pages/training/schedule.html" class="btn btn-sm btn-outline-primary">Prikaži sve</a>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover table-sm table-mobile-cards mb-0">
+              <thead><tr><th>Trening</th><th>Datum</th><th>Trener</th></tr></thead>
+              <tbody id="trainingsTable">
+                <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:70%;"></div></td><td><div class="skeleton" style="height:13px;width:75px;"></div></td><td><div class="skeleton" style="height:13px;width:60%;"></div></td></tr>
+                <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:55%;"></div></td><td><div class="skeleton" style="height:13px;width:75px;"></div></td><td><div class="skeleton" style="height:13px;width:65%;"></div></td></tr>
+                <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:75%;"></div></td><td><div class="skeleton" style="height:13px;width:75px;"></div></td><td><div class="skeleton" style="height:13px;width:50%;"></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="card table-card h-100">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-semibold"><i class="bi bi-trophy me-1 text-warning"></i>Nadolazeće utakmice</span>
+            <a href="/pages/matches/list.html" class="btn btn-sm btn-outline-primary">Prikaži sve</a>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover table-sm table-mobile-cards mb-0">
+              <thead><tr><th>Protivnik</th><th>Datum</th><th>Vrsta</th></tr></thead>
+              <tbody id="matchesTable">
+                <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:65%;"></div></td><td><div class="skeleton" style="height:13px;width:75px;"></div></td><td><div class="skeleton" style="height:20px;width:55px;border-radius:999px;"></div></td></tr>
+                <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:80%;"></div></td><td><div class="skeleton" style="height:13px;width:75px;"></div></td><td><div class="skeleton" style="height:20px;width:55px;border-radius:999px;"></div></td></tr>
+                <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:50%;"></div></td><td><div class="skeleton" style="height:13px;width:75px;"></div></td><td><div class="skeleton" style="height:20px;width:55px;border-radius:999px;"></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent announcements -->
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-semibold"><i class="bi bi-megaphone me-2 text-info"></i>Najave</span>
+        <a href="/pages/announcements/list.html" class="btn btn-sm btn-outline-primary">Prikaži sve</a>
+      </div>
+      <div class="card-body">
+        <div class="row g-3" id="announcementsRow">
+          <div class="col-12"><div class="skeleton mb-2" style="height:60px;border-radius:8px;"></div><div class="skeleton" style="height:60px;border-radius:8px;"></div></div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /page-body -->
+</div><!-- /main-content -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+  const user = requireRole('member');
+  setUserInfo(user);
+  buildSidebar();
+
+  let attChart, feeChart;
+
+  const MONTHS_BS = ['Jan','Feb','Mar','Apr','Maj','Jun','Jul','Aug','Sep','Okt','Nov','Dec'];
+
+  function chartTheme() {
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    return { isDark: dark, grid: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', label: dark ? '#94a3b8' : '#64748b', tbg: dark ? 'rgba(15,23,42,0.95)' : 'rgba(15,23,42,0.88)' };
+  }
+
+  function buildAttendanceChart(attendanceByMonth) {
+    const t = chartTheme();
+    const labels = MONTHS_BS.slice(0, 8);
+    const present = labels.map((_, i) => { const e = (attendanceByMonth||[]).find(a => Number(a.month)===i+1); return e ? (e.present||e.attended||0) : 0; });
+    const absent  = labels.map((_, i) => { const e = (attendanceByMonth||[]).find(a => Number(a.month)===i+1); return e ? (e.absent||e.missed||0)  : 0; });
+    const ctx = document.getElementById('chartAttendance').getContext('2d');
+    if (attChart) attChart.destroy();
+    attChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Prisutan', data: present, backgroundColor: 'rgba(34,197,94,0.8)',  hoverBackgroundColor: 'rgba(34,197,94,1)',  borderRadius: 4, borderSkipped: false },
+          { label: 'Odsutan',  data: absent,  backgroundColor: 'rgba(239,68,68,0.65)', hoverBackgroundColor: 'rgba(239,68,68,0.85)', borderRadius: 4, borderSkipped: false }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { position: 'bottom', labels: { color: t.label, font: { size: 11 }, boxWidth: 10, usePointStyle: true, pointStyle: 'rectRounded', padding: 12 } },
+          tooltip: { backgroundColor: t.tbg, titleColor: '#f1f5f9', bodyColor: '#cbd5e1', padding: 10, cornerRadius: 8 }
+        },
+        scales: {
+          x: { stacked: true, ticks: { color: t.label, font: { size: 11 } }, grid: { color: t.grid, drawBorder: false } },
+          y: { stacked: true, beginAtZero: true, ticks: { color: t.label, font: { size: 11 }, stepSize: 1 }, grid: { color: t.grid, drawBorder: false } }
+        }
+      }
+    });
+  }
+
+  function buildFeesChart(fees) {
+    const t = chartTheme();
+    const paid    = (fees||[]).filter(f => f.status==='paid').length;
+    const pending = (fees||[]).filter(f => f.status==='pending').length;
+    const overdue = (fees||[]).filter(f => f.status==='overdue').length;
+    const total   = paid + pending + overdue;
+    const ctx = document.getElementById('chartFees').getContext('2d');
+    if (feeChart) feeChart.destroy();
+    const centerPlugin = {
+      id: 'centerText',
+      afterDraw(chart) {
+        const { ctx: c, width, height } = chart;
+        c.save(); c.textAlign = 'center'; c.textBaseline = 'middle';
+        c.font = 'bold 1.5rem system-ui'; c.fillStyle = t.isDark ? '#e2e8f0' : '#1e293b';
+        c.fillText(paid, width / 2, height / 2 - 9);
+        c.font = '0.65rem system-ui'; c.fillStyle = t.label;
+        c.fillText('plaćeno', width / 2, height / 2 + 12); c.restore();
+      }
+    };
+    feeChart = new Chart(ctx, {
+      type: 'doughnut',
+      plugins: [centerPlugin],
+      data: {
+        labels: ['Plaćeno', 'Na čekanju', 'Zakašnjelo'],
+        datasets: [{ data: total > 0 ? [paid, pending, overdue] : [1, 0, 0], backgroundColor: ['rgba(34,197,94,0.85)','rgba(234,179,8,0.85)','rgba(239,68,68,0.85)'], borderWidth: 0, hoverOffset: 6 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '70%',
+        plugins: {
+          legend: { position: 'bottom', labels: { color: t.label, font: { size: 11 }, boxWidth: 10, usePointStyle: true, pointStyle: 'circle', padding: 12 } },
+          tooltip: { backgroundColor: t.tbg, titleColor: '#f1f5f9', bodyColor: '#cbd5e1', padding: 10, cornerRadius: 8, callbacks: { label: c => ' ' + c.label + ': ' + c.parsed } }
+        }
+      }
+    });
+  }
+
+  async function loadDashboard() {
+    try {
+      const [authProfile, memberProfile, training, matches, announcements] = await Promise.all([
+        apiGet('/auth/profile').catch(() => null),
+        apiGet('/members/my-profile'),
+        apiGet('/training'),
+        apiGet('/matches'),
+        apiGet('/announcements').catch(() => [])
+      ]);
+
+      /* ── Profile header ── */
+      const profile = memberProfile || {};
+      const displayName = profile.name || user.name || '-';
+      document.getElementById('profileName').textContent = displayName;
+      document.getElementById('profileNumber').textContent  = profile.membership_number || '-';
+      document.getElementById('profilePosition').textContent = profile.position || '-';
+      document.getElementById('profileJersey').textContent  = profile.jersey_number || '-';
+      document.getElementById('profileStatusBadge').innerHTML = statusBadge(profile.status || 'active');
+
+      const avatarEl = document.getElementById('profileAvatarWrap');
+      const avatarUrl = (authProfile && authProfile.avatar_url) || (profile && profile.avatar_url) || null;
+      renderAvatarEl(avatarEl, avatarUrl, displayName);
+
+      /* ── Stats ── */
+      const fees = profile.fees || [];
+      const attendancePct = profile.attendance_pct || profile.attendance_percentage || null;
+      document.getElementById('statAttendance').textContent = attendancePct != null ? parseFloat(attendancePct).toFixed(1) + '%' : '-';
+
+      const pendingFees = fees.filter(f => f.status === 'pending' || f.status === 'overdue').length;
+      document.getElementById('statPendingFees').textContent = pendingFees;
+
+      // Goals/assists - try player stats if memberId available
+      let goals = profile.goals || 0, assists = profile.assists || 0;
+      if (profile.id) {
+        try {
+          const stats = await apiGet('/stats/player/' + profile.id);
+          goals   = stats.goals   || stats.total_goals   || 0;
+          assists = stats.assists || stats.total_assists || 0;
+          // Attendance from stats if not already set
+          if (attendancePct == null && (stats.attendance_pct || stats.attendance_percentage)) {
+            document.getElementById('statAttendance').textContent = parseFloat(stats.attendance_pct || stats.attendance_percentage).toFixed(1) + '%';
+          }
+        } catch (_) {}
+      }
+      document.getElementById('statGoals').textContent   = goals;
+      document.getElementById('statAssists').textContent = assists;
+
+      /* ── Charts ── */
+      buildAttendanceChart(profile.attendance_by_month || profile.monthly_attendance || []);
+      buildFeesChart(fees);
+
+      /* ── Upcoming trainings ── */
+      const upTrainings = training
+        .filter(t => t.status === 'scheduled')
+        .sort((a, b) => new Date(a.session_date) - new Date(b.session_date))
+        .slice(0, 5);
+      document.getElementById('trainingsTable').innerHTML = upTrainings.length
+        ? upTrainings.map(t => `
+            <tr>
+              <td data-label="Trening" class="fw-medium">${t.title || '-'}</td>
+              <td data-label="Datum" class="small">${formatDate(t.session_date)}</td>
+              <td data-label="Trener" class="small text-muted">${t.coach_name || '-'}</td>
+            </tr>`).join('')
+        : '<tr><td colspan="3" class="text-center text-muted py-3">Nema zakazanih treninga</td></tr>';
+
+      /* ── Upcoming matches ── */
+      const upMatches = matches
+        .filter(m => !m.result || m.result === 'pending' || m.result === null)
+        .sort((a, b) => new Date(a.match_date) - new Date(b.match_date))
+        .slice(0, 5);
+      document.getElementById('matchesTable').innerHTML = upMatches.length
+        ? upMatches.map(m => `
+            <tr>
+              <td data-label="Protivnik" class="fw-medium">${m.opponent}</td>
+              <td data-label="Datum" class="small">${formatDate(m.match_date)}</td>
+              <td data-label="Vrsta">${statusBadge(m.match_type)}</td>
+            </tr>`).join('')
+        : '<tr><td colspan="3" class="text-center text-muted py-3">Nema nadolazećih utakmica</td></tr>';
+
+      /* ── Announcements ── */
+      const ann = Array.isArray(announcements) ? announcements.slice(0, 3) : [];
+      document.getElementById('announcementsRow').innerHTML = ann.length
+        ? ann.map(a => `
+            <div class="col-md-4">
+              <div class="border rounded p-3 h-100">
+                <div class="fw-semibold small mb-1">${a.title}</div>
+                <div class="text-muted" style="font-size:0.72rem;">${formatDate(a.created_at || a.publish_date)}</div>
+                ${a.content ? `<div class="text-muted small mt-2" style="display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;">${a.content}</div>` : ''}
+              </div>
+            </div>`).join('')
+        : '<div class="col-12 text-center text-muted small py-2">Nema najava</div>';
+
+    } catch (e) {
+      showToast('Greška pri učitavanju: ' + e.message, 'error');
+    }
+  }
+
+  loadDashboard();
+</script>
+</body>
+</html>

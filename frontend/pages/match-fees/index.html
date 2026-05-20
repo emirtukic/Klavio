@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Naknade za utakmice | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="sidebar"></div>
+
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Naknade za utakmice</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-primary" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+
+  <div class="page-body">
+
+    <!-- Page header -->
+    <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div>
+        <h4>Naknade za utakmice</h4>
+        <p class="text-muted mb-0">Upravljanje naknadama članova po utakmicama</p>
+      </div>
+      <button class="btn btn-primary" onclick="openAddModal()">
+        <i class="bi bi-plus-lg me-1"></i> Dodaj naknade
+      </button>
+    </div>
+
+    <div class="row g-3 mb-4">
+      <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="stat-icon bg-primary bg-opacity-10 flex-shrink-0"><i class="bi bi-cash-stack text-primary fs-5"></i></div>
+            <div class="min-w-0"><div class="stat-kpi-label">Ukupno</div><div class="stat-kpi-value" id="statTotal">-</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="stat-icon bg-success bg-opacity-10 flex-shrink-0"><i class="bi bi-check-circle text-success fs-5"></i></div>
+            <div class="min-w-0"><div class="stat-kpi-label">Plaćeno</div><div class="stat-kpi-value" id="statPaid">-</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="stat-icon bg-warning bg-opacity-10 flex-shrink-0"><i class="bi bi-hourglass-split text-warning fs-5"></i></div>
+            <div class="min-w-0"><div class="stat-kpi-label">Na čekanju</div><div class="stat-kpi-value" id="statPending">-</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="stat-icon bg-danger bg-opacity-10 flex-shrink-0"><i class="bi bi-exclamation-circle text-danger fs-5"></i></div>
+            <div class="min-w-0"><div class="stat-kpi-label">Zakašnjelo</div><div class="stat-kpi-value" id="statOverdue">-</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table card -->
+    <div class="card table-card">
+      <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <span class="fw-semibold">Pregled naknada</span>
+        <div class="d-flex gap-2 flex-wrap align-items-center">
+          <select class="form-select form-select-sm" id="filterMatch" style="width:auto;min-width:180px;" onchange="applyFilter()">
+            <option value="">Sve utakmice</option>
+          </select>
+          <select class="form-select form-select-sm" id="filterStatus" style="width:auto;" onchange="applyFilter()">
+            <option value="">Svi statusi</option>
+            <option value="pending">Na čekanju</option>
+            <option value="paid">Plaćeno</option>
+            <option value="overdue">Zakašnjelo</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0 table-mobile-cards">
+          <thead>
+            <tr>
+              <th>Član</th>
+              <th>Utakmica</th>
+              <th>Iznos</th>
+              <th>Status</th>
+              <th>Datum uplate</th>
+              <th>Napomena</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:80%;"></div></td><td><div class="skeleton" style="height:13px;width:70%;"></div></td><td><div class="skeleton" style="height:13px;width:55%;"></div></td><td><div class="skeleton" style="height:20px;width:70px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:13px;width:60%;"></div></td><td><div class="skeleton" style="height:13px;width:50%;"></div></td><td><div class="skeleton" style="height:28px;width:28px;border-radius:6px;"></div></td></tr>
+            <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:65%;"></div></td><td><div class="skeleton" style="height:13px;width:75%;"></div></td><td><div class="skeleton" style="height:13px;width:50%;"></div></td><td><div class="skeleton" style="height:20px;width:70px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:13px;width:55%;"></div></td><td><div class="skeleton" style="height:13px;width:40%;"></div></td><td><div class="skeleton" style="height:28px;width:28px;border-radius:6px;"></div></td></tr>
+            <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:72%;"></div></td><td><div class="skeleton" style="height:13px;width:60%;"></div></td><td><div class="skeleton" style="height:13px;width:45%;"></div></td><td><div class="skeleton" style="height:20px;width:70px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:13px;width:65%;"></div></td><td><div class="skeleton" style="height:13px;width:35%;"></div></td><td><div class="skeleton" style="height:28px;width:28px;border-radius:6px;"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /page-body -->
+</div><!-- /main-content -->
+
+<!-- Add Fees Modal -->
+<div class="modal fade" id="addModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-cash-stack me-2"></i>Dodaj naknade za utakmicu</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="addAlert" class="alert alert-danger d-none py-2 small"></div>
+        <div class="row g-3">
+          <!-- Match select -->
+          <div class="col-12">
+            <label class="form-label" for="aMatch">Utakmica *</label>
+            <select class="form-select" id="aMatch">
+              <option value="">- Odaberite utakmicu -</option>
+            </select>
+          </div>
+          <!-- Amount -->
+          <div class="col-md-6">
+            <label class="form-label" for="aAmount">Iznos po članu (KM) *</label>
+            <div class="input-group">
+              <input type="number" class="form-control" id="aAmount" min="0" step="0.01" placeholder="0.00">
+              <span class="input-group-text">KM</span>
+            </div>
+          </div>
+          <!-- Notes -->
+          <div class="col-md-6">
+            <label class="form-label" for="aNotes">Napomena</label>
+            <input type="text" class="form-control" id="aNotes" placeholder="Opcionalna napomena">
+          </div>
+          <!-- Members checkboxes -->
+          <div class="col-12">
+            <label class="form-label">Članovi *</label>
+            <div class="d-flex gap-2 mb-2">
+              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectAllMembers(true)">Odaberi sve</button>
+              <button type="button" class="btn btn-sm btn-outline-secondary" onclick="selectAllMembers(false)">Poništi sve</button>
+            </div>
+            <div id="memberCheckboxes" class="border rounded p-3" style="max-height:240px;overflow-y:auto;">
+              <div class="text-muted small">Učitavanje članova...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
+        <button type="button" class="btn btn-primary" id="addSaveBtn" onclick="saveAdd()">
+          <span class="spinner-border spinner-border-sm d-none me-1" id="addSpinner"></span>
+          Spremi
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal fade" id="editModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-pencil me-2"></i>Uredi naknadu</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="eId">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label" for="eAmount">Iznos (KM)</label>
+            <div class="input-group">
+              <input type="number" class="form-control" id="eAmount" min="0" step="0.01">
+              <span class="input-group-text">KM</span>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="eStatus">Status</label>
+            <select class="form-select" id="eStatus">
+              <option value="pending">Na čekanju</option>
+              <option value="paid">Plaćeno</option>
+              <option value="overdue">Zakašnjelo</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="ePaidDate">Datum uplate</label>
+            <input type="date" class="form-control" id="ePaidDate">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="eNotes">Napomena</label>
+            <input type="text" class="form-control" id="eNotes">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
+        <button type="button" class="btn btn-primary" id="editSaveBtn" onclick="saveEdit()">
+          <span class="spinner-border spinner-border-sm d-none me-1" id="editSpinner"></span>
+          Spremi
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+  const user = requireRole('admin', 'super_admin');
+  setUserInfo(user); buildSidebar();
+
+  let allFees    = [];
+  let allMatches = [];
+  let allMembers = [];
+
+  /* ── Init: load reference data + fees ── */
+  async function init() {
+    try {
+      const [matches, members] = await Promise.all([
+        apiGet('/matches'),
+        apiGet('/members')
+      ]);
+      allMatches = Array.isArray(matches) ? matches : [];
+      allMembers = Array.isArray(members) ? members : (members.data || []);
+      populateMatchFilter();
+      populateMatchSelect();
+      populateMemberCheckboxes();
+      await loadFees();
+      await loadStats();
+    } catch(e) {
+      showToast(e.message, 'error');
+    }
+  }
+
+  function matchLabel(m) {
+    return `${m.opponent} (${formatDate(m.match_date)})`;
+  }
+
+  function populateMatchFilter() {
+    const sel = document.getElementById('filterMatch');
+    allMatches.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.id;
+      opt.textContent = matchLabel(m);
+      sel.appendChild(opt);
+    });
+  }
+
+  function populateMatchSelect() {
+    const sel = document.getElementById('aMatch');
+    allMatches.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.id;
+      opt.textContent = matchLabel(m);
+      sel.appendChild(opt);
+    });
+  }
+
+  function populateMemberCheckboxes() {
+    const container = document.getElementById('memberCheckboxes');
+    if (!allMembers.length) {
+      container.innerHTML = '<div class="text-muted small">Nema članova</div>';
+      return;
+    }
+    container.innerHTML = allMembers.map(m => `
+      <div class="form-check">
+        <input class="form-check-input member-cb" type="checkbox" value="${m.id}" id="mcb_${m.id}">
+        <label class="form-check-label" for="mcb_${m.id}">${m.name}</label>
+      </div>
+    `).join('');
+  }
+
+  function selectAllMembers(checked) {
+    document.querySelectorAll('.member-cb').forEach(cb => cb.checked = checked);
+  }
+
+  /* ── Load fees ── */
+  async function loadFees() {
+    const matchId  = document.getElementById('filterMatch').value;
+    const statusVal = document.getElementById('filterStatus').value;
+    try {
+      const qs = matchId ? `?match_id=${matchId}` : '';
+      let fees = await apiGet('/match-fees' + qs);
+      fees = Array.isArray(fees) ? fees : [];
+      if (statusVal) fees = fees.filter(f => f.status === statusVal);
+      allFees = fees;
+      renderTable(fees);
+    } catch(e) {
+      showToast(e.message, 'error');
+    }
+  }
+
+  async function loadStats() {
+    try {
+      const stats = await apiGet('/match-fees/stats');
+      document.getElementById('statTotal').textContent   = parseFloat(stats.total   || 0).toFixed(2) + ' KM';
+      document.getElementById('statPaid').textContent    = parseFloat(stats.paid    || 0).toFixed(2) + ' KM';
+      document.getElementById('statPending').textContent = parseFloat(stats.pending || 0).toFixed(2) + ' KM';
+      document.getElementById('statOverdue').textContent = parseFloat(stats.overdue || 0).toFixed(2) + ' KM';
+    } catch(e) { /* stats are non-critical */ }
+  }
+
+  function applyFilter() { loadFees(); }
+
+  /* ── Render table ── */
+  function renderTable(fees) {
+    const tbody = document.getElementById('tableBody');
+    if (!fees.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-5"><i class="bi bi-inbox fs-2 d-block mb-2"></i>Nema naknada</td></tr>';
+      return;
+    }
+    tbody.innerHTML = fees.map(f => `
+      <tr>
+        <td data-label="Član"><span class="fw-semibold">${f.member_name || '-'}</span></td>
+        <td data-label="Utakmica">
+          <div class="fw-semibold small">${f.opponent || '-'}</div>
+          <div class="text-muted" style="font-size:0.78rem;">${formatDate(f.match_date)}</div>
+        </td>
+        <td data-label="Iznos" class="fw-semibold">${parseFloat(f.amount || 0).toFixed(2)} KM</td>
+        <td data-label="Status">${statusBadge(f.status)}</td>
+        <td data-label="Datum uplate">${f.paid_date ? formatDate(f.paid_date) : '<span class="text-muted">-</span>'}</td>
+        <td data-label="Napomena"><span class="text-muted small">${f.notes || '-'}</span></td>
+        <td>
+          <div class="d-flex gap-1 flex-wrap">
+            ${f.status !== 'paid' ? `
+              <button class="btn btn-sm btn-success" onclick="markPaid(${f.id})" title="Označi kao plaćeno">
+                <i class="bi bi-check-lg"></i>
+              </button>` : ''}
+            <button class="btn btn-sm btn-outline-secondary" onclick="openEdit(${f.id})" title="Uredi">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger" onclick="deleteFee(${f.id})" title="Obriši">
+              <i class="bi bi-trash"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  /* ── Mark paid ── */
+  async function markPaid(id) {
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      await apiPut('/match-fees/' + id, { status: 'paid', paid_date: today });
+      showToast('Naknada označena kao plaćena.', 'success');
+      loadFees();
+      loadStats();
+    } catch(e) {
+      showToast(e.message, 'error');
+    }
+  }
+
+  /* ── Add modal ── */
+  function openAddModal() {
+    document.getElementById('aMatch').value  = '';
+    document.getElementById('aAmount').value = '';
+    document.getElementById('aNotes').value  = '';
+    document.getElementById('addAlert').classList.add('d-none');
+    selectAllMembers(false);
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('addModal')).show();
+  }
+
+  async function saveAdd() {
+    const matchId = document.getElementById('aMatch').value;
+    const amount  = parseFloat(document.getElementById('aAmount').value);
+    const notes   = document.getElementById('aNotes').value.trim();
+    const alertEl = document.getElementById('addAlert');
+    alertEl.classList.add('d-none');
+
+    if (!matchId) { alertEl.textContent = 'Odaberite utakmicu.'; alertEl.classList.remove('d-none'); return; }
+    if (!amount || amount <= 0) { alertEl.textContent = 'Unesite ispravan iznos.'; alertEl.classList.remove('d-none'); return; }
+
+    const checkedIds = [...document.querySelectorAll('.member-cb:checked')].map(cb => parseInt(cb.value));
+    if (!checkedIds.length) { alertEl.textContent = 'Odaberite barem jednog člana.'; alertEl.classList.remove('d-none'); return; }
+
+    const spinner = document.getElementById('addSpinner');
+    const btn     = document.getElementById('addSaveBtn');
+    spinner.classList.remove('d-none');
+    btn.disabled = true;
+
+    try {
+      await apiPost('/match-fees', { match_id: parseInt(matchId), member_ids: checkedIds, amount, notes: notes || undefined });
+      showToast(`${checkedIds.length} naknada uspješno dodano.`, 'success');
+      bootstrap.Modal.getInstance(document.getElementById('addModal')).hide();
+      loadFees();
+      loadStats();
+    } catch(e) {
+      alertEl.textContent = e.message;
+      alertEl.classList.remove('d-none');
+    } finally {
+      spinner.classList.add('d-none');
+      btn.disabled = false;
+    }
+  }
+
+  /* ── Edit modal ── */
+  function openEdit(id) {
+    const f = allFees.find(x => x.id === id);
+    if (!f) return;
+    document.getElementById('eId').value       = f.id;
+    document.getElementById('eAmount').value   = f.amount   || '';
+    document.getElementById('eStatus').value   = f.status   || 'pending';
+    document.getElementById('ePaidDate').value = f.paid_date ? f.paid_date.slice(0, 10) : '';
+    document.getElementById('eNotes').value    = f.notes    || '';
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('editModal')).show();
+  }
+
+  async function saveEdit() {
+    const id       = document.getElementById('eId').value;
+    const amount   = parseFloat(document.getElementById('eAmount').value) || undefined;
+    const status   = document.getElementById('eStatus').value;
+    const paidDate = document.getElementById('ePaidDate').value || undefined;
+    const notes    = document.getElementById('eNotes').value.trim() || undefined;
+
+    const spinner = document.getElementById('editSpinner');
+    const btn     = document.getElementById('editSaveBtn');
+    spinner.classList.remove('d-none');
+    btn.disabled = true;
+
+    try {
+      await apiPut('/match-fees/' + id, { amount, status, paid_date: paidDate, notes });
+      showToast('Naknada uspješno ažurirana.', 'success');
+      bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+      loadFees();
+      loadStats();
+    } catch(e) {
+      showToast(e.message, 'error');
+    } finally {
+      spinner.classList.add('d-none');
+      btn.disabled = false;
+    }
+  }
+
+  /* ── Delete ── */
+  function deleteFee(id) {
+    confirmDelete(async () => {
+      try {
+        await apiDelete('/match-fees/' + id);
+        showToast('Naknada obrisana.', 'success');
+        loadFees();
+        loadStats();
+      } catch(e) {
+        showToast(e.message, 'error');
+      }
+    });
+  }
+
+  /* ── Boot ── */
+  init();
+</script>
+</body>
+</html>

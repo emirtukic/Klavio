@@ -1,0 +1,116 @@
+﻿<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Treneri | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Treneri</span>
+    <div class="d-flex align-items-center gap-2"><span class="badge bg-primary" id="userRole"></span><span class="fw-semibold small" id="userName"></span></div>
+  </div>
+  <div class="page-body">
+    <div class="page-header d-flex justify-content-between align-items-center">
+      <div><h4>Treneri</h4><p class="text-muted mb-0">Upravljanje trenerskim štabom</p></div>
+      <button class="btn btn-primary" id="addBtn" data-bs-toggle="modal" data-bs-target="#addModal"><i class="bi bi-plus-lg me-1"></i> Dodaj trenera</button>
+    </div>
+    <div class="card table-card">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0 table-mobile-cards">
+          <thead><tr><th>Ime</th><th>E-mail</th><th>Specijalizacija</th><th>Telefon</th><th>Aktivan</th><th>Akcije</th></tr></thead>
+          <tbody id="tableBody">
+            <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:80%;"></div></td><td><div class="skeleton" style="height:13px;width:70%;"></div></td><td><div class="skeleton" style="height:13px;width:60%;"></div></td><td><div class="skeleton" style="height:13px;width:55%;"></div></td><td><div class="skeleton" style="height:20px;width:40px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:28px;width:56px;border-radius:6px;"></div></td></tr>
+            <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:65%;"></div></td><td><div class="skeleton" style="height:13px;width:75%;"></div></td><td><div class="skeleton" style="height:13px;width:50%;"></div></td><td><div class="skeleton" style="height:13px;width:45%;"></div></td><td><div class="skeleton" style="height:20px;width:40px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:28px;width:56px;border-radius:6px;"></div></td></tr>
+            <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:72%;"></div></td><td><div class="skeleton" style="height:13px;width:65%;"></div></td><td><div class="skeleton" style="height:13px;width:45%;"></div></td><td><div class="skeleton" style="height:13px;width:50%;"></div></td><td><div class="skeleton" style="height:20px;width:40px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:28px;width:56px;border-radius:6px;"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="addModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Dodaj trenera</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div id="modalAlert" class="alert alert-danger d-none"></div>
+        <form id="addForm">
+          <div class="mb-3"><label class="form-label">Puno ime i prezime *</label><input type="text" class="form-control" name="name" required></div>
+          <div class="mb-3"><label class="form-label">E-mail *</label><input type="email" class="form-control" name="email" required></div>
+          <div class="mb-3"><label class="form-label">Specijalizacija</label><input type="text" class="form-control" name="specialization" placeholder="npr. Fudbal, Kondicija"></div>
+          <div class="mb-3"><label class="form-label">Telefon</label><input type="text" class="form-control" name="phone"></div>
+          <div class="mb-3"><label class="form-label">Biografija</label><textarea class="form-control" name="bio" rows="2"></textarea></div>
+          <div class="mb-3">
+            <label class="form-label">Selekcija</label>
+            <select class="form-select" name="selection_id" id="selectionSelect">
+              <option value="">- Bez selekcije -</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
+        <button type="button" class="btn btn-primary" id="saveBtn">Dodaj trenera</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+  const user = requireRole('super_admin', 'admin');
+  setUserInfo(user); buildSidebar();
+  apiGet('/selections').then(sels => {
+    const sel = document.getElementById('selectionSelect');
+    sels.forEach(s => sel.insertAdjacentHTML('beforeend', `<option value="${s.id}">${s.name}</option>`));
+  }).catch(() => {});
+  async function load() {
+    try {
+      const coaches = await apiGet('/coaches');
+      document.getElementById('tableBody').innerHTML = coaches.map(c => `
+        <tr>
+          <td data-label="Ime" class="fw-semibold">${c.name}</td>
+          <td data-label="E-mail" class="text-muted small">${c.email}</td>
+          <td data-label="Specijalizacija">${c.specialization || '-'}</td>
+          <td data-label="Telefon">${c.phone || '-'}</td>
+          <td data-label="Aktivan">${c.is_active ? '<i class="bi bi-check-circle text-success"></i>' : '<i class="bi bi-x-circle text-danger"></i>'}</td>
+          <td>
+            <a href="schedule.html?id=${c.id}" class="btn btn-sm btn-outline-secondary me-1"><i class="bi bi-calendar3"></i></a>
+            ${['super_admin','admin'].includes(user.role) ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteCoach(${c.id})"><i class="bi bi-trash"></i></button>` : ''}
+          </td>
+        </tr>`).join('') || '<tr><td colspan="6" class="text-center text-muted py-4">Nema trenera</td></tr>';
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+  async function deleteCoach(id) {
+    confirmDelete(async () => {
+      try { await apiDelete('/coaches/' + id); showToast('Trener obrisan'); load(); } catch(e) { showToast(e.message, 'error'); }
+    });
+  }
+  document.getElementById('saveBtn').addEventListener('click', async () => {
+    const alertEl = document.getElementById('modalAlert');
+    alertEl.classList.add('d-none');
+    const fd = new FormData(document.getElementById('addForm'));
+    const body = Object.fromEntries(fd.entries());
+    Object.keys(body).forEach(k => { if (!body[k]) delete body[k]; });
+    if (body.selection_id) body.selection_id = parseInt(body.selection_id);
+    try {
+      await apiPost('/coaches', body);
+      showToast('Trener dodan');
+      bootstrap.Modal.getInstance(document.getElementById('addModal')).hide();
+      document.getElementById('addForm').reset();
+      load();
+    } catch(e) { alertEl.textContent = e.message; alertEl.classList.remove('d-none'); }
+  });
+  load();
+</script>
+</body>
+</html>

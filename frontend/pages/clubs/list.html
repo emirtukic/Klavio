@@ -1,0 +1,505 @@
+﻿<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Upravljanje klubovima | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Upravljanje klubovima</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-danger" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+  <div class="page-body">
+    <div class="page-header d-flex justify-content-between align-items-start">
+      <div><h4>Klubovi</h4><p class="text-muted mb-0">Dodajte i upravljajte klubovima na platformi.</p></div>
+      <button class="btn btn-primary" onclick="openCreate()"><i class="bi bi-plus me-1"></i>Novi klub</button>
+    </div>
+    <div class="card table-card">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0 table-mobile-cards">
+          <thead><tr><th>Naziv</th><th>Slug</th><th>Pretplata</th><th>Boje</th><th>Članovi</th><th>Treneri</th><th>Status</th><th>Akcije</th></tr></thead>
+          <tbody id="clubsTable">
+            <tr class="sk-row"><td><div class="skeleton" style="height:14px;width:60%;"></div></td><td><div class="skeleton" style="height:14px;width:70px;"></div></td><td><div class="skeleton" style="height:20px;width:100px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:18px;width:40px;border-radius:50%;"></div></td><td><div class="skeleton" style="height:14px;width:30px;"></div></td><td><div class="skeleton" style="height:14px;width:30px;"></div></td><td><div class="skeleton" style="height:28px;width:80px;border-radius:6px;"></div></td><td><div class="skeleton" style="height:28px;width:100px;border-radius:6px;"></div></td></tr>
+            <tr class="sk-row"><td><div class="skeleton" style="height:14px;width:50%;"></div></td><td><div class="skeleton" style="height:14px;width:70px;"></div></td><td><div class="skeleton" style="height:20px;width:100px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:18px;width:40px;border-radius:50%;"></div></td><td><div class="skeleton" style="height:14px;width:30px;"></div></td><td><div class="skeleton" style="height:14px;width:30px;"></div></td><td><div class="skeleton" style="height:28px;width:80px;border-radius:6px;"></div></td><td><div class="skeleton" style="height:28px;width:100px;border-radius:6px;"></div></td></tr>
+            <tr class="sk-row"><td><div class="skeleton" style="height:14px;width:70%;"></div></td><td><div class="skeleton" style="height:14px;width:70px;"></div></td><td><div class="skeleton" style="height:20px;width:100px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:18px;width:40px;border-radius:50%;"></div></td><td><div class="skeleton" style="height:14px;width:30px;"></div></td><td><div class="skeleton" style="height:14px;width:30px;"></div></td><td><div class="skeleton" style="height:28px;width:80px;border-radius:6px;"></div></td><td><div class="skeleton" style="height:28px;width:100px;border-radius:6px;"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create/Edit Club Modal -->
+<div class="modal fade" id="clubModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="clubModalTitle">Novi klub</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="clubId">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Naziv kluba <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="clubName" placeholder="npr. FK Sarajevo" required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Slug (URL identifikator)</label>
+            <input type="text" class="form-control" id="clubSlug" placeholder="auto-generisano">
+            <div class="form-text">Ostavite prazno za automatsko generisanje.</div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Primarna boja (sidebar)</label>
+            <div class="d-flex gap-2 align-items-center">
+              <input type="color" class="form-control form-control-color" id="clubPrimary" value="#1e293b">
+              <input type="text" class="form-control" id="clubPrimaryHex" value="#1e293b" placeholder="#1e293b" maxlength="7">
+            </div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Sekundarna boja (akcent)</label>
+            <div class="d-flex gap-2 align-items-center">
+              <input type="color" class="form-control form-control-color" id="clubSecondary" value="#3b82f6">
+              <input type="text" class="form-control" id="clubSecondaryHex" value="#3b82f6" placeholder="#3b82f6" maxlength="7">
+            </div>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Logo kluba</label>
+            <div class="d-flex align-items-center gap-3">
+              <div id="logoPreview" onclick="document.getElementById('clubLogoFile').click()" style="width:64px;height:64px;border-radius:12px;background:#f1f5f9;border:2px dashed #cbd5e1;cursor:pointer;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;" title="Kliknite za upload">
+                <i class="bi bi-image text-muted" style="font-size:1.5rem" id="logoPreviewIcon"></i>
+              </div>
+              <div>
+                <input type="file" id="clubLogoFile" accept="image/*" class="d-none" onchange="previewLogo(this)">
+                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('clubLogoFile').click()"><i class="bi bi-upload me-1"></i>Odaberi sliku</button>
+                <div class="form-text mt-1">Maks. 5 MB. JPEG, PNG, WebP.</div>
+              </div>
+            </div>
+          </div>
+          <div class="col-12">
+            <div class="p-3 rounded-3 d-flex align-items-center gap-3" id="brandPreview" style="background:#1e293b">
+              <span style="color:white;font-weight:700;font-size:1rem" id="previewName">Naziv kluba</span>
+              <span class="badge" id="previewBadge" style="background:#3b82f6">Aktivan</span>
+            </div>
+            <div class="form-text">Pregled boja.</div>
+          </div>
+          <div class="col-md-6" id="clubActiveRow">
+            <div class="form-check form-switch mt-2">
+              <input class="form-check-input" type="checkbox" id="clubActive" checked>
+              <label class="form-check-label" for="clubActive">Aktivan</label>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
+        <button type="button" class="btn btn-primary" onclick="saveClub()">
+          <span id="saveSpinner" class="spinner-border spinner-border-sm d-none me-1"></span>
+          Spremi
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Subscription Edit Modal -->
+<div class="modal fade" id="subModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Pretplata — <span id="subClubName"></span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="subClubId">
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <label class="form-label">Plan</label>
+            <select class="form-select" id="subPlan" onchange="onSubPlanChange()">
+              <option value="starter">Starter (Besplatno)</option>
+              <option value="pro">Pro — 40 KM/mj.</option>
+              <option value="klub">Klub — 60 KM/mj.</option>
+            </select>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label">Status</label>
+            <select class="form-select" id="subStatus">
+              <option value="active">Aktivan</option>
+              <option value="overdue">Overdue</option>
+              <option value="cancelled">Otkazan</option>
+            </select>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label">Cijena (KM)</label>
+            <input type="number" class="form-control" id="subPrice" step="0.01" min="0" placeholder="0.00">
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label">Ciklus naplate</label>
+            <select class="form-select" id="subBilling">
+              <option value="monthly">Mjesečno</option>
+              <option value="yearly">Godišnje</option>
+            </select>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label">Period počinje</label>
+            <input type="date" class="form-control" id="subPeriodStart">
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label">Period završava</label>
+            <input type="date" class="form-control" id="subPeriodEnd">
+          </div>
+          <div class="col-12">
+            <label class="form-label">Napomene</label>
+            <textarea class="form-control" id="subNotes" rows="2" placeholder="Interne napomene..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
+        <button type="button" class="btn btn-primary" onclick="saveSub()">
+          <i class="bi bi-check-lg me-1"></i>Sačuvaj pretplatu
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Admins Modal -->
+<div class="modal fade" id="adminsModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="adminsModalTitle">Administratori</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="adminsList" class="mb-3"></div>
+        <hr>
+        <p class="fw-semibold mb-2">Dodaj novog admina</p>
+        <div class="row g-2">
+          <div class="col-md-5"><input type="text" class="form-control" id="adminName" placeholder="Ime i prezime"></div>
+          <div class="col-md-5"><input type="email" class="form-control" id="adminEmail" placeholder="E-mail"></div>
+          <div class="col-md-2"><button class="btn btn-primary w-100" onclick="addAdmin()"><i class="bi bi-plus"></i></button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastContainer"></div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+  const user = requireRole('super_admin');
+  setUserInfo(user);
+  buildSidebar();
+
+  const PLAN_COLORS  = { starter:'#6c757d', pro:'#10b981', klub:'#8b5cf6' };
+  const PLAN_LABEL   = { starter:'Starter', pro:'Pro', klub:'Klub' };
+  const STATUS_BADGE = {
+    active:    '<span class="badge bg-success">Aktivan</span>',
+    overdue:   '<span class="badge bg-danger">Overdue</span>',
+    cancelled: '<span class="badge bg-secondary">Otkazan</span>',
+  };
+
+  let currentClubId = null;
+
+  // Color picker sync
+  document.getElementById('clubPrimary').addEventListener('input', e => {
+    document.getElementById('clubPrimaryHex').value = e.target.value;
+    updatePreview();
+  });
+  document.getElementById('clubSecondary').addEventListener('input', e => {
+    document.getElementById('clubSecondaryHex').value = e.target.value;
+    updatePreview();
+  });
+  document.getElementById('clubPrimaryHex').addEventListener('input', e => {
+    if (/^#[0-9a-fA-F]{6}$/.test(e.target.value)) {
+      document.getElementById('clubPrimary').value = e.target.value;
+      updatePreview();
+    }
+  });
+  document.getElementById('clubSecondaryHex').addEventListener('input', e => {
+    if (/^#[0-9a-fA-F]{6}$/.test(e.target.value)) {
+      document.getElementById('clubSecondary').value = e.target.value;
+      updatePreview();
+    }
+  });
+  document.getElementById('clubName').addEventListener('input', updatePreview);
+
+  function updatePreview() {
+    const primary = document.getElementById('clubPrimary').value;
+    const secondary = document.getElementById('clubSecondary').value;
+    const name = document.getElementById('clubName').value || 'Naziv kluba';
+    document.getElementById('brandPreview').style.background = primary;
+    document.getElementById('previewBadge').style.background = secondary;
+    document.getElementById('previewName').textContent = name;
+  }
+
+  async function loadClubs() {
+    try {
+      const clubs = await apiGet('/clubs');
+      document.getElementById('clubsTable').innerHTML = clubs.map(c => `
+        <tr>
+          <td data-label="Naziv" class="fw-semibold">
+            <div class="d-flex align-items-center gap-2">
+              ${c.logo_url ? `<img src="${c.logo_url}?t=${Date.now()}" style="width:28px;height:28px;border-radius:6px;object-fit:contain;border:1px solid #e2e8f0;flex-shrink:0;" alt="">` : `<div style="width:28px;height:28px;border-radius:6px;background:#f1f5f9;border:1px solid #e2e8f0;flex-shrink:0;display:flex;align-items:center;justify-content:center;"><i class="bi bi-building text-muted" style="font-size:0.8rem"></i></div>`}
+              ${c.name}
+            </div>
+          </td>
+          <td data-label="Slug"><code class="text-muted small">${c.slug}</code></td>
+          <td data-label="Pretplata">
+            <div class="d-flex align-items-center gap-1 flex-wrap">
+              <span class="badge" style="background:${PLAN_COLORS[c.sub_plan]||'#6c757d'}">${PLAN_LABEL[c.sub_plan]||c.sub_plan||'Starter'}</span>
+              ${STATUS_BADGE[c.sub_status] || ''}
+              <button class="btn btn-link btn-sm p-0 ms-1" style="font-size:0.72rem;" onclick="openSubEdit(${c.id},'${(c.name||'').replace(/'/g,"\\'")}')" title="Uredi pretplatu"><i class="bi bi-pencil-square"></i></button>
+            </div>
+          </td>
+          <td data-label="Boje">
+            <span class="d-inline-block rounded-circle border me-1" style="width:18px;height:18px;background:${c.primary_color}" title="Sidebar: ${c.primary_color}"></span>
+            <span class="d-inline-block rounded-circle border" style="width:18px;height:18px;background:${c.secondary_color}" title="Akcent: ${c.secondary_color}"></span>
+          </td>
+          <td data-label="Članovi">${c.member_count || 0}</td>
+          <td data-label="Treneri">${c.coach_count || 0}</td>
+          <td data-label="Status">
+            <button class="btn btn-sm ${c.is_active ? 'btn-success' : 'btn-secondary'}" onclick="toggleActive(${c.id}, ${c.is_active})" title="${c.is_active ? 'Deaktiviraj' : 'Aktiviraj'}">
+              <i class="bi bi-${c.is_active ? 'toggle-on' : 'toggle-off'}"></i>
+              ${c.is_active ? 'Aktivan' : 'Neaktivan'}
+            </button>
+          </td>
+          <td>
+            <div class="d-flex gap-1">
+              <button class="btn btn-sm btn-primary" onclick="switchToClub(${c.id})" title="Pristupi klubu"><i class="bi bi-box-arrow-in-right me-1"></i>Pristupi</button>
+              <button class="btn btn-sm btn-outline-secondary" onclick="openEdit(${JSON.stringify(c).replace(/"/g,'&quot;')})" title="Uredi"><i class="bi bi-pencil"></i></button>
+              <button class="btn btn-sm btn-outline-info" onclick="openAdmins(${c.id}, '${c.name.replace(/'/g,"\\'")}')` + `" title="Administratori"><i class="bi bi-person-gear"></i></button>
+              <button class="btn btn-sm btn-outline-danger" onclick="deleteClub(${c.id},'${c.name.replace(/'/g,"\\'")}')` + `" title="Obriši"><i class="bi bi-trash"></i></button>
+            </div>
+          </td>
+        </tr>`).join('') || '<tr><td colspan="9" class="text-center text-muted py-3">Nema klubova</td></tr>';
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  function openCreate() {
+    document.getElementById('clubModalTitle').textContent = 'Novi klub';
+    document.getElementById('clubId').value = '';
+    document.getElementById('clubName').value = '';
+    document.getElementById('clubSlug').value = '';
+    document.getElementById('clubPrimary').value = '#1e293b';
+    document.getElementById('clubPrimaryHex').value = '#1e293b';
+    document.getElementById('clubSecondary').value = '#3b82f6';
+    document.getElementById('clubSecondaryHex').value = '#3b82f6';
+    document.getElementById('clubLogoFile').value = '';
+    setLogoPreview(null);
+    document.getElementById('clubActive').checked = true;
+    document.getElementById('clubActiveRow').style.display = 'none';
+    updatePreview();
+    new bootstrap.Modal(document.getElementById('clubModal')).show();
+  }
+
+  function openEdit(club) {
+    document.getElementById('clubModalTitle').textContent = 'Uredi klub';
+    document.getElementById('clubId').value = club.id;
+    document.getElementById('clubName').value = club.name;
+    document.getElementById('clubSlug').value = club.slug;
+    document.getElementById('clubPrimary').value = club.primary_color || '#1e293b';
+    document.getElementById('clubPrimaryHex').value = club.primary_color || '#1e293b';
+    document.getElementById('clubSecondary').value = club.secondary_color || '#3b82f6';
+    document.getElementById('clubSecondaryHex').value = club.secondary_color || '#3b82f6';
+    document.getElementById('clubLogoFile').value = '';
+    setLogoPreview(club.logo_url || null);
+    document.getElementById('clubActive').checked = !!club.is_active;
+    document.getElementById('clubActiveRow').style.display = '';
+    updatePreview();
+    new bootstrap.Modal(document.getElementById('clubModal')).show();
+  }
+
+  async function saveClub() {
+    const id = document.getElementById('clubId').value;
+    const body = {
+      name: document.getElementById('clubName').value.trim(),
+      slug: document.getElementById('clubSlug').value.trim() || undefined,
+      primary_color: document.getElementById('clubPrimaryHex').value,
+      secondary_color: document.getElementById('clubSecondaryHex').value,
+      is_active: document.getElementById('clubActive').checked ? 1 : 0
+    };
+    if (!body.name) { showToast('Naziv kluba je obavezan', 'error'); return; }
+    const spinner = document.getElementById('saveSpinner');
+    spinner.classList.remove('d-none');
+    try {
+      let clubId = id;
+      if (id) await apiPut(`/clubs/${id}`, body);
+      else { const r = await apiPost('/clubs', body); clubId = r.id; }
+
+      // Upload logo if a file was selected
+      const logoFile = document.getElementById('clubLogoFile').files[0];
+      if (logoFile && clubId) {
+        const fd = new FormData();
+        fd.append('logo', logoFile);
+        const res = await fetch(`/api/clubs/${clubId}/logo`, {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + getToken() },
+          body: fd
+        });
+        if (!res.ok) { const d = await res.json(); throw new Error(d.message || 'Greška pri uploadu loga'); }
+      }
+
+      bootstrap.Modal.getInstance(document.getElementById('clubModal')).hide();
+      showToast(id ? 'Klub ažuriran' : 'Klub dodan', 'success');
+      loadClubs();
+    } catch(e) { showToast(e.message, 'error'); }
+    finally { spinner.classList.add('d-none'); }
+  }
+
+  async function toggleActive(id, currentState) {
+    try {
+      await apiPut(`/clubs/${id}`, { is_active: currentState ? 0 : 1 });
+      showToast(currentState ? 'Klub deaktiviran' : 'Klub aktiviran', 'success');
+      loadClubs();
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  function deleteClub(id, name) {
+    confirmDelete(async () => {
+      try {
+        await apiDelete(`/clubs/${id}`);
+        showToast('Klub obrisan', 'success');
+        loadClubs();
+      } catch(e) { showToast(e.message, 'error'); }
+    }, `Obrisati klub "${name}"? Ova radnja je trajna.`);
+  }
+
+  async function openAdmins(clubId, clubName) {
+    currentClubId = clubId;
+    document.getElementById('adminsModalTitle').textContent = `Administratori - ${clubName}`;
+    document.getElementById('adminName').value = '';
+    document.getElementById('adminEmail').value = '';
+    await refreshAdmins();
+    new bootstrap.Modal(document.getElementById('adminsModal')).show();
+  }
+
+  async function refreshAdmins() {
+    try {
+      const admins = await apiGet(`/clubs/${currentClubId}/admins`);
+      document.getElementById('adminsList').innerHTML = admins.length
+        ? admins.map(a => `
+          <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+            <div><div class="fw-semibold">${a.name}</div><div class="text-muted small">${a.email}</div></div>
+            <div class="d-flex gap-1">
+              <button class="btn btn-sm btn-outline-warning" onclick="resetPassword(${a.id})" title="Resetuj lozinku na password123"><i class="bi bi-key"></i></button>
+              <button class="btn btn-sm btn-outline-danger" onclick="removeAdmin(${a.id})" title="Ukloni admina"><i class="bi bi-trash"></i></button>
+            </div>
+          </div>`).join('')
+        : '<p class="text-muted">Nema administratora.</p>';
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  async function addAdmin() {
+    const name = document.getElementById('adminName').value.trim();
+    const email = document.getElementById('adminEmail').value.trim();
+    if (!name || !email) { showToast('Unesite ime i e-mail', 'error'); return; }
+    try {
+      await apiPost(`/clubs/${currentClubId}/admins`, { name, email });
+      document.getElementById('adminName').value = '';
+      document.getElementById('adminEmail').value = '';
+      showToast('Admin dodan', 'success');
+      await refreshAdmins();
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  function removeAdmin(userId) {
+    confirmAction('Ukloniti administratora iz kluba?', async () => {
+      try {
+        await apiDelete(`/clubs/${currentClubId}/admins/${userId}`);
+        showToast('Admin uklonjen', 'success');
+        await refreshAdmins();
+      } catch(e) { showToast(e.message, 'error'); }
+    }, { title: 'Ukloni admina', btnLabel: 'Ukloni', btnClass: 'btn-danger' });
+  }
+
+  function resetPassword(userId) {
+    confirmAction('Resetovati lozinku administratora na "password123"?', async () => {
+      try {
+        await apiPost(`/clubs/${currentClubId}/admins/${userId}/reset`, {});
+        showToast('Lozinka resetovana na: password123', 'success');
+      } catch(e) { showToast(e.message, 'error'); }
+    }, { title: 'Resetuj lozinku', btnLabel: 'Resetuj', btnClass: 'btn-warning' });
+  }
+
+  function setLogoPreview(url) {
+    const el = document.getElementById('logoPreview');
+    const icon = document.getElementById('logoPreviewIcon');
+    if (url) {
+      icon.style.display = 'none';
+      el.style.background = '#f8fafc';
+      el.style.border = '2px solid #cbd5e1';
+      el.innerHTML = `<img src="${url}?t=${Date.now()}" style="width:100%;height:100%;object-fit:contain;" alt=""><i class="bi bi-image text-muted d-none" id="logoPreviewIcon"></i>`;
+    } else {
+      el.style.background = '#f1f5f9';
+      el.style.border = '2px dashed #cbd5e1';
+      el.innerHTML = '<i class="bi bi-image text-muted" id="logoPreviewIcon" style="font-size:1.5rem"></i>';
+    }
+  }
+
+  function previewLogo(input) {
+    if (!input.files[0]) return;
+    const reader = new FileReader();
+    reader.onload = e => setLogoPreview(e.target.result);
+    reader.readAsDataURL(input.files[0]);
+  }
+
+  const SUB_PRICE = { starter: 0, pro: 40, klub: 60 };
+
+  function onSubPlanChange() {
+    const plan = document.getElementById('subPlan').value;
+    document.getElementById('subPrice').value = SUB_PRICE[plan] ?? '';
+  }
+
+  async function openSubEdit(clubId, clubName) {
+    try {
+      const sub = await apiGet(`/platform/subscriptions/${clubId}`);
+      document.getElementById('subClubName').textContent  = clubName;
+      document.getElementById('subClubId').value          = clubId;
+      document.getElementById('subPlan').value            = sub?.plan || 'starter';
+      document.getElementById('subStatus').value          = sub?.status || 'active';
+      document.getElementById('subPrice').value           = sub?.price ?? SUB_PRICE[sub?.plan] ?? 0;
+      document.getElementById('subBilling').value         = sub?.billing_cycle || 'monthly';
+      document.getElementById('subPeriodStart').value     = (sub?.current_period_start||'').slice(0,10);
+      document.getElementById('subPeriodEnd').value       = (sub?.current_period_end||'').slice(0,10);
+      document.getElementById('subNotes').value           = sub?.notes || '';
+      new bootstrap.Modal(document.getElementById('subModal')).show();
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  async function saveSub() {
+    const clubId = document.getElementById('subClubId').value;
+    const body = {
+      plan:                 document.getElementById('subPlan').value,
+      status:               document.getElementById('subStatus').value,
+      price:                parseFloat(document.getElementById('subPrice').value) || 0,
+      billing_cycle:        document.getElementById('subBilling').value,
+      current_period_start: document.getElementById('subPeriodStart').value || null,
+      current_period_end:   document.getElementById('subPeriodEnd').value || null,
+      notes:                document.getElementById('subNotes').value || null,
+    };
+    try {
+      await apiPut(`/platform/subscriptions/${clubId}`, body);
+      bootstrap.Modal.getInstance(document.getElementById('subModal')).hide();
+      showToast('Pretplata ažurirana', 'success');
+      loadClubs();
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  loadClubs();
+</script>
+</body>
+</html>

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Uvjeti korištenja - Klavio</title>
+  <meta name="description" content="Uvjeti korištenja Klavio platforme za upravljanje fudbalskim klubovima.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    #mainNav{position:fixed;top:0;left:0;right:0;z-index:900;transition:all 0.3s;padding:10px 0}
+    #mainNav.scrolled{background:rgba(10,15,30,0.95);backdrop-filter:blur(24px) saturate(1.4);border-bottom:1px solid rgba(255,255,255,0.07);padding:6px 0;box-shadow:0 4px 32px rgba(0,0,0,0.3)}
+    .nav-inner{max-width:1160px;margin:0 auto;padding:0 24px;display:flex;align-items:center;height:56px;gap:8px}
+    .nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none;margin-right:20px;flex-shrink:0}
+    .nav-logo-img{height:36px;width:auto;filter:brightness(0) invert(1);opacity:0.92}
+    .nav-links-wrap{flex:1;display:flex;justify-content:center}
+    .nav-links{display:flex;align-items:center;gap:2px;list-style:none;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);border-radius:30px;padding:4px}
+    .nav-links a{display:block;color:rgba(255,255,255,0.65);text-decoration:none;font-size:0.875rem;font-weight:500;padding:6px 16px;border-radius:24px;transition:all 0.15s}
+    .nav-links a:hover{color:#fff;background:rgba(255,255,255,0.1)}.nav-links a.active{color:#fff;background:#2563eb}
+    .nav-ctas{display:flex;align-items:center;gap:8px;flex-shrink:0}
+    .nav-login{color:rgba(255,255,255,0.75);text-decoration:none;font-size:0.875rem;font-weight:600;padding:8px 16px;border-radius:8px;transition:all 0.15s}
+    .nav-login:hover{color:#fff;background:rgba(255,255,255,0.08)}
+    .nav-hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:6px;margin-left:auto;background:none;border:none}
+    .nav-hamburger span{display:block;width:22px;height:2px;background:rgba(255,255,255,0.8);border-radius:2px;transition:all 0.25s}
+    .nav-mob-overlay{display:none;position:fixed;inset:0;z-index:998;background:rgba(0,0,0,0.5);backdrop-filter:blur(3px)}
+    .nav-mob-overlay.open{display:block}
+    .nav-mobile{display:flex;flex-direction:column;position:fixed;top:0;right:-100%;width:min(340px,90vw);height:100%;z-index:999;background:#0a0f1e;border-left:1px solid rgba(255,255,255,0.07);transition:right 0.35s cubic-bezier(0.4,0,0.2,1);overflow-y:auto}
+    .nav-mobile.open{right:0}
+    .nav-mobile-hd{display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid rgba(255,255,255,0.07);flex-shrink:0}
+    .nav-mobile-hd a{display:flex;align-items:center;gap:10px;text-decoration:none}
+    .nav-mobile-hd img{height:28px;filter:brightness(0) invert(1);opacity:0.9}
+    .nav-mobile-close{background:rgba(255,255,255,0.06);border:1.5px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.65);width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;transition:all 0.15s;flex-shrink:0}
+    .nav-mobile-close:hover{background:rgba(255,255,255,0.12);color:#fff}
+    .nav-mobile-links{flex:1;padding:8px 0}
+    .nav-mobile-link{display:flex;align-items:center;justify-content:space-between;color:rgba(255,255,255,0.75);text-decoration:none;font-size:1rem;font-weight:600;padding:15px 24px;border-bottom:1px solid rgba(255,255,255,0.04);transition:color 0.15s,background 0.15s,padding-left 0.15s;letter-spacing:-0.01em}
+    .nav-mobile-link:hover{color:#fff;background:rgba(255,255,255,0.05);padding-left:28px}
+    .nav-mobile-link .arr{color:rgba(255,255,255,0.2);font-size:0.85rem}
+    .nav-mobile-ft{padding:20px 24px;border-top:1px solid rgba(255,255,255,0.07);display:flex;flex-direction:column;gap:10px;flex-shrink:0}
+    .nav-login-m{display:block;text-align:center;color:rgba(255,255,255,0.7);text-decoration:none;font-size:0.9rem;font-weight:600;padding:12px;border:1.5px solid rgba(255,255,255,0.12);border-radius:10px;transition:all 0.15s}
+    .nav-login-m:hover{background:rgba(255,255,255,0.05);color:#fff}
+    .nav-mobile-ft .btn-primary{display:block;text-align:center}
+    @media(max-width:860px){.nav-links-wrap,.nav-ctas{display:none}.nav-hamburger{display:flex}}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:13px 26px;border-radius:10px;font-size:0.95rem;font-weight:700;cursor:pointer;text-decoration:none;border:none;transition:all 0.18s;white-space:nowrap}
+    .btn-primary{background:#2563eb;color:#fff}.btn-sm{padding:9px 18px;font-size:0.85rem;border-radius:8px}
+  </style>
+  <link rel="stylesheet" href="/website/website.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body { font-family: 'Inter', system-ui, sans-serif; background: #fff; color: #111827; line-height: 1.6; display: flex; flex-direction: column; }
+    main { flex: 1; }
+    .container { max-width: 800px; margin: 0 auto; padding: 0 24px; }
+    .page-hero { background: #0a0f1e; padding: 96px 0 48px; }
+    .page-hero h1 { font-size: clamp(1.8rem,4vw,2.8rem); font-weight: 900; color: #fff; letter-spacing: -0.02em; margin-bottom: 12px; }
+    .page-hero p { color: rgba(255,255,255,0.5); font-size: 1rem; }
+    .content { padding: 56px 0 80px; }
+    .content h2 { font-size: 1.2rem; font-weight: 700; color: #111827; margin: 32px 0 12px; }
+    .content h2:first-child { margin-top: 0; }
+    .content p { color: #4b5563; line-height: 1.75; margin-bottom: 16px; font-size: 0.95rem; }
+    .content ul { color: #4b5563; padding-left: 20px; margin-bottom: 16px; }
+    .content ul li { margin-bottom: 6px; font-size: 0.95rem; line-height: 1.65; }
+
+    .legal-layout {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 48px;
+      align-items: start;
+    }
+
+    .toc {
+      position: sticky;
+      top: 84px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .toc-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 14px;
+    }
+    .toc a {
+      display: block;
+      font-size: 0.82rem;
+      color: #4b5563;
+      text-decoration: none;
+      padding: 5px 0;
+      border-bottom: 1px solid #f1f5f9;
+      transition: color 0.15s;
+      line-height: 1.4;
+    }
+    .toc a:last-child { border-bottom: none; }
+    .toc a:hover { color: #2563eb; }
+
+    .updated-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #15803d;
+      margin-bottom: 32px;
+    }
+
+    .section-num {
+      display: inline-block;
+      background: #eff6ff;
+      color: #2563eb;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 5px;
+      margin-right: 8px;
+      vertical-align: middle;
+      letter-spacing: 0.02em;
+    }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #f1f5f9;
+      margin: 8px 0 28px;
+    }
+
+    @media (max-width: 700px) {
+      .legal-layout { grid-template-columns: 1fr; }
+      .toc { position: static; }
+    }
+  </style>
+</head>
+<body>
+
+<nav id="mainNav">
+  <div class="nav-inner">
+    <a href="/website/" class="nav-logo"><img src="/assets/img/klavio-icon.svg" alt="Klavio" class="nav-logo-img"></a>
+    <div class="nav-links-wrap">
+      <ul class="nav-links">
+        <li><a href="/website/#modules">Moduli</a></li>
+        <li><a href="/website/#features">Funkcije</a></li>
+        <li><a href="/website/about.html">O nama</a></li>
+        <li><a href="/website/#pricing">Cijene</a></li>
+        <li><a href="/website/contact.html">Kontakt</a></li>
+      </ul>
+    </div>
+    <div class="nav-ctas">
+      <a href="/" class="nav-login">Prijava</a>
+      <a href="/website/register.html" class="btn btn-primary btn-sm">Registruj klub</a>
+    </div>
+    <button class="nav-hamburger" id="hamburger" aria-label="Menu" onclick="toggleMenu()">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+<div class="nav-mob-overlay" id="mobileOverlay" onclick="toggleMenu()"></div>
+<div class="nav-mobile" id="mobileMenu">
+  <div class="nav-mobile-hd">
+    <a href="/website/"><img src="/assets/img/klavio-icon.svg" alt="Klavio"></a>
+    <button class="nav-mobile-close" onclick="toggleMenu()" aria-label="Zatvori">✕</button>
+  </div>
+  <div class="nav-mobile-links">
+    <a href="/website/#modules" class="nav-mobile-link" onclick="toggleMenu()">Moduli<span class="arr">→</span></a>
+    <a href="/website/#features" class="nav-mobile-link" onclick="toggleMenu()">Funkcije<span class="arr">→</span></a>
+    <a href="/website/about.html" class="nav-mobile-link" onclick="toggleMenu()">O nama<span class="arr">→</span></a>
+    <a href="/website/#pricing" class="nav-mobile-link" onclick="toggleMenu()">Cijene<span class="arr">→</span></a>
+    <a href="/website/contact.html" class="nav-mobile-link" onclick="toggleMenu()">Kontakt<span class="arr">→</span></a>
+  </div>
+  <div class="nav-mobile-ft">
+    <a href="/" class="nav-login-m">Prijava</a>
+    <a href="/website/register.html" class="btn btn-primary">Registruj klub</a>
+  </div>
+</div>
+
+<main>
+  <section class="page-hero">
+    <div class="container">
+      <h1>Uvjeti korištenja</h1>
+      <p>Molimo vas da pažljivo pročitate ove uvjete prije korištenja platforme.</p>
+    </div>
+  </section>
+
+  <section class="content">
+    <div class="container">
+      <div class="legal-layout">
+
+        <nav class="toc">
+          <div class="toc-title">Sadržaj</div>
+          <a href="#prihvatanje">1. Prihvatanje uvjeta</a>
+          <a href="#opis">2. Opis usluge</a>
+          <a href="#racun">3. Korisnički račun</a>
+          <a href="#zabrana">4. Zabranjena upotreba</a>
+          <a href="#ip">5. Intelektualno vlasništvo</a>
+          <a href="#odgovornost">6. Ograničenje odgovornosti</a>
+          <a href="#izmjene">7. Izmjene uvjeta</a>
+          <a href="#kontakt">8. Kontakt</a>
+        </nav>
+
+        <div>
+          <div class="updated-badge">
+            <span>●</span> Posljednje ažuriranje: maj 2026.
+          </div>
+
+          <h2 id="prihvatanje"><span class="section-num">01</span> Prihvatanje uvjeta</h2>
+          <hr class="divider">
+          <p>Korištenjem Klavio platforme potvrđujete da ste pročitali, razumjeli i prihvatili ove Uvjete korištenja u cijelosti. Ako se ne slažete s bilo kojim dijelom ovih uvjeta, molimo vas da prestanete koristiti platformu.</p>
+          <p>Ovi uvjeti primjenjuju se na sve korisnike platforme, uključujući administratore klubova, trenere i ostale korisnike koji pristupaju platformi putem klupskog računa.</p>
+
+          <h2 id="opis"><span class="section-num">02</span> Opis usluge</h2>
+          <hr class="divider">
+          <p>Klavio je SaaS platforma namijenjena upravljanju fudbalskim klubovima, koja uključuje module za evidenciju članova, praćenje treninga i utakmica, finansijsko upravljanje, postavljanje tima i komunikaciju unutar kluba. Platforma se nudi na osnovu pretplatničkog modela.</p>
+          <p>Zadržavamo pravo izmjene, proširenja ili ukidanja pojedinih funkcionalnosti platforme uz prethodnu najavu korisnicima putem e-maila ili obavještenja unutar aplikacije.</p>
+
+          <h2 id="racun"><span class="section-num">03</span> Korisnički račun</h2>
+          <hr class="divider">
+          <p>Svaki klub registruje jedan administratorski račun koji je odgovoran za tačnost unesenih podataka i upravljanje pristupom ostalih korisnika unutar kluba. Obavezni ste čuvati povjerljivost svojih pristupnih podataka i odmah nas obavijestiti o svakom neovlaštenom pristupu vašem računu.</p>
+          <p>Klavio zadržava pravo suspenzije ili ukidanja računa u slučaju kršenja ovih uvjeta, neplaćanja pretplate ili aktivnosti koje štete platformi ili drugim korisnicima.</p>
+
+          <h2 id="zabrana"><span class="section-num">04</span> Zabranjena upotreba</h2>
+          <hr class="divider">
+          <p>Zabranjeno je koristiti platformu za unos lažnih podataka, pokušaje neovlaštenog pristupa tuđim računima, distribuciju malicioznog sadržaja ili bilo kakvu aktivnost koja je u suprotnosti s važećim zakonima Bosne i Hercegovine i EU regulativama. Jednako je zabranjeno koristiti automatizovane alate (botove, crawlere) za pristup platformi bez pisanog odobrenja.</p>
+          <ul>
+            <li>Dijeljenje pristupnih podataka s neovlaštenim trećim stranama</li>
+            <li>Pokušaj reverz-inženjeringa ili kopiranja izvornog koda platforme</li>
+            <li>Unos sadržaja koji krši prava intelektualnog vlasništva trećih strana</li>
+            <li>Zloupotreba platforme u svrhu neželjene komunikacije (spam)</li>
+          </ul>
+
+          <h2 id="ip"><span class="section-num">05</span> Intelektualno vlasništvo</h2>
+          <hr class="divider">
+          <p>Sav sadržaj, dizajn, kod i funkcionalnosti Klavio platforme isključivo su vlasništvo Klavio tima i zaštićeni su primjenjivim zakonima o autorskim pravima. Korisnici zadržavaju vlasništvo nad podacima koje unose u platformu, ali daju Klaviu licencu za obradu tih podataka u svrhu pružanja usluge.</p>
+          <p>Klavio naziv, logo i drugi brendirani elementi ne smiju se koristiti bez izričitog pisanog odobrenja.</p>
+
+          <h2 id="odgovornost"><span class="section-num">06</span> Ograničenje odgovornosti</h2>
+          <hr class="divider">
+          <p>Klavio se trudi osigurati visoku dostupnost i pouzdanost platforme, ali ne garantuje neprekidan rad usluge. U mjeri dozvoljenoj primjenjivim zakonom, Klavio ne odgovara za indirektne ili posredne štete nastale usljed nemogućnosti korištenja platforme, gubitka podataka ili grešaka u sadržaju.</p>
+          <p>Ukupna odgovornost Klavia prema korisniku ne može premašiti iznos pretplate plaćene u posljednjih 12 mjeseci.</p>
+
+          <h2 id="izmjene"><span class="section-num">07</span> Izmjene uvjeta</h2>
+          <hr class="divider">
+          <p>Klavio može izmijeniti ove Uvjete korištenja u bilo koje doba. O svim značajnim izmjenama obavijestit ćemo registrovane korisnike putem e-maila najmanje 14 dana unaprijed. Nastavak korištenja platforme nakon stupanja izmjena na snagu smatra se prihvatanjem novih uvjeta.</p>
+          <p>Preporučujemo da povremeno pregledate ovu stranicu kako biste bili upoznati s aktuelnom verzijom uvjeta.</p>
+
+          <h2 id="kontakt"><span class="section-num">08</span> Kontakt</h2>
+          <hr class="divider">
+          <p>Za sva pitanja u vezi s ovim Uvjetima korištenja možete nas kontaktirati putem e-maila: <a href="mailto:klavio.app@gmail.com" style="color:#2563eb;text-decoration:none;font-weight:600;">klavio.app@gmail.com</a> ili putem <a href="/website/contact.html" style="color:#2563eb;text-decoration:none;font-weight:600;">kontakt forme</a>.</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div style="max-width:1160px;margin:0 auto;padding:0 24px;">
+    <div class="footer-grid">
+      <div>
+        <a href="/website/" class="footer-logo">
+          <img src="/assets/img/klavio-icon.svg" alt="Klavio">
+        </a>
+        <p class="footer-tagline">Platforma za upravljanje fudbalskim klubovima u BiH i regiji.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Aplikacija</h4>
+        <ul>
+          <li><a href="/website/#modules">Svi moduli</a></li>
+          <li><a href="/website/#features">Funkcije</a></li>
+          <li><a href="/website/#pricing">Cijene</a></li>
+          <li><a href="/">Prijava</a></li>
+          <li><a href="/website/register.html">Registracija</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Kompanija</h4>
+        <ul>
+          <li><a href="/website/about.html">O nama</a></li>
+          <li><a href="/website/contact.html">Kontakt</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Pravno</h4>
+        <ul>
+          <li><a href="/website/terms.html">Uvjeti korištenja</a></li>
+          <li><a href="/website/privacy.html">Politika privatnosti</a></li>
+          <li><a href="/website/cookies.html">Kolačići</a></li>
+          <li><a href="/website/gdpr.html">GDPR</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span class="footer-copy">© 2026 Klavio. Sva prava pridržana.</span>
+      <div class="footer-langs">
+        <a href="#">BS</a><a href="#">HR</a><a href="#">SR</a><a href="#">EN</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+const _nav = document.getElementById('mainNav');
+window.addEventListener('scroll', () => _nav.classList.toggle('scrolled', window.scrollY > 30), { passive: true });
+_nav.classList.toggle('scrolled', window.scrollY > 30);
+function toggleMenu() {
+  const m = document.getElementById('mobileMenu');
+  const o = document.getElementById('mobileOverlay');
+  const isOpen = m.classList.toggle('open');
+  if(o) o.classList.toggle('open', isOpen);
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+}
+</script>
+</body>
+</html>

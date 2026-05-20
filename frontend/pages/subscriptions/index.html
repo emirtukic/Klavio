@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pretplate | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Pretplate klubova</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-danger" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+  <div class="page-body">
+
+    <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-2">
+      <div>
+        <h4>Pretplate</h4>
+        <p class="text-muted mb-0">Upravljajte pretplatama svih klubova na platformi.</p>
+      </div>
+    </div>
+
+    <!-- Summary KPIs -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="stat-icon bg-success bg-opacity-10 flex-shrink-0"><i class="bi bi-check-circle text-success fs-5"></i></div>
+            <div class="min-w-0"><div class="stat-kpi-label">Aktivne</div><div class="stat-kpi-value" id="kActive">-</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="stat-icon bg-warning bg-opacity-10 flex-shrink-0"><i class="bi bi-hourglass-split text-warning fs-5"></i></div>
+            <div class="min-w-0"><div class="stat-kpi-label">Besplatni</div><div class="stat-kpi-value" id="kTrial">-</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="stat-icon bg-danger bg-opacity-10 flex-shrink-0"><i class="bi bi-exclamation-triangle text-danger fs-5"></i></div>
+            <div class="min-w-0"><div class="stat-kpi-label">Dospjelo</div><div class="stat-kpi-value" id="kOverdue">-</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="stat-icon bg-primary bg-opacity-10 flex-shrink-0"><i class="bi bi-graph-up text-primary fs-5"></i></div>
+            <div class="min-w-0"><div class="stat-kpi-label">MRR</div><div class="stat-kpi-value" id="kMrr">-</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-3">
+      <div class="card-body py-2">
+        <div class="row g-2 align-items-center">
+          <div class="col-sm-4 col-md-3">
+            <input type="text" class="form-control form-control-sm" id="filterSearch" placeholder="Pretraži klub..."
+              autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly')" oninput="renderTable()">
+          </div>
+          <div class="col-auto">
+            <select class="form-select form-select-sm" id="filterStatus" onchange="renderTable()">
+              <option value="">Svi statusi</option>
+              <option value="active">Aktivan</option>
+              <option value="overdue">Dospjelo</option>
+              <option value="cancelled">Otkazan</option>
+            </select>
+          </div>
+          <div class="col-auto">
+            <select class="form-select form-select-sm" id="filterPlan" onchange="renderTable()">
+              <option value="">Svi planovi</option>
+              <option value="starter">Starter</option>
+              <option value="pro">Pro</option>
+              <option value="klub">Klub</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card table-card">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th>Klub</th>
+              <th>Plan</th>
+              <th>Status</th>
+              <th>Cijena</th>
+              <th>Ciklus</th>
+              <th>Period završava</th>
+              <th>Članovi</th>
+              <th>Napomene</th>
+              <th>Akcije</th>
+            </tr>
+          </thead>
+          <tbody id="subsTable">
+            <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:60%;"></div></td><td><div class="skeleton" style="height:20px;width:55px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:20px;width:65px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:13px;width:55px;"></div></td><td><div class="skeleton" style="height:13px;width:35px;"></div></td><td><div class="skeleton" style="height:13px;width:70px;"></div></td><td><div class="skeleton" style="height:13px;width:70px;"></div></td><td><div class="skeleton" style="height:13px;width:30px;"></div></td><td><div class="skeleton" style="height:13px;width:80%;"></div></td><td><div class="skeleton" style="height:28px;width:36px;border-radius:6px;"></div></td></tr>
+            <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:50%;"></div></td><td><div class="skeleton" style="height:20px;width:55px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:20px;width:65px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:13px;width:55px;"></div></td><td><div class="skeleton" style="height:13px;width:35px;"></div></td><td><div class="skeleton" style="height:13px;width:70px;"></div></td><td><div class="skeleton" style="height:13px;width:70px;"></div></td><td><div class="skeleton" style="height:13px;width:30px;"></div></td><td><div class="skeleton" style="height:13px;width:65%;"></div></td><td><div class="skeleton" style="height:28px;width:36px;border-radius:6px;"></div></td></tr>
+            <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:70%;"></div></td><td><div class="skeleton" style="height:20px;width:55px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:20px;width:65px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:13px;width:55px;"></div></td><td><div class="skeleton" style="height:13px;width:35px;"></div></td><td><div class="skeleton" style="height:13px;width:70px;"></div></td><td><div class="skeleton" style="height:13px;width:70px;"></div></td><td><div class="skeleton" style="height:13px;width:30px;"></div></td><td><div class="skeleton" style="height:13px;width:75%;"></div></td><td><div class="skeleton" style="height:28px;width:36px;border-radius:6px;"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Subscription Edit Modal -->
+<div class="modal fade" id="subModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Pretplata - <span id="subClubName"></span></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="subClubId">
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <label class="form-label">Plan</label>
+            <select class="form-select" id="subPlan" onchange="onPlanChange()">
+              <option value="starter">Starter — Besplatno (do 25 članova, 1 selekcija)</option>
+              <option value="pro">Pro — 40 KM/mj. (do 150 čl., obrazci, finansije)</option>
+              <option value="klub">Klub — 60 KM/mj. (neograničeno, sve funkcije)</option>
+            </select>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label">Status</label>
+            <select class="form-select" id="subStatus">
+              <option value="active">Aktivan</option>
+              <option value="overdue">Dospjelo</option>
+              <option value="cancelled">Otkazan</option>
+            </select>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label">Cijena (KM)</label>
+            <input type="number" class="form-control" id="subPrice" step="0.01" min="0" placeholder="0.00">
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label">Ciklus naplate</label>
+            <select class="form-select" id="subBilling">
+              <option value="monthly">Mjesečno</option>
+              <option value="yearly">Godišnje</option>
+            </select>
+          </div>
+          <div class="col-sm-4">
+            <label class="form-label">Period počinje</label>
+            <input type="date" class="form-control" id="subPeriodStart">
+          </div>
+          <div class="col-sm-4">
+            <label class="form-label">Period završava</label>
+            <input type="date" class="form-control" id="subPeriodEnd">
+          </div>
+          <div class="col-12">
+            <label class="form-label">Napomene</label>
+            <textarea class="form-control" id="subNotes" rows="3" placeholder="Interne napomene o ovom klijentu..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
+        <button type="button" class="btn btn-primary" onclick="saveSub()">
+          <i class="bi bi-check-lg me-1"></i>Sačuvaj
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+const user = requireRole('super_admin');
+setUserInfo(user);
+buildSidebar();
+
+let allSubs = [];
+
+const PLAN_COLORS  = { starter:'#6c757d', pro:'#10b981', klub:'#8b5cf6' };
+const PLAN_LABEL   = { starter:'Starter', pro:'Pro', klub:'Klub' };
+const PLAN_PRICE   = { starter: 0, pro: 40, klub: 60 };
+const STATUS_BADGE = {
+  active:    '<span class="badge bg-success">Aktivan</span>',
+  overdue:   '<span class="badge bg-danger">Dospjelo</span>',
+  cancelled: '<span class="badge bg-secondary">Otkazan</span>',
+};
+
+function fmt(n) { return parseFloat(n||0).toLocaleString('bs-BA', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' KM'; }
+function fmtDate(d) { return d ? d.slice(0,10) : '-'; }
+
+function calcMrr(subs) {
+  return subs.filter(s=>s.status==='active').reduce((acc, s) => {
+    const p = parseFloat(s.price||0);
+    return acc + (s.billing_cycle === 'yearly' ? p/12 : p);
+  }, 0);
+}
+
+async function load() {
+  try {
+    allSubs = await apiGet('/platform/subscriptions');
+    document.getElementById('kActive').textContent  = allSubs.filter(s=>s.status==='active').length;
+    document.getElementById('kTrial').textContent   = allSubs.filter(s=>s.plan==='starter').length;
+    document.getElementById('kOverdue').textContent = allSubs.filter(s=>s.status==='overdue').length;
+    document.getElementById('kMrr').textContent     = fmt(calcMrr(allSubs));
+    renderTable();
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+function renderTable() {
+  const q      = (document.getElementById('filterSearch').value || '').toLowerCase();
+  const status = document.getElementById('filterStatus').value;
+  const plan   = document.getElementById('filterPlan').value;
+
+  const rows = allSubs.filter(s =>
+    (!q      || s.club_name.toLowerCase().includes(q)) &&
+    (!status || s.status === status) &&
+    (!plan   || s.plan === plan)
+  );
+
+  document.getElementById('subsTable').innerHTML = rows.map(s => `
+    <tr>
+      <td class="fw-semibold">
+        ${s.logo_url ? `<img src="${s.logo_url}" height="22" class="me-2 rounded">` : ''}
+        ${s.club_name}
+        ${!s.is_active ? '<span class="badge bg-secondary ms-1">Neaktivan</span>' : ''}
+      </td>
+      <td><span class="badge" style="background:${PLAN_COLORS[s.plan]||'#6c757d'}">${PLAN_LABEL[s.plan]||s.plan||'-'}</span></td>
+      <td>${STATUS_BADGE[s.status] || '<span class="badge bg-secondary">-</span>'}</td>
+      <td>${s.price ? fmt(s.price) : '-'}</td>
+      <td>${s.billing_cycle === 'monthly' ? 'Mj.' : s.billing_cycle === 'yearly' ? 'God.' : '-'}</td>
+      <td class="text-muted small">${fmtDate(s.current_period_end)}</td>
+      <td>${s.member_count || 0}</td>
+      <td class="text-muted small" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${s.notes||''}">${s.notes || '-'}</td>
+      <td>
+        <button class="btn btn-sm btn-outline-primary" onclick="openSub(${s.club_id})">
+          <i class="bi bi-pencil"></i>
+        </button>
+      </td>
+    </tr>`).join('') || '<tr><td colspan="10" class="text-center text-muted py-3">Nema pretplata</td></tr>';
+}
+
+function onPlanChange() {
+  const plan = document.getElementById('subPlan').value;
+  document.getElementById('subPrice').value = PLAN_PRICE[plan] ?? '';
+}
+
+async function openSub(clubId) {
+  try {
+    const sub = await apiGet(`/platform/subscriptions/${clubId}`);
+    document.getElementById('subClubName').textContent  = sub?.club_name || clubId;
+    document.getElementById('subClubId').value          = clubId;
+    document.getElementById('subPlan').value            = sub?.plan || 'starter';
+    document.getElementById('subStatus').value          = sub?.status || 'active';
+    document.getElementById('subPrice').value           = sub?.price ?? PLAN_PRICE[sub?.plan] ?? '';
+    document.getElementById('subBilling').value         = sub?.billing_cycle || 'monthly';
+    document.getElementById('subPeriodStart').value     = fmtDate(sub?.current_period_start);
+    document.getElementById('subPeriodEnd').value       = fmtDate(sub?.current_period_end);
+    document.getElementById('subNotes').value           = sub?.notes || '';
+    new bootstrap.Modal(document.getElementById('subModal')).show();
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function saveSub() {
+  const clubId = document.getElementById('subClubId').value;
+  const body = {
+    plan:                 document.getElementById('subPlan').value,
+    status:               document.getElementById('subStatus').value,
+    price:                parseFloat(document.getElementById('subPrice').value) || 0,
+    billing_cycle:        document.getElementById('subBilling').value,
+    current_period_start: document.getElementById('subPeriodStart').value || null,
+    current_period_end:   document.getElementById('subPeriodEnd').value || null,
+    notes:                document.getElementById('subNotes').value || null,
+  };
+  try {
+    await apiPut(`/platform/subscriptions/${clubId}`, body);
+    bootstrap.Modal.getInstance(document.getElementById('subModal')).hide();
+    showToast('Pretplata ažurirana', 'success');
+    load();
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+load();
+</script>
+</body>
+</html>

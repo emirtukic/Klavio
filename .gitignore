@@ -1,0 +1,28 @@
+# Dependencies
+backend/node_modules/
+
+# Environment variables (contains passwords/secrets)
+backend/.env
+
+# Logs
+server.log
+server.err
+*.log
+
+# User uploaded files
+frontend/assets/uploads/avatars/*
+!frontend/assets/uploads/avatars/.gitkeep
+frontend/assets/uploads/clubs/*
+!frontend/assets/uploads/clubs/.gitkeep
+frontend/assets/uploads/gallery/*
+!frontend/assets/uploads/gallery/.gitkeep
+
+# DOCX extracted working files
+obrazci/_extracted/
+
+# Claude Code local session data
+.claude/
+
+# OS files
+.DS_Store
+Thumbs.db

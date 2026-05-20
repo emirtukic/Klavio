@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Podrška | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Podrška</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-primary" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+  <div class="page-body">
+    <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-2">
+      <div>
+        <h4>Support ticketi</h4>
+        <p class="text-muted mb-0">Pošaljite zahtjev za podršku ili pratite status postojećih tiketa.</p>
+      </div>
+      <button class="btn btn-primary" onclick="openCreate()"><i class="bi bi-plus me-1"></i>Novi tiket</button>
+    </div>
+
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="stat-icon bg-danger bg-opacity-10 flex-shrink-0"><i class="bi bi-envelope-open text-danger fs-5"></i></div>
+            <div class="min-w-0"><div class="stat-kpi-label">Otvoreni</div><div class="stat-kpi-value" id="kOpen">-</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="stat-icon bg-warning bg-opacity-10 flex-shrink-0"><i class="bi bi-arrow-repeat text-warning fs-5"></i></div>
+            <div class="min-w-0"><div class="stat-kpi-label">U obradi</div><div class="stat-kpi-value" id="kInProgress">-</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="stat-icon bg-success bg-opacity-10 flex-shrink-0"><i class="bi bi-check-circle text-success fs-5"></i></div>
+            <div class="min-w-0"><div class="stat-kpi-label">Riješeni</div><div class="stat-kpi-value" id="kResolved">-</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="stat-icon bg-primary bg-opacity-10 flex-shrink-0"><i class="bi bi-ticket-perforated text-primary fs-5"></i></div>
+            <div class="min-w-0"><div class="stat-kpi-label">Ukupno</div><div class="stat-kpi-value" id="kTotal">-</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card table-card">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead><tr><th>#</th><th>Naslov</th><th>Prioritet</th><th>Status</th><th>Odgovori</th><th>Datum</th><th></th></tr></thead>
+          <tbody id="ticketTable">
+            <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:30px;"></div></td><td><div class="skeleton" style="height:13px;width:65%;"></div></td><td><div class="skeleton" style="height:20px;width:55px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:20px;width:65px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:13px;width:20px;"></div></td><td><div class="skeleton" style="height:13px;width:70px;"></div></td><td><div class="skeleton" style="height:13px;width:16px;"></div></td></tr>
+            <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:30px;"></div></td><td><div class="skeleton" style="height:13px;width:50%;"></div></td><td><div class="skeleton" style="height:20px;width:55px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:20px;width:65px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:13px;width:20px;"></div></td><td><div class="skeleton" style="height:13px;width:70px;"></div></td><td><div class="skeleton" style="height:13px;width:16px;"></div></td></tr>
+            <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:30px;"></div></td><td><div class="skeleton" style="height:13px;width:70%;"></div></td><td><div class="skeleton" style="height:20px;width:55px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:20px;width:65px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:13px;width:20px;"></div></td><td><div class="skeleton" style="height:13px;width:70px;"></div></td><td><div class="skeleton" style="height:13px;width:16px;"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create Modal -->
+<div class="modal fade" id="createModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Novi support tiket</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-sm-8">
+            <label class="form-label">Naslov *</label>
+            <input type="text" class="form-control" id="tSubject" placeholder="Kratki opis problema...">
+          </div>
+          <div class="col-sm-4">
+            <label class="form-label">Prioritet</label>
+            <select class="form-select" id="tPriority">
+              <option value="low">Nizak</option>
+              <option value="medium" selected>Srednji</option>
+              <option value="high">Visok</option>
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Opis *</label>
+            <textarea class="form-control" id="tBody" rows="5" placeholder="Detaljno opišite problem ili zahtjev..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
+        <button type="button" class="btn btn-primary" onclick="submitTicket()"><i class="bi bi-send me-1"></i>Pošalji</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Thread Modal -->
+<div class="modal fade" id="threadModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title" id="threadSubject"></h5>
+          <div class="d-flex gap-2 mt-1" id="threadMeta"></div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="max-height:420px;overflow-y:auto;" id="threadReplies"></div>
+      <div class="modal-footer flex-column align-items-stretch" id="threadReplyWrap">
+        <textarea class="form-control mb-2" id="replyBody" rows="3" placeholder="Unesite poruku..."></textarea>
+        <div class="d-flex justify-content-end">
+          <button class="btn btn-primary" onclick="sendReply()"><i class="bi bi-send me-1"></i>Pošalji</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+const user = requireRole('admin', 'super_admin');
+setUserInfo(user); buildSidebar();
+
+let allTickets = [], currentTicketId = null;
+const STATUS_BADGE = {
+  open:        '<span class="badge bg-danger">Otvoren</span>',
+  in_progress: '<span class="badge bg-warning text-dark">U obradi</span>',
+  resolved:    '<span class="badge bg-success">Riješen</span>',
+  closed:      '<span class="badge bg-secondary">Zatvoren</span>'
+};
+const PRIO_BADGE = {
+  low:    '<span class="badge bg-secondary">Nizak</span>',
+  medium: '<span class="badge bg-info text-dark">Srednji</span>',
+  high:   '<span class="badge bg-danger">Visok</span>'
+};
+
+async function load() {
+  allTickets = await apiGet('/support-tickets/mine');
+  document.getElementById('kOpen').textContent       = allTickets.filter(t => t.status === 'open').length;
+  document.getElementById('kInProgress').textContent = allTickets.filter(t => t.status === 'in_progress').length;
+  document.getElementById('kResolved').textContent   = allTickets.filter(t => t.status === 'resolved' || t.status === 'closed').length;
+  document.getElementById('kTotal').textContent      = allTickets.length;
+  renderTable();
+}
+
+function renderTable() {
+  document.getElementById('ticketTable').innerHTML = allTickets.map(t => `
+    <tr style="cursor:pointer;" onclick="openThread(${t.id})">
+      <td class="text-muted small">#${t.id}</td>
+      <td class="fw-semibold">${t.subject}</td>
+      <td>${PRIO_BADGE[t.priority] || t.priority}</td>
+      <td>${STATUS_BADGE[t.status] || t.status}</td>
+      <td class="text-center">${t.reply_count || 0}</td>
+      <td class="small text-muted">${new Date(t.created_at).toLocaleDateString('bs-BA')}</td>
+      <td><i class="bi bi-chevron-right text-muted"></i></td>
+    </tr>`).join('') || '<tr><td colspan="7" class="text-center text-muted py-3">Nema tiketa</td></tr>';
+}
+
+function openCreate() {
+  document.getElementById('tSubject').value = '';
+  document.getElementById('tBody').value = '';
+  document.getElementById('tPriority').value = 'medium';
+  new bootstrap.Modal(document.getElementById('createModal')).show();
+}
+
+async function submitTicket() {
+  const subject  = document.getElementById('tSubject').value.trim();
+  const body     = document.getElementById('tBody').value.trim();
+  const priority = document.getElementById('tPriority').value;
+  if (!subject || !body) return showToast('Unesite naslov i opis', 'error');
+  try {
+    await apiPost('/support-tickets', { subject, body, priority });
+    bootstrap.Modal.getInstance(document.getElementById('createModal')).hide();
+    showToast('Tiket poslan', 'success');
+    load();
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function openThread(id) {
+  currentTicketId = id;
+  const { ticket, replies } = await apiGet('/support-tickets/' + id + '/replies');
+  document.getElementById('threadSubject').textContent = ticket.subject;
+  document.getElementById('threadMeta').innerHTML = `${STATUS_BADGE[ticket.status]} ${PRIO_BADGE[ticket.priority]}`;
+  document.getElementById('replyBody').value = '';
+
+  // Hide reply box if ticket is closed/resolved
+  const closed = ticket.status === 'closed' || ticket.status === 'resolved';
+  document.getElementById('threadReplyWrap').style.display = closed ? 'none' : '';
+
+  document.getElementById('threadReplies').innerHTML = replies.map(r => `
+    <div class="d-flex gap-2 mb-3 ${r.is_staff ? 'flex-row-reverse' : ''}">
+      <div class="flex-shrink-0">
+        <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:36px;height:36px;background:${r.is_staff ? '#9b86f2' : '#e2e8f0'}">
+          <i class="bi bi-${r.is_staff ? 'shield-check text-white' : 'person text-muted'}"></i>
+        </div>
+      </div>
+      <div class="flex-grow-1">
+        <div class="small fw-semibold ${r.is_staff ? 'text-end' : ''} mb-1">${r.user_name} ${r.is_staff ? '<span class="badge" style="background:#9b86f2">Klavio</span>' : ''}</div>
+        <div class="p-3 rounded-3 ${r.is_staff ? 'text-white' : 'bg-light'}" style="${r.is_staff ? 'background:#9b86f2' : ''};white-space:pre-wrap;">${r.body}</div>
+        <div class="small text-muted mt-1 ${r.is_staff ? 'text-end' : ''}">${new Date(r.created_at).toLocaleString('bs-BA')}</div>
+      </div>
+    </div>`).join('') || '<p class="text-muted text-center">Nema poruka</p>';
+
+  const _tm = document.getElementById('threadModal');
+  (bootstrap.Modal.getInstance(_tm) || new bootstrap.Modal(_tm)).show();
+}
+
+async function sendReply() {
+  const body = document.getElementById('replyBody').value.trim();
+  if (!body) return;
+  try {
+    await apiPost('/support-tickets/' + currentTicketId + '/replies', { body });
+    showToast('Poruka poslana', 'success');
+    openThread(currentTicketId); load();
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+load();
+</script>
+</body>
+</html>

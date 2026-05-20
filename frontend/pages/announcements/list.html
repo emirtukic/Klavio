@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oglasna tabla | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+  <style>
+    .announcement-card {
+      border: none;
+      border-radius: 14px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+      transition: box-shadow 0.2s, transform 0.15s;
+    }
+    .announcement-card:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.11);
+      transform: translateY(-1px);
+    }
+    .announcement-card.pinned {
+      border-left: 4px solid var(--club-accent, #3b82f6);
+    }
+    .announcement-card .card-body { padding: 1.25rem 1.4rem 0.85rem; }
+    .announcement-card .card-footer {
+      background: transparent;
+      border-top: 1px solid #f1f5f9;
+      padding: 0.6rem 1.4rem;
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
+    .pin-badge {
+      background: rgba(59,130,246,0.12);
+      color: #2563eb;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      letter-spacing: 0.03em;
+    }
+    .announcement-content {
+      color: #374151;
+      font-size: 0.93rem;
+      line-height: 1.65;
+      white-space: pre-wrap;
+      word-break: break-word;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .announcement-card { cursor: pointer; }
+    .read-more-link {
+      font-size: 0.8rem; font-weight: 600; color: var(--club-accent, #3b82f6);
+      text-decoration: none; display: inline-block; margin-top: 6px;
+    }
+    .read-more-link:hover { text-decoration: underline; }
+    .view-modal-content {
+      white-space: pre-wrap; word-break: break-word;
+      line-height: 1.75; font-size: 0.95rem; color: #374151;
+    }
+    [data-theme="dark"] .view-modal-content { color: #cbd5e1; }
+[data-theme="dark"] .announcement-card { background: #1e293b !important; }
+    [data-theme="dark"] .announcement-card .card-footer { border-top-color: #334155; color: #64748b; }
+    [data-theme="dark"] .announcement-content { color: #cbd5e1; }
+    [data-theme="dark"] .pin-badge { background: rgba(59,130,246,0.2); color: #93c5fd; }
+  </style>
+</head>
+<body>
+<div class="sidebar"></div>
+
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Oglasna tabla</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-primary" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+
+  <div class="page-body">
+
+    <!-- Page header -->
+    <div class="page-header d-flex justify-content-between align-items-center">
+      <div>
+        <h4>Oglasna tabla</h4>
+        <p class="text-muted mb-0">Obavještenja i poruke kluba</p>
+      </div>
+      <button class="btn btn-primary d-none" id="addBtn" onclick="openModal()">
+        <i class="bi bi-plus-lg me-1"></i> Novo obavještenje
+      </button>
+    </div>
+
+    <!-- Announcements grid -->
+    <div id="announcementsContainer">
+      <!-- Loading state -->
+      <div class="text-center py-5 text-muted" id="loadingState">
+        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+        Učitavanje...
+      </div>
+    </div>
+
+  </div><!-- /page-body -->
+</div><!-- /main-content -->
+
+<!-- Create/Edit Modal -->
+<div class="modal fade" id="announcementModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalTitle"><i class="bi bi-megaphone me-2"></i>Novo obavještenje</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editId">
+        <!-- Title -->
+        <div class="mb-3">
+          <label class="form-label" for="fTitle">Naslov *</label>
+          <input type="text" class="form-control" id="fTitle" placeholder="Unesite naslov obavještenja...">
+        </div>
+        <!-- Content -->
+        <div class="mb-3">
+          <label class="form-label" for="fContent">Sadržaj *</label>
+          <textarea class="form-control" id="fContent" rows="6" placeholder="Unesite tekst obavještenja..."></textarea>
+        </div>
+        <!-- Pinned (admin only) -->
+        <div class="form-check" id="pinnedRow">
+          <input class="form-check-input" type="checkbox" id="fPinned">
+          <label class="form-check-label fw-semibold" for="fPinned">
+            <i class="bi bi-pin-angle me-1 text-primary"></i>Zakači obavještenje (prikaži na vrhu)
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
+        <button type="button" class="btn btn-primary" id="saveBtn" onclick="saveAnnouncement()">
+          <span class="spinner-border spinner-border-sm d-none me-1" id="saveSpinner"></span>
+          Objavi
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- View modal -->
+<div class="modal fade" id="viewModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header" id="viewModalHeader">
+        <div class="flex-grow-1 me-3">
+          <div id="viewPinnedBadge"></div>
+          <h5 class="modal-title fw-bold mb-0 mt-1" id="viewTitle"></h5>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body px-4 py-3">
+        <div class="view-modal-content" id="viewContent"></div>
+      </div>
+      <div class="modal-footer d-flex justify-content-between align-items-center">
+        <div class="text-muted small d-flex align-items-center gap-2">
+          <i class="bi bi-person-circle"></i>
+          <span id="viewAuthor"></span>
+          <span class="mx-1">·</span>
+          <span id="viewDate"></span>
+        </div>
+        <div id="viewAdminActions"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+  const user = requireRole('admin', 'super_admin', 'coach', 'member');
+  setUserInfo(user); buildSidebar();
+
+  const canPost   = ['admin', 'super_admin', 'coach'].includes(user.role);
+  const canAdmin  = ['admin', 'super_admin'].includes(user.role);
+
+  // Show "Novo obavještenje" button for eligible roles
+  if (canPost) document.getElementById('addBtn').classList.remove('d-none');
+  // Only admins can pin — hide the pinned row for coaches
+  if (!canAdmin) document.getElementById('pinnedRow').classList.add('d-none');
+
+  let allAnnouncements = [];
+
+  /* ── Load ── */
+  async function load() {
+    try {
+      const data = await apiGet('/announcements');
+      allAnnouncements = Array.isArray(data) ? data : (data.data || []);
+      renderAnnouncements(allAnnouncements);
+    } catch(e) {
+      showToast(e.message, 'error');
+      document.getElementById('announcementsContainer').innerHTML = `
+        <div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>${e.message}</div>`;
+    }
+  }
+
+  /* ── Render ── */
+  function renderAnnouncements(list) {
+    const container = document.getElementById('announcementsContainer');
+    document.getElementById('loadingState') && document.getElementById('loadingState').remove();
+
+    if (!list.length) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <i class="bi bi-megaphone empty-state-icon"></i>
+          <p class="fw-semibold mb-1">Nema obavještenja</p>
+          <p class="small text-muted">Još uvijek nema objavljenih obavještenja na oglasnoj tabli.</p>
+        </div>`;
+      return;
+    }
+
+    // Pinned first, then by date desc
+    const sorted = [...list].sort((a, b) => {
+      if (a.pinned && !b.pinned) return -1;
+      if (!a.pinned && b.pinned) return 1;
+      return new Date(b.created_at || b.date || 0) - new Date(a.created_at || a.date || 0);
+    });
+
+    container.innerHTML = `<div class="row g-3">${sorted.map(a => renderCard(a)).join('')}</div>`;
+  }
+
+  function renderCard(a) {
+    const pinnedBadge = a.pinned
+      ? `<span class="pin-badge me-2"><i class="bi bi-pin-angle-fill me-1"></i>Zakačeno</span>`
+      : '';
+
+    const adminActions = canAdmin ? `
+      <button class="btn btn-sm btn-outline-secondary me-1" onclick="openEdit(${a.id})" title="Uredi">
+        <i class="bi bi-pencil"></i>
+      </button>
+      <button class="btn btn-sm btn-outline-danger" onclick="deleteAnnouncement(${a.id})" title="Obriši">
+        <i class="bi bi-trash"></i>
+      </button>
+    ` : '';
+
+    const coachActions = (user.role === 'coach' && (a.author_id === user.id || a.author_id === user.member_id))
+      ? `<button class="btn btn-sm btn-outline-secondary me-1" onclick="openEdit(${a.id})" title="Uredi"><i class="bi bi-pencil"></i></button>`
+      : '';
+
+    const actions = canAdmin ? adminActions : coachActions;
+
+    return `
+      <div class="col-12 col-md-6 col-xl-4">
+        <div class="card announcement-card h-100 ${a.pinned ? 'pinned' : ''}" onclick="openView(${a.id})">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div class="d-flex align-items-center flex-wrap gap-1">
+                ${pinnedBadge}
+                <h6 class="fw-bold mb-0 text-break">${escHtml(a.title)}</h6>
+              </div>
+              ${actions ? `<div class="d-flex flex-shrink-0 ms-2" onclick="event.stopPropagation()">${actions}</div>` : ''}
+            </div>
+            <div class="announcement-content">${escHtml(a.content)}</div>
+            <a class="read-more-link" onclick="event.stopPropagation();openView(${a.id})">Pročitaj više <i class="bi bi-arrow-right"></i></a>
+          </div>
+          <div class="card-footer d-flex align-items-center gap-2">
+            <i class="bi bi-person-circle"></i>
+            <span>${escHtml(a.author_name || a.author || 'Nepoznato')}</span>
+            <span class="ms-auto">${formatDate(a.created_at || a.date)}</span>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function escHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  /* ── View modal ── */
+  function openView(id) {
+    const a = allAnnouncements.find(x => x.id === id);
+    if (!a) return;
+
+    document.getElementById('viewPinnedBadge').innerHTML = a.pinned
+      ? `<span class="pin-badge"><i class="bi bi-pin-angle-fill me-1"></i>Zakačeno</span>` : '';
+    document.getElementById('viewTitle').textContent   = a.title   || '';
+    document.getElementById('viewContent').textContent = a.content || '';
+    document.getElementById('viewAuthor').textContent  = a.author_name || a.author || 'Nepoznato';
+    document.getElementById('viewDate').textContent    = formatDate(a.created_at || a.date);
+
+    const adminActions = document.getElementById('viewAdminActions');
+    if (canAdmin) {
+      adminActions.innerHTML = `
+        <button class="btn btn-sm btn-outline-secondary me-1" onclick="bootstrap.Modal.getInstance(document.getElementById('viewModal')).hide();openEdit(${a.id})">
+          <i class="bi bi-pencil me-1"></i>Uredi
+        </button>
+        <button class="btn btn-sm btn-outline-danger" onclick="bootstrap.Modal.getInstance(document.getElementById('viewModal')).hide();deleteAnnouncement(${a.id})">
+          <i class="bi bi-trash me-1"></i>Obriši
+        </button>`;
+    } else if (user.role === 'coach' && (a.author_id === user.id || a.author_id === user.member_id)) {
+      adminActions.innerHTML = `
+        <button class="btn btn-sm btn-outline-secondary" onclick="bootstrap.Modal.getInstance(document.getElementById('viewModal')).hide();openEdit(${a.id})">
+          <i class="bi bi-pencil me-1"></i>Uredi
+        </button>`;
+    } else {
+      adminActions.innerHTML = '';
+    }
+
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('viewModal')).show();
+  }
+
+  /* ── Modal helpers ── */
+  function resetModal() {
+    document.getElementById('editId').value   = '';
+    document.getElementById('fTitle').value   = '';
+    document.getElementById('fContent').value = '';
+    document.getElementById('fPinned').checked = false;
+  }
+
+  function openModal() {
+    resetModal();
+    document.getElementById('modalTitle').innerHTML = '<i class="bi bi-megaphone me-2"></i>Novo obavještenje';
+    document.getElementById('saveBtn').textContent  = 'Objavi';
+    const sp = document.createElement('span');
+    sp.className = 'spinner-border spinner-border-sm d-none me-1';
+    sp.id = 'saveSpinner';
+    document.getElementById('saveBtn').prepend(sp);
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('announcementModal')).show();
+  }
+
+  function openEdit(id) {
+    const a = allAnnouncements.find(x => x.id === id);
+    if (!a) return;
+    document.getElementById('editId').value    = a.id;
+    document.getElementById('fTitle').value    = a.title   || '';
+    document.getElementById('fContent').value  = a.content || '';
+    document.getElementById('fPinned').checked = !!a.pinned;
+    document.getElementById('modalTitle').innerHTML = '<i class="bi bi-pencil me-2"></i>Uredi obavještenje';
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('announcementModal')).show();
+  }
+
+  /* ── Save ── */
+  async function saveAnnouncement() {
+    const id      = document.getElementById('editId').value;
+    const title   = document.getElementById('fTitle').value.trim();
+    const content = document.getElementById('fContent').value.trim();
+    const pinned  = canAdmin ? document.getElementById('fPinned').checked : false;
+
+    if (!title)   { showToast('Naslov je obavezan.', 'error'); return; }
+    if (!content) { showToast('Sadržaj je obavezan.', 'error'); return; }
+
+    const payload = { title, content, pinned };
+    const spinner = document.getElementById('saveSpinner');
+    const btn     = document.getElementById('saveBtn');
+    if (spinner) spinner.classList.remove('d-none');
+    btn.disabled = true;
+
+    try {
+      if (id) {
+        await apiPut('/announcements/' + id, payload);
+        showToast('Obavještenje ažurirano.', 'success');
+      } else {
+        await apiPost('/announcements', payload);
+        showToast('Obavještenje objavljeno.', 'success');
+      }
+      bootstrap.Modal.getInstance(document.getElementById('announcementModal')).hide();
+      load();
+    } catch(e) {
+      showToast(e.message, 'error');
+    } finally {
+      if (spinner) spinner.classList.add('d-none');
+      btn.disabled = false;
+    }
+  }
+
+  /* ── Delete ── */
+  function deleteAnnouncement(id) {
+    confirmDelete(async () => {
+      try {
+        await apiDelete('/announcements/' + id);
+        showToast('Obavještenje obrisano.', 'success');
+        load();
+      } catch(e) {
+        showToast(e.message, 'error');
+      }
+    });
+  }
+
+  /* ── Init ── */
+  load();
+</script>
+</body>
+</html>

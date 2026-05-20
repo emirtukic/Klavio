@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dodaj trening | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Dodaj trening</span>
+    <div class="d-flex align-items-center gap-2"><span class="badge bg-primary" id="userRole"></span><span class="fw-semibold small" id="userName"></span></div>
+  </div>
+  <div class="page-body">
+    <div class="page-header d-flex align-items-center gap-2">
+      <a href="schedule.html" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+      <h4 class="mb-0">Dodaj trening</h4>
+    </div>
+    <div class="card form-card">
+      <div class="card-body p-4">
+        <div id="alert" class="alert alert-danger d-none"></div>
+        <form id="form">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Naziv *</label>
+              <input type="text" class="form-control" name="title" required placeholder="npr. Jutarnji trening">
+            </div>
+            <div class="col-md-6" id="coachField">
+              <label class="form-label">Trener *</label>
+              <select class="form-select" name="coach_id"><option value="">Odaberi trenera...</option></select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Datum *</label>
+              <input type="date" class="form-control" name="session_date" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Početak *</label>
+              <input type="time" class="form-control" name="start_time" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Kraj *</label>
+              <input type="time" class="form-control" name="end_time" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Lokacija</label>
+              <input type="text" class="form-control" name="location" placeholder="npr. Glavno igralište">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Maks. sudionika</label>
+              <input type="number" class="form-control" name="max_participants" value="20" min="1">
+            </div>
+            <div class="col-md-6" id="selectionField">
+              <label class="form-label">Selekcija</label>
+              <select class="form-select" name="selection_id" id="selectionSelect">
+                <option value="">- Bez selekcije -</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Opis</label>
+              <textarea class="form-control" name="description" rows="2"></textarea>
+            </div>
+            <div class="col-12">
+              <button type="submit" class="btn btn-primary me-2">
+                <span class="spinner-border spinner-border-sm d-none me-1" id="spinner"></span>Dodaj trening
+              </button>
+              <a href="schedule.html" class="btn btn-outline-secondary">Odustani</a>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+  const user = requireRole('super_admin', 'admin', 'coach');
+  setUserInfo(user); buildSidebar();
+
+  if (user.role === 'coach') {
+    document.getElementById('coachField').classList.add('d-none');
+    document.getElementById('selectionField').classList.add('d-none');
+  } else {
+    apiGet('/coaches').then(coaches => {
+      const sel = document.querySelector('select[name=coach_id]');
+      sel.innerHTML = '<option value="">Odaberi trenera...</option>' + coaches.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+      sel.required = true;
+    }).catch(e => showToast(e.message, 'error'));
+    apiGet('/selections').then(sels => {
+      const sel = document.getElementById('selectionSelect');
+      sels.forEach(s => sel.insertAdjacentHTML('beforeend', `<option value="${s.id}">${s.name}</option>`));
+    }).catch(() => {});
+  }
+
+  document.getElementById('form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type=submit]');
+    const spinner = document.getElementById('spinner');
+    const alertEl = document.getElementById('alert');
+    btn.disabled = true; spinner.classList.remove('d-none'); alertEl.classList.add('d-none');
+    const fd = new FormData(e.target);
+    const body = Object.fromEntries(fd.entries());
+    Object.keys(body).forEach(k => { if (!body[k]) delete body[k]; });
+    if (body.coach_id) body.coach_id = parseInt(body.coach_id);
+    if (body.max_participants) body.max_participants = parseInt(body.max_participants);
+    if (body.selection_id) body.selection_id = parseInt(body.selection_id);
+    try {
+      await apiPost('/training', body);
+      showToast('Trening uspješno dodan');
+      setTimeout(() => window.location.href = 'schedule.html', 1000);
+    } catch(err) {
+      alertEl.textContent = err.message; alertEl.classList.remove('d-none');
+      btn.disabled = false; spinner.classList.add('d-none');
+    }
+  });
+</script>
+</body>
+</html>

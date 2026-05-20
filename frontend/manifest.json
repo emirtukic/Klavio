@@ -1,0 +1,21 @@
+{
+  "name": "Klavio — Upravljanje klubom",
+  "short_name": "Klavio",
+  "description": "Platforma za upravljanje sportskim klubom",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "icons": [
+    { "src": "/assets/img/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/assets/img/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "categories": ["sports", "productivity", "business"],
+  "shortcuts": [
+    { "name": "Članovi",   "url": "/pages/members/list.html",    "icons": [{ "src": "/assets/img/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Treninzi",  "url": "/pages/training/schedule.html","icons": [{ "src": "/assets/img/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Utakmice",  "url": "/pages/matches/list.html",    "icons": [{ "src": "/assets/img/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Kalendar",  "url": "/pages/calendar/index.html",  "icons": [{ "src": "/assets/img/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

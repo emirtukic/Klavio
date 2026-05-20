@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Razvoj igrača | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+  <style>
+    .dev-card {
+      border: none; border-radius: 14px; box-shadow: 0 1px 5px rgba(0,0,0,0.08);
+      transition: box-shadow 0.18s;
+    }
+    .dev-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+    .dev-card .card-header {
+      background: linear-gradient(135deg, var(--club-accent,#3b82f6) 0%, #6366f1 100%);
+      color: #fff; border-radius: 14px 14px 0 0 !important; border: none; padding: 1rem 1.25rem;
+    }
+    .stars-wrap { display: flex; align-items: center; gap: 2px; }
+    .star-icon { font-size: 1rem; color: #fbbf24; }
+    .star-icon.empty { color: #e2e8f0; }
+    .star-icon.half { position: relative; display: inline-block; color: #e2e8f0; }
+    .star-icon.half::before { content: '\F5E5'; font-family: 'bootstrap-icons'; color: #fbbf24; position: absolute; left: 0; width: 50%; overflow: hidden; }
+    .section-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: #64748b; margin-bottom: 0.25rem; }
+    .section-value { font-size: 0.88rem; color: #334155; line-height: 1.5; }
+    .rating-badge { background: rgba(255,255,255,0.25); border-radius: 20px;
+      padding: 2px 10px; font-size: 0.8rem; font-weight: 700; }
+    .slider-labels { display: flex; justify-content: space-between; font-size: 0.75rem; color: #94a3b8; }
+    .dev-empty-icon { font-size: 3rem; display: block; margin-bottom: 0.75rem; }
+    #ratingDisplay { font-size: 1.1rem; font-weight: 700; color: var(--club-accent,#3b82f6); }
+  </style>
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Razvoj igrača</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-primary" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+  <div class="page-body">
+
+    <!-- Page header -->
+    <div class="page-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <div>
+        <h4><i class="bi bi-person-lines-fill me-2 text-primary"></i>Razvoj igrača</h4>
+        <p class="text-muted mb-0">Planovi razvoja po igraču i sezoni</p>
+      </div>
+      <button class="btn btn-primary" id="addPlanBtn" data-bs-toggle="modal" data-bs-target="#planModal" onclick="openCreateModal()">
+        <i class="bi bi-plus-lg me-1"></i> Dodaj plan
+      </button>
+    </div>
+
+    <!-- Season filter -->
+    <div class="d-flex align-items-center gap-3 mb-4 flex-wrap">
+      <label class="form-label mb-0 fw-semibold text-muted small">Sezona:</label>
+      <select class="form-select form-select-sm w-auto" id="seasonFilter" onchange="filterBySeason()">
+        <option value="">Sve sezone</option>
+      </select>
+      <span class="text-muted small" id="planCount"></span>
+    </div>
+
+    <!-- Plans grid -->
+    <div class="row g-3" id="plansGrid">
+      <div class="col-12 text-center py-5 text-muted">
+        <div class="spinner-border spinner-border-sm me-2"></div>Učitavanje...
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Create/Edit Plan Modal -->
+<div class="modal fade" id="planModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="planModalTitle"><i class="bi bi-person-lines-fill me-2"></i>Dodaj plan razvoja</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editPlanId">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Igrač <span class="text-danger">*</span></label>
+            <select class="form-select" id="planMemberId">
+              <option value="">Odaberite igrača...</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Sezona <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="planSeason" placeholder="npr. 2024/2025">
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold">
+              <i class="bi bi-bullseye text-primary me-1"></i>Ciljevi
+            </label>
+            <textarea class="form-control" id="planGoals" rows="3" placeholder="Koji su ciljevi igrača za ovu sezonu?"></textarea>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">
+              <i class="bi bi-check-circle text-success me-1"></i>Prednosti
+            </label>
+            <textarea class="form-control" id="planStrengths" rows="3" placeholder="Koje su jake strane igrača?"></textarea>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">
+              <i class="bi bi-arrow-up-circle text-warning me-1"></i>Poboljšanja
+            </label>
+            <textarea class="form-control" id="planImprovements" rows="3" placeholder="Na čemu treba raditi?"></textarea>
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold">
+              <i class="bi bi-sticky text-secondary me-1"></i>Napomene
+            </label>
+            <textarea class="form-control" id="planNotes" rows="2" placeholder="Dodatne napomene..."></textarea>
+          </div>
+          <div class="col-12">
+            <label class="form-label fw-semibold">
+              Ocjena: <span id="ratingDisplay">5</span>/10
+            </label>
+            <input type="range" class="form-range" id="planRating" min="1" max="10" value="5"
+              oninput="document.getElementById('ratingDisplay').textContent=this.value">
+            <div class="slider-labels"><span>1</span><span>5</span><span>10</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
+        <button type="button" class="btn btn-primary" id="planSaveBtn" onclick="savePlan()">
+          <span id="planSpinner" class="spinner-border spinner-border-sm d-none me-1"></span>
+          <i class="bi bi-save me-1"></i>Spremi
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+  const user = requireRole('admin', 'super_admin', 'coach', 'member');
+  setUserInfo(user);
+  buildSidebar();
+
+  const canManage = ['admin', 'super_admin', 'coach'].includes(user.role);
+  const isMember  = user.role === 'member';
+
+  if (!canManage) document.getElementById('addPlanBtn').classList.add('d-none');
+
+  let allPlans   = [];
+  let allMembers = [];
+
+  // ── Load data ──
+  async function load() {
+    try {
+      [allPlans, allMembers] = await Promise.all([
+        apiGet('/development'),
+        canManage ? apiGet('/members') : Promise.resolve([])
+      ]);
+
+      // Members can only see their own plan
+      if (isMember && user.member_id) {
+        allPlans = allPlans.filter(p => p.member_id === user.member_id);
+      }
+
+      populateSeasonFilter();
+      populateMemberSelect();
+      render(allPlans);
+    } catch(e) {
+      document.getElementById('plansGrid').innerHTML = `
+        <div class="col-12"><div class="alert alert-danger">${e.message}</div></div>`;
+    }
+  }
+
+  function populateSeasonFilter() {
+    const seasons = [...new Set(allPlans.map(p => p.season).filter(Boolean))].sort().reverse();
+    const sel = document.getElementById('seasonFilter');
+    const current = sel.value;
+    sel.innerHTML = '<option value="">Sve sezone</option>' +
+      seasons.map(s => `<option value="${s}" ${s === current ? 'selected' : ''}>${s}</option>`).join('');
+  }
+
+  function populateMemberSelect() {
+    const sel = document.getElementById('planMemberId');
+    sel.innerHTML = '<option value="">Odaberite igrača...</option>' +
+      allMembers.map(m => `<option value="${m.id}">${escHtml(m.name)}</option>`).join('');
+  }
+
+  function filterBySeason() {
+    const season = document.getElementById('seasonFilter').value;
+    const filtered = season ? allPlans.filter(p => p.season === season) : allPlans;
+    render(filtered);
+  }
+
+  // ── Render cards ──
+  function render(plans) {
+    document.getElementById('planCount').textContent = `${plans.length} plan(ova)`;
+    if (!plans.length) {
+      document.getElementById('plansGrid').innerHTML = `
+        <div class="col-12">
+          <div class="empty-state">
+            <i class="bi bi-person-lines-fill dev-empty-icon"></i>
+            <p class="fw-semibold">Nema planova razvoja</p>
+            <p class="small">${canManage ? 'Kreirajte prvi plan klikom na dugme iznad.' : 'Trener još nije kreirao vaš plan razvoja.'}</p>
+          </div>
+        </div>`;
+      return;
+    }
+
+    document.getElementById('plansGrid').innerHTML = plans.map(p => `
+      <div class="col-12 col-md-6 col-xl-4">
+        <div class="dev-card card h-100">
+          <div class="card-header d-flex justify-content-between align-items-start">
+            <div>
+              <div class="fw-bold fs-6">${escHtml(p.member_name || 'Nepoznat igrač')}</div>
+              <div style="font-size:0.82rem;opacity:0.85">Sezona: ${escHtml(p.season || '-')}</div>
+            </div>
+            <span class="rating-badge">${p.rating || '-'}/10</span>
+          </div>
+          <div class="card-body pb-2">
+            <!-- Stars -->
+            <div class="stars-wrap mb-3">${renderStars(p.rating)}</div>
+
+            <!-- Collapsible sections -->
+            <div class="accordion accordion-flush" id="acc-${p.id}">
+              ${accordionSection(p.id, 'goals',       'bullseye text-primary',  'Ciljevi',     p.goals)}
+              ${accordionSection(p.id, 'strengths',   'check-circle text-success', 'Prednosti', p.strengths)}
+              ${accordionSection(p.id, 'improvements','arrow-up-circle text-warning', 'Poboljšanja', p.improvements)}
+              ${accordionSection(p.id, 'notes',       'sticky text-secondary',  'Napomene',    p.notes)}
+            </div>
+          </div>
+          <div class="card-footer bg-transparent border-top-0 pt-0 pb-3 px-3 d-flex justify-content-between align-items-center">
+            <small class="text-muted"><i class="bi bi-person-badge me-1"></i>${escHtml(p.coach_name || '-')}</small>
+            ${canManage ? `
+            <div class="d-flex gap-1">
+              <button class="btn btn-sm btn-outline-primary" onclick="openEditModal(${p.id})" title="Uredi">
+                <i class="bi bi-pencil"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-danger" onclick="deletePlan(${p.id})" title="Obriši">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>` : ''}
+          </div>
+        </div>
+      </div>`).join('');
+  }
+
+  function accordionSection(planId, key, iconCls, label, text) {
+    const colId = `acc-${planId}-${key}`;
+    return `
+      <div class="accordion-item border-0 border-bottom">
+        <h2 class="accordion-header">
+          <button class="accordion-button collapsed py-2 px-0 bg-transparent shadow-none"
+            style="font-size:0.85rem;color:#334155;font-weight:600;"
+            type="button" data-bs-toggle="collapse" data-bs-target="#${colId}">
+            <i class="bi bi-${iconCls} me-2"></i>${label}
+          </button>
+        </h2>
+        <div id="${colId}" class="accordion-collapse collapse">
+          <div class="accordion-body px-0 pt-0 pb-2">
+            <p class="section-value mb-0">${text ? escHtml(text) : '<span class="text-muted fst-italic">Nije uneseno</span>'}</p>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // ── Stars renderer ──
+  function renderStars(rating) {
+    const r = parseFloat(rating) || 0;
+    const total = 10;
+    // Show as 5-star scale (each star = 2 rating points)
+    const starCount = 5;
+    const scaled = r / 2; // e.g. rating 7 → 3.5 stars
+    let html = '';
+    for (let i = 1; i <= starCount; i++) {
+      if (i <= Math.floor(scaled)) {
+        html += `<i class="bi bi-star-fill star-icon"></i>`;
+      } else if (i - 0.5 <= scaled) {
+        html += `<i class="bi bi-star-half star-icon"></i>`;
+      } else {
+        html += `<i class="bi bi-star star-icon empty"></i>`;
+      }
+    }
+    html += `<span class="ms-2 text-muted small">${r}/10</span>`;
+    return html;
+  }
+
+  // ── Modal helpers ──
+  function openCreateModal() {
+    document.getElementById('planModalTitle').innerHTML = '<i class="bi bi-plus-lg me-2"></i>Dodaj plan razvoja';
+    document.getElementById('editPlanId').value = '';
+    ['planMemberId','planSeason','planGoals','planStrengths','planImprovements','planNotes'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el.tagName === 'SELECT') el.value = '';
+      else el.value = '';
+    });
+    document.getElementById('planRating').value = 5;
+    document.getElementById('ratingDisplay').textContent = '5';
+  }
+
+  function openEditModal(id) {
+    const p = allPlans.find(x => x.id === id);
+    if (!p) return;
+    document.getElementById('planModalTitle').innerHTML = '<i class="bi bi-pencil me-2"></i>Uredi plan razvoja';
+    document.getElementById('editPlanId').value = id;
+    document.getElementById('planMemberId').value = p.member_id || '';
+    document.getElementById('planSeason').value = p.season || '';
+    document.getElementById('planGoals').value = p.goals || '';
+    document.getElementById('planStrengths').value = p.strengths || '';
+    document.getElementById('planImprovements').value = p.improvements || '';
+    document.getElementById('planNotes').value = p.notes || '';
+    const rating = p.rating || 5;
+    document.getElementById('planRating').value = rating;
+    document.getElementById('ratingDisplay').textContent = rating;
+    new bootstrap.Modal(document.getElementById('planModal')).show();
+  }
+
+  // ── Save plan ──
+  async function savePlan() {
+    const memberId = document.getElementById('planMemberId').value;
+    const season   = document.getElementById('planSeason').value.trim();
+    if (!memberId) { showToast('Odaberite igrača', 'error'); return; }
+    if (!season)   { showToast('Unesite sezonu', 'error'); return; }
+
+    const body = {
+      member_id:    parseInt(memberId),
+      season,
+      goals:        document.getElementById('planGoals').value.trim(),
+      strengths:    document.getElementById('planStrengths').value.trim(),
+      improvements: document.getElementById('planImprovements').value.trim(),
+      notes:        document.getElementById('planNotes').value.trim(),
+      rating:       parseInt(document.getElementById('planRating').value)
+    };
+
+    const spinner = document.getElementById('planSpinner');
+    const btn     = document.getElementById('planSaveBtn');
+    spinner.classList.remove('d-none'); btn.disabled = true;
+
+    try {
+      await apiPost('/development', body);
+      bootstrap.Modal.getInstance(document.getElementById('planModal')).hide();
+      showToast('Plan uspješno spremljen', 'success');
+      load();
+    } catch(e) { showToast(e.message, 'error'); }
+    finally { spinner.classList.add('d-none'); btn.disabled = false; }
+  }
+
+  // ── Delete plan ──
+  async function deletePlan(id) {
+    confirmDelete(async () => {
+      try {
+        await apiDelete('/development/' + id);
+        showToast('Plan obrisan', 'success');
+        load();
+      } catch(e) { showToast(e.message, 'error'); }
+    });
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  load();
+</script>
+</body>
+</html>

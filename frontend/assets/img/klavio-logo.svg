@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="PRINT" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="50 195 455 120">
+  <defs>
+    <style>
+      .st0 { fill: #9b86f2; }
+      .st1 { font-family: Barlow-Bold, Barlow; font-size: 11px; font-weight: 700; }
+      .st1, .st2 { fill: #84f4d4; }
+      .st3 { fill: #fff; font-family: Bauhaus93, 'Bauhaus 93'; font-size: 68.07px; }
+    </style>
+  </defs>
+  <g id="CUSTOM-group">
+    <path class="st0" d="M142.94,254.56c0-6.48-4.39-11.95-10.36-13.6v27.2c5.97-1.65,10.36-7.12,10.36-13.6Z"/>
+    <path class="st2" d="M114.72,254.56c0,6.48,4.39,11.95,10.36,13.6v-27.2c-5.97,1.65-10.36,7.12-10.36,13.6Z"/>
+    <path class="st2" d="M64.92,273.67v-38.2h19.93v38.2h-19.93Z"/>
+    <path class="st0" d="M132.58,233.29c10.13,1.78,17.85,10.64,17.85,21.27s-7.72,19.49-17.85,21.27v29.97h48.93c6.19,0,11.24-5.04,11.24-11.24v-13.41h-23.72c-2.07,0-3.74-1.68-3.74-3.75v-45.69c0-2.07,1.68-3.74,3.74-3.74h23.72v-13.41c0-6.19-5.04-11.24-11.24-11.24h-48.93v29.97Z"/>
+    <path class="st2" d="M125.09,275.84c-10.13-1.78-17.85-10.64-17.85-21.27s7.72-19.49,17.85-21.27v-29.97h-48.94c-6.19,0-11.24,5.04-11.24,11.23v13.41h23.67c2.07,0,3.74,1.68,3.74,3.74v45.69c0,2.07-1.68,3.75-3.74,3.75h-23.67v13.41c0,6.19,5.04,11.24,11.24,11.24h48.94v-29.97Z"/>
+    <path class="st0" d="M172.77,273.67v-38.2h19.97v38.2h-19.97Z"/>
+  </g>
+  <path id="CUSTOM" class="st0" d="M413.72,286.29c0,4.26-1.69,8.12-4.41,10.91-2.72,2.79-6.49,4.52-10.64,4.52h-191.21v-15.43h206.26Z"/>
+  <text class="st3" transform="translate(206.15 254.75)"><tspan x="0" y="0">KLAVIO</tspan></text>
+  <text class="st1" transform="translate(208.94 275.68)"><tspan x="0" y="0">Platforma za upravljanje sportskim klubom</tspan></text>
+</svg>

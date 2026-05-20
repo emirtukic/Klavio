@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kalendar kluba | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+  <style>
+    .cal-nav { display: flex; align-items: center; gap: 1rem; }
+    .cal-nav-btn {
+      background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;
+      width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: #475569; transition: all 0.15s; font-size: 1rem;
+    }
+    .cal-nav-btn:hover { background: var(--club-accent,#3b82f6); color: #fff; border-color: var(--club-accent,#3b82f6); }
+    .cal-month-label { font-size: 1.15rem; font-weight: 700; color: #1e293b; min-width: 180px; text-align: center; }
+
+    .cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; }
+    .cal-day-header {
+      text-align: center; font-size: 0.75rem; font-weight: 700;
+      text-transform: uppercase; color: #94a3b8; padding: 6px 0;
+    }
+    .cal-cell {
+      background: #fff; border: 1px solid #e8ecf1; border-radius: 8px;
+      min-height: 90px; padding: 6px; position: relative; overflow: hidden;
+    }
+    .cal-cell.other-month { background: #f8fafc; }
+    .cal-cell.today { border-color: var(--club-accent,#3b82f6); border-width: 2px; }
+    .cal-cell.today .cal-day-num { color: var(--club-accent,#3b82f6); font-weight: 800; }
+    .cal-day-num { font-size: 0.82rem; font-weight: 600; color: #334155; margin-bottom: 3px; }
+    .cal-event-pill {
+      display: block; font-size: 0.68rem; border-radius: 4px; padding: 1px 5px;
+      margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      cursor: pointer; border: none; text-align: left; width: 100%; line-height: 1.5;
+      transition: opacity 0.12s;
+    }
+    .cal-event-pill:hover { opacity: 0.8; }
+    .pill-training    { background: #dbeafe; color: #1d4ed8; }
+    .pill-match       { background: #fee2e2; color: #dc2626; }
+    .pill-appointment { background: #dcfce7; color: #15803d; }
+    .more-badge { font-size: 0.65rem; color: #94a3b8; cursor: pointer; padding: 1px 3px; }
+
+    .upcoming-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 0.75rem 0; border-bottom: 1px solid #f1f5f9;
+    }
+    .upcoming-item:last-child { border-bottom: none; }
+    .upcoming-date-box {
+      min-width: 46px; text-align: center; background: #f8fafc;
+      border-radius: 8px; padding: 4px 6px; border: 1px solid #e2e8f0;
+    }
+    .upcoming-date-box .day  { font-size: 1.3rem; font-weight: 800; line-height: 1; color: #1e293b; }
+    .upcoming-date-box .mon  { font-size: 0.65rem; color: #64748b; text-transform: uppercase; }
+    .upcoming-type-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 4px; flex-shrink:0; }
+    .dot-training    { background: #3b82f6; }
+    .dot-match       { background: #ef4444; }
+    .dot-appointment { background: #22c55e; }
+
+    @media (max-width: 600px) {
+      .cal-cell { min-height: 60px; padding: 3px; }
+      .cal-day-num { font-size: 0.72rem; }
+      .cal-event-pill { font-size: 0.6rem; padding: 1px 3px; }
+    }
+  </style>
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Kalendar kluba</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-primary" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+  <div class="page-body">
+
+    <!-- Page header + navigation -->
+    <div class="page-header">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+          <h4><i class="bi bi-calendar2-week me-2 text-primary"></i>Kalendar kluba</h4>
+          <p class="text-muted mb-0">Treninzi, utakmice i termini u jednom pregledu</p>
+        </div>
+        <div class="cal-nav">
+          <button class="cal-nav-btn" onclick="changeMonth(-1)" title="Prethodni mjesec">
+            <i class="bi bi-chevron-left"></i>
+          </button>
+          <div class="cal-month-label" id="calMonthLabel"></div>
+          <button class="cal-nav-btn" onclick="changeMonth(1)" title="Sljedeći mjesec">
+            <i class="bi bi-chevron-right"></i>
+          </button>
+          <button class="btn btn-sm btn-outline-secondary ms-2" onclick="goToday()">Danas</button>
+          <button class="btn btn-sm btn-outline-primary" onclick="exportICS()"><i class="bi bi-calendar-plus me-1"></i>Preuzmi .ics</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="d-flex gap-3 mb-3 flex-wrap">
+      <span class="d-flex align-items-center gap-1 small text-muted">
+        <span class="dot-training upcoming-type-dot"></span>Treninzi
+      </span>
+      <span class="d-flex align-items-center gap-1 small text-muted">
+        <span class="dot-match upcoming-type-dot"></span>Utakmice
+      </span>
+      <span class="d-flex align-items-center gap-1 small text-muted">
+        <span class="dot-appointment upcoming-type-dot"></span>Termini
+      </span>
+    </div>
+
+    <!-- Calendar grid -->
+    <div class="card table-card mb-4">
+      <div class="card-body p-2 p-md-3">
+        <div id="calendarWrap">
+          <div class="text-center py-5 text-muted">
+            <div class="spinner-border spinner-border-sm me-2"></div>Učitavanje...
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upcoming events -->
+    <div class="card table-card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h6 class="mb-0 fw-bold"><i class="bi bi-clock me-2 text-primary"></i>Predstojeći eventi</h6>
+        <span class="badge bg-secondary" id="upcomingCount">0</span>
+      </div>
+      <div class="card-body" id="upcomingList">
+        <div><div class="skeleton mb-2" style="height:44px;border-radius:8px;"></div><div class="skeleton mb-2" style="height:44px;border-radius:8px;"></div><div class="skeleton" style="height:44px;border-radius:8px;"></div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Event detail modal -->
+<div class="modal fade" id="eventModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header" id="eventModalHeader">
+        <h5 class="modal-title" id="eventModalTitle"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="eventModalBody"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zatvori</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+  const user = requireRole('admin', 'super_admin', 'coach', 'member');
+  setUserInfo(user); buildSidebar();
+
+  // Personalise title for coach/member
+  if (user.role === 'coach' || user.role === 'member') {
+    const sel = getSelection();
+    const selName = sel ? sel.name : null;
+    document.title = 'Moj kalendar | Klavio';
+    document.querySelector('.topbar-title').textContent = 'Moj kalendar';
+    document.querySelector('h4').innerHTML = '<i class="bi bi-calendar2-week me-2 text-primary"></i>Moj kalendar';
+    document.querySelector('h4 + p').textContent =
+      selName ? `Treninzi, utakmice i termini — ${selName}` : 'Treninzi, utakmice i termini vaše selekcije';
+  }
+
+  const BS_MONTHS =['Januar','Februar','Mart','April','Maj','Juni',
+                     'Juli','August','Septembar','Oktobar','Novembar','Decembar'];
+  const BS_MONTHS_SHORT = ['Jan','Feb','Mar','Apr','Maj','Jun','Jul','Aug','Sep','Okt','Nov','Dec'];
+  const DAY_HEADERS = ['Pon','Uto','Sri','Čet','Pet','Sub','Ned'];
+
+  let currentYear  = new Date().getFullYear();
+  let currentMonth = new Date().getMonth(); // 0-indexed
+  let allEvents    = []; // unified array
+
+  // ── Load all event sources ──
+  async function load() {
+    try {
+      const isRestricted = user.role === 'coach' || user.role === 'member';
+      const [trainings, matches, appointments] = await Promise.all([
+        apiGet('/training').catch(() => []),
+        apiGet('/matches').catch(() => []),
+        apiGet(isRestricted ? '/appointments/my' : '/appointments').catch(() => [])
+      ]);
+
+      allEvents = [
+        ...trainings.map(t => ({
+          type: 'training',
+          date: t.session_date,
+          time: t.start_time,
+          title: t.title || 'Trening',
+          raw: t
+        })),
+        ...matches.map(m => ({
+          type: 'match',
+          date: m.match_date,
+          time: null,
+          title: `vs ${m.opponent || 'Protivnik'}`,
+          raw: m
+        })),
+        ...appointments.map(a => ({
+          type: 'appointment',
+          date: a.appointment_date,
+          time: a.start_time,
+          title: a.title || 'Termin',
+          raw: a
+        }))
+      ].filter(e => e.date);
+
+      renderCalendar();
+      renderUpcoming();
+    } catch(err) {
+      document.getElementById('calendarWrap').innerHTML =
+        `<div class="alert alert-danger">${err.message}</div>`;
+    }
+  }
+
+  // ── Build calendar ──
+  function renderCalendar() {
+    document.getElementById('calMonthLabel').textContent =
+      `${BS_MONTHS[currentMonth]} ${currentYear}`;
+
+    const today = new Date();
+    today.setHours(0,0,0,0);
+
+    // First day of month, adjusted to Monday=0 grid
+    const firstDay = new Date(currentYear, currentMonth, 1);
+    let startDow = firstDay.getDay(); // 0=Sun
+    startDow = (startDow === 0) ? 6 : startDow - 1; // Mon=0
+
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const daysInPrev  = new Date(currentYear, currentMonth, 0).getDate();
+
+    // Build event lookup: "YYYY-MM-DD" → array of events
+    const eventMap = {};
+    allEvents.forEach(e => {
+      const key = isoDate(e.date);
+      if (!eventMap[key]) eventMap[key] = [];
+      eventMap[key].push(e);
+    });
+
+    let html = '<div class="cal-grid">';
+    // Day headers
+    DAY_HEADERS.forEach(d => { html += `<div class="cal-day-header">${d}</div>`; });
+
+    let cellCount = 0;
+    // Prev month overflow cells
+    for (let i = startDow - 1; i >= 0; i--) {
+      const d = daysInPrev - i;
+      html += `<div class="cal-cell other-month"><div class="cal-day-num text-muted">${d}</div></div>`;
+      cellCount++;
+    }
+
+    // Current month cells
+    for (let d = 1; d <= daysInMonth; d++) {
+      const cellDate = new Date(currentYear, currentMonth, d);
+      cellDate.setHours(0,0,0,0);
+      const isToday = cellDate.getTime() === today.getTime();
+      const key = `${currentYear}-${String(currentMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const evs  = eventMap[key] || [];
+
+      const maxShow = 3;
+      const shown   = evs.slice(0, maxShow);
+      const extra   = evs.length - maxShow;
+
+      const pills = shown.map(e => {
+        const label = pillLabel(e);
+        const idx   = allEvents.indexOf(e);
+        return `<button class="cal-event-pill pill-${e.type}" onclick="openEventModal(${idx})" title="${escHtml(e.title)}">${escHtml(label)}</button>`;
+      }).join('');
+
+      const moreBadge = extra > 0
+        ? `<div class="more-badge">+${extra} više</div>` : '';
+
+      html += `<div class="cal-cell${isToday ? ' today' : ''}">
+        <div class="cal-day-num">${d}</div>
+        ${pills}${moreBadge}
+      </div>`;
+      cellCount++;
+    }
+
+    // Next month overflow
+    const totalCells = Math.ceil(cellCount / 7) * 7;
+    for (let d = 1; cellCount < totalCells; d++, cellCount++) {
+      html += `<div class="cal-cell other-month"><div class="cal-day-num text-muted">${d}</div></div>`;
+    }
+
+    html += '</div>';
+    document.getElementById('calendarWrap').innerHTML = html;
+  }
+
+  // ── Upcoming events ──
+  function renderUpcoming() {
+    const todayStr = isoDate(new Date());
+    const upcoming = allEvents
+      .filter(e => isoDate(e.date) >= todayStr)
+      .sort((a,b) => {
+        const da = isoDate(a.date) + (a.time || '00:00');
+        const db = isoDate(b.date) + (b.time || '00:00');
+        return da.localeCompare(db);
+      })
+      .slice(0, 10);
+
+    document.getElementById('upcomingCount').textContent = upcoming.length;
+
+    if (!upcoming.length) {
+      document.getElementById('upcomingList').innerHTML =
+        '<p class="text-muted text-center mb-0">Nema predstojećih događaja</p>';
+      return;
+    }
+
+    const typeLabels = { training:'Trening', match:'Utakmica', appointment:'Termin' };
+
+    document.getElementById('upcomingList').innerHTML = upcoming.map((e, i) => {
+      const dt   = new Date(e.date);
+      const day  = dt.getDate();
+      const mon  = BS_MONTHS_SHORT[dt.getMonth()];
+      const idx  = allEvents.indexOf(e);
+      return `
+        <div class="upcoming-item" role="button" onclick="openEventModal(${idx})" style="cursor:pointer">
+          <div class="upcoming-date-box">
+            <div class="day">${day}</div>
+            <div class="mon">${mon}</div>
+          </div>
+          <div class="upcoming-type-dot dot-${e.type} mt-1"></div>
+          <div class="flex-grow-1">
+            <div class="fw-semibold small">${escHtml(e.title)}</div>
+            <div class="text-muted" style="font-size:0.78rem">
+              ${typeLabels[e.type] || e.type}${e.time ? ' · ' + formatTime(e.time) : ''}
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  // ── Event detail modal ──
+  function openEventModal(idx) {
+    const e = allEvents[idx];
+    if (!e) return;
+    const typeColors = { training:'primary', match:'danger', appointment:'success' };
+    const typeLabels = { training:'Trening', match:'Utakmica', appointment:'Termin' };
+    const color = typeColors[e.type] || 'secondary';
+
+    const header = document.getElementById('eventModalHeader');
+    header.className = `modal-header bg-${color} text-white`;
+
+    document.getElementById('eventModalTitle').innerHTML =
+      `<i class="bi bi-${typeIcons[e.type]} me-2"></i>${escHtml(e.title)}`;
+
+    let body = `<table class="table table-sm table-borderless mb-0">`;
+    body += row('Datum', formatDate(e.date));
+    if (e.time) body += row('Vrijeme', formatTime(e.time));
+
+    if (e.type === 'training') {
+      const r = e.raw;
+      if (r.end_time)  body += row('Kraj', formatTime(r.end_time));
+      if (r.location)  body += row('Lokacija', escHtml(r.location));
+      if (r.status)    body += row('Status', statusBadge(r.status));
+    } else if (e.type === 'match') {
+      const r = e.raw;
+      if (r.match_type) body += row('Tip', statusBadge(r.match_type));
+      if (r.home_away)  body += row('Dom/Gost', statusBadge(r.home_away));
+      if (r.result)     body += row('Rezultat', `<strong>${escHtml(r.result)}</strong>`);
+    } else if (e.type === 'appointment') {
+      const r = e.raw;
+      if (r.end_time) body += row('Kraj', formatTime(r.end_time));
+      if (r.status)   body += row('Status', statusBadge(r.status));
+    }
+
+    body += `</table>`;
+    document.getElementById('eventModalBody').innerHTML = body;
+    new bootstrap.Modal(document.getElementById('eventModal')).show();
+  }
+
+  const typeIcons = { training:'calendar3', match:'trophy', appointment:'calendar-check' };
+
+  function row(label, value) {
+    return `<tr><th class="text-muted fw-normal" style="width:110px">${label}</th><td>${value}</td></tr>`;
+  }
+
+  // ── Navigation ──
+  function changeMonth(delta) {
+    currentMonth += delta;
+    if (currentMonth > 11) { currentMonth = 0;  currentYear++; }
+    if (currentMonth < 0)  { currentMonth = 11; currentYear--; }
+    renderCalendar();
+  }
+
+  function goToday() {
+    const now = new Date();
+    currentYear  = now.getFullYear();
+    currentMonth = now.getMonth();
+    renderCalendar();
+  }
+
+  // ── Helpers ──
+  function isoDate(d) {
+    if (!d) return '';
+    const dt = new Date(d);
+    return `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+  }
+
+  function formatTime(t) {
+    if (!t) return '';
+    return String(t).slice(0, 5);
+  }
+
+  function pillLabel(e) {
+    if (e.type === 'training')    return `Trening${e.time ? ' ' + formatTime(e.time) : ''}`;
+    if (e.type === 'match')       return e.title;
+    if (e.type === 'appointment') return e.title.length > 12 ? e.title.slice(0,10)+'…' : e.title;
+    return e.title;
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── ICS export ──
+  function exportICS() {
+    const typeLabels = { training: 'Trening', match: 'Utakmica', appointment: 'Termin' };
+
+    function toICSDate(dateStr, timeStr) {
+      const d = new Date(dateStr);
+      const year  = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day   = String(d.getDate()).padStart(2, '0');
+      if (!timeStr) return `${year}${month}${day}`;
+      const parts = String(timeStr).split(':');
+      const hh = String(parts[0] || '00').padStart(2, '0');
+      const mm = String(parts[1] || '00').padStart(2, '0');
+      const ss = String(parts[2] || '00').padStart(2, '0');
+      return `${year}${month}${day}T${hh}${mm}${ss}`;
+    }
+
+    function addOneHour(dateStr, timeStr) {
+      const d = new Date(dateStr);
+      const parts = String(timeStr || '00:00').split(':');
+      d.setHours(parseInt(parts[0] || 0, 10) + 1, parseInt(parts[1] || 0, 10), 0);
+      const year  = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day   = String(d.getDate()).padStart(2, '0');
+      const hh    = String(d.getHours()).padStart(2, '0');
+      const mm    = String(d.getMinutes()).padStart(2, '0');
+      return `${year}${month}${day}T${hh}${mm}00`;
+    }
+
+    let ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Klavio//Club Management//BS\r\n';
+
+    allEvents.forEach(e => {
+      const dtstart = toICSDate(e.date, e.time);
+      let dtend;
+      if (e.raw && e.raw.end_time) {
+        dtend = toICSDate(e.date, e.raw.end_time);
+      } else if (e.time) {
+        dtend = addOneHour(e.date, e.time);
+      } else {
+        dtend = toICSDate(e.date, null);
+      }
+
+      const location = (e.raw && e.raw.location) ? e.raw.location : '';
+      const description = typeLabels[e.type] || e.type;
+
+      ics += 'BEGIN:VEVENT\r\n';
+      ics += `DTSTART:${dtstart}\r\n`;
+      ics += `DTEND:${dtend}\r\n`;
+      ics += `SUMMARY:${e.title}\r\n`;
+      if (location) ics += `LOCATION:${location}\r\n`;
+      ics += `DESCRIPTION:${description}\r\n`;
+      ics += 'END:VEVENT\r\n';
+    });
+
+    ics += 'END:VCALENDAR';
+
+    const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'klavio-kalendar.ics';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  load();
+</script>
+</body>
+</html>

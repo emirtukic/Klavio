@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Utakmice | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+  <style>
+    .result-btn { border-radius: 10px; padding: 10px 20px; font-size: .9rem; transition: all .15s; cursor: pointer; }
+    .result-btn:hover { filter: brightness(.94); }
+    .result-btn.selected { box-shadow: 0 0 0 3px rgba(59,130,246,.45); transform: scale(1.04); font-weight: 700; }
+    .score-box { background: #f8fafc; border-radius: 12px; padding: 16px; text-align: center; }
+    .score-box input { font-size: 1.8rem; font-weight: 800; text-align: center; border: 2px solid #e2e8f0; border-radius: 10px; width: 80px; }
+    .score-box input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.2); }
+    .score-vs { font-size: 1.4rem; font-weight: 700; color: #94a3b8; }
+    .stat-input { width: 56px !important; text-align: center; }
+    .player-row:hover { background: #f8fafc; }
+    [data-theme="dark"] .score-box { background: #1e293b; }
+    [data-theme="dark"] .score-box input { background: #0f172a; color: #f1f5f9; border-color: #334155; }
+    [data-theme="dark"] .player-row:hover { background: #1e293b; }
+    .modal-header-match { background: linear-gradient(135deg,#1e40af,#3b82f6); color: #fff; border: none; }
+    .rsvp-group { display: flex; gap: 3px; }
+    .rsvp-btn {
+      padding: 3px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 600;
+      cursor: pointer; border: 1.5px solid; line-height: 1.4; transition: all 0.12s; white-space: nowrap;
+    }
+    .rsvp-yes  { background:#f0fdf4; border-color:#86efac; color:#166534; }
+    .rsvp-yes.active, .rsvp-yes:hover  { background:#16a34a; border-color:#16a34a; color:#fff; }
+    .rsvp-maybe{ background:#fefce8; border-color:#fde68a; color:#854d0e; }
+    .rsvp-maybe.active, .rsvp-maybe:hover { background:#d97706; border-color:#d97706; color:#fff; }
+    .rsvp-no   { background:#fef2f2; border-color:#fca5a5; color:#991b1b; }
+    .rsvp-no.active, .rsvp-no:hover   { background:#dc2626; border-color:#dc2626; color:#fff; }
+    .rsvp-count { font-size: 0.72rem; color: #64748b; white-space: nowrap; }
+    [data-theme="dark"] .rsvp-count { color: #94a3b8; }
+  </style>
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Utakmice</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-primary" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+  <div class="page-body">
+
+    <div class="page-header d-flex justify-content-between align-items-center">
+      <div><h4>Utakmice</h4><p class="text-muted mb-0">Nadolazeće i prošle utakmice</p></div>
+      <div class="d-flex gap-2">
+        <a href="../standings/index.html" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1">
+          <i class="bi bi-trophy"></i><span class="d-none d-md-inline">Tablica</span>
+        </a>
+        <a href="add.html" class="btn btn-primary" id="addBtn"><i class="bi bi-plus-lg me-1"></i>Dodaj utakmicu</a>
+      </div>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="filter-bar mb-3">
+      <div class="row g-2 align-items-end">
+        <div class="col-sm-6 col-lg-3">
+          <input type="text" class="form-control form-control-sm" id="fSearch"
+            placeholder="Pretraži protivnika..." oninput="renderTable()"
+            autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly')">
+        </div>
+        <div class="col-auto">
+          <select class="form-select form-select-sm" id="fResult" onchange="renderTable()">
+            <option value="">Svi ishodi</option>
+            <option value="pending">Na čekanju</option>
+            <option value="win">Pobjede</option>
+            <option value="loss">Porazi</option>
+            <option value="draw">Remiji</option>
+          </select>
+        </div>
+        <div class="col-auto">
+          <select class="form-select form-select-sm" id="fType" onchange="renderTable()">
+            <option value="">Sve vrste</option>
+            <option value="league">Liga</option>
+            <option value="cup">Kup</option>
+            <option value="friendly">Prijateljska</option>
+          </select>
+        </div>
+        <div class="col-auto">
+          <select class="form-select form-select-sm" id="fHomeAway" onchange="renderTable()">
+            <option value="">D/G - sve</option>
+            <option value="home">Domaći</option>
+            <option value="away">Gostujući</option>
+          </select>
+        </div>
+        <div class="col-auto d-none" id="fSelectionWrap">
+          <select class="form-select form-select-sm" id="fSelection" onchange="renderTable()">
+            <option value="">Sve selekcije</option>
+          </select>
+        </div>
+        <div class="col-auto">
+          <input type="date" class="form-control form-control-sm" id="fFrom" onchange="renderTable()" title="Od datuma">
+        </div>
+        <div class="col-auto">
+          <input type="date" class="form-control form-control-sm" id="fTo" onchange="renderTable()" title="Do datuma">
+        </div>
+        <div class="col-auto">
+          <button class="btn btn-outline-secondary btn-sm" onclick="resetFilters()" title="Resetuj filtere">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card table-card">
+      <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span class="fw-semibold small"><i class="bi bi-trophy me-2 text-warning"></i>Lista utakmica</span>
+        <span class="text-muted small" id="matchCount"></span>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0 table-mobile-cards">
+          <thead>
+            <tr>
+              <th>Protivnik</th>
+              <th>Datum</th>
+              <th>Lokacija</th>
+              <th class="admin-col d-none">Selekcija</th>
+              <th>Vrsta</th>
+              <th>D/G</th>
+              <th>RSVP</th>
+              <th>Ishod</th>
+              <th>Rezultat</th>
+              <th>Akcije</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr><td colspan="9" class="p-2"><span class="skeleton sk-row"></span></td></tr>
+            <tr><td colspan="9" class="p-2"><span class="skeleton sk-row"></span></td></tr>
+            <tr><td colspan="9" class="p-2"><span class="skeleton sk-row"></span></td></tr>
+            <tr><td colspan="9" class="p-2"><span class="skeleton sk-row" style="width:65%"></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Result Modal -->
+<div class="modal fade" id="resultModal" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content border-0" style="border-radius:16px;overflow:hidden;">
+      <div class="modal-header modal-header-match">
+        <div>
+          <h5 class="modal-title fw-bold mb-0" id="rmTitle">Unesi rezultat</h5>
+          <div class="small opacity-75 mt-1" id="rmSub"></div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+
+        <!-- Result selector -->
+        <div class="mb-4">
+          <label class="form-label fw-semibold mb-2">Ishod utakmice</label>
+          <div class="d-flex gap-2 flex-wrap">
+            <button type="button" class="btn result-btn" data-result="win"
+              style="background:#dcfce7;color:#166534;border:2px solid #86efac;"
+              onclick="selectResult('win')">
+              <i class="bi bi-trophy-fill me-1"></i>Pobjeda
+            </button>
+            <button type="button" class="btn result-btn" data-result="loss"
+              style="background:#fee2e2;color:#991b1b;border:2px solid #fca5a5;"
+              onclick="selectResult('loss')">
+              <i class="bi bi-x-circle-fill me-1"></i>Poraz
+            </button>
+            <button type="button" class="btn result-btn" data-result="draw"
+              style="background:#fef9c3;color:#854d0e;border:2px solid #fde68a;"
+              onclick="selectResult('draw')">
+              <i class="bi bi-dash-circle-fill me-1"></i>Remi
+            </button>
+            <button type="button" class="btn result-btn" data-result="pending"
+              style="background:#f1f5f9;color:#475569;border:2px solid #cbd5e1;"
+              onclick="selectResult('pending')">
+              <i class="bi bi-hourglass-split me-1"></i>Na čekanju
+            </button>
+          </div>
+        </div>
+
+        <!-- Score -->
+        <div class="mb-4">
+          <label class="form-label fw-semibold mb-2">Rezultat</label>
+          <div class="d-flex align-items-center gap-3 justify-content-center">
+            <div class="score-box text-center">
+              <div class="text-muted small mb-1" id="rmTeamLabel">Naš tim</div>
+              <input type="number" class="form-control" id="eGoalsFor" min="0" max="99" value="0">
+            </div>
+            <div class="score-vs">:</div>
+            <div class="score-box text-center">
+              <div class="text-muted small mb-1" id="rmOpponentLabel">Protivnik</div>
+              <input type="number" class="form-control" id="eGoalsAgainst" min="0" max="99" value="0">
+            </div>
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="mb-4">
+          <label class="form-label fw-semibold">Napomene</label>
+          <textarea class="form-control" id="eNotes" rows="2" placeholder="Bilješke o utakmici, formation, teren..."></textarea>
+        </div>
+
+        <!-- Player stats (admin/coach only) -->
+        <div id="playerStatsWrap">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <label class="form-label fw-semibold mb-0">
+              <i class="bi bi-people me-1 text-primary"></i>Statistike igrača
+            </label>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnToggleStats" onclick="toggleStats()">
+              <i class="bi bi-chevron-up" id="statsChevron"></i> Sklopi
+            </button>
+          </div>
+          <div id="playerStatsBody" class="table-responsive rounded-3 border">
+            <table class="table table-sm table-hover mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th>Igrač</th>
+                  <th class="text-center" title="Igrao/la"><i class="bi bi-play-circle text-success"></i></th>
+                  <th class="text-center" title="Golovi"><i class="bi bi-bullseye text-success"></i></th>
+                  <th class="text-center" title="Asistencije"><i class="bi bi-magic text-primary"></i></th>
+                  <th class="text-center" title="Žuti karton"><i class="bi bi-square-fill text-warning"></i></th>
+                  <th class="text-center" title="Crveni karton"><i class="bi bi-square-fill text-danger"></i></th>
+                  <th class="text-center" title="Minuti">Min</th>
+                </tr>
+              </thead>
+              <tbody id="psBody">
+                <tr><td colspan="7" class="text-center py-3 text-muted">
+                  <div class="spinner-border spinner-border-sm me-2"></div>Učitavanje igrača...
+                </td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Odustani</button>
+        <button type="button" class="btn btn-primary px-4" onclick="saveResult()">
+          <span class="spinner-border spinner-border-sm d-none me-1" id="saveSpinner"></span>
+          <i class="bi bi-check-lg me-1"></i>Sačuvaj rezultat
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+const user = requireAuth();
+setUserInfo(user);
+buildSidebar();
+
+const canEdit  = ['super_admin','admin','coach'].includes(user.role);
+const isAdmin  = ['super_admin','admin'].includes(user.role);
+const isMember = user.role === 'member';
+if (!canEdit) document.getElementById('addBtn').classList.add('d-none');
+if (isMember)  document.getElementById('playerStatsWrap').classList.add('d-none');
+if (isAdmin) {
+  document.getElementById('fSelectionWrap').classList.remove('d-none');
+  document.querySelectorAll('.admin-col').forEach(el => el.classList.remove('d-none'));
+}
+
+let allMatches = [], allSelections = [];
+let myRsvpMap  = {};
+let editMatchId = null;
+let selectedResult = 'pending';
+let statsExpanded = true;
+let psMembers = [];
+
+/* ── Load & filter ── */
+async function load() {
+  try {
+    const fetches = [
+      apiGet('/matches'),
+      isMember ? apiGet('/availability/my').catch(() => []) : Promise.resolve([])
+    ];
+    if (isAdmin) fetches.push(apiGet('/selections').catch(() => []));
+
+    const [matches, myRsvp, selections] = await Promise.all(fetches);
+    allMatches = matches;
+    myRsvp.filter(r => r.event_type === 'match').forEach(r => { myRsvpMap[r.event_id] = r.status; });
+
+    if (isAdmin && selections) {
+      allSelections = selections;
+      const sel = document.getElementById('fSelection');
+      sel.innerHTML = '<option value="">Sve selekcije</option>' +
+        selections.map(s => `<option value="${s.id}">${esc(s.name)}</option>`).join('');
+    }
+
+    renderTable();
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+function filtered() {
+  const q   = (document.getElementById('fSearch').value || '').toLowerCase();
+  const r   = document.getElementById('fResult').value;
+  const t   = document.getElementById('fType').value;
+  const ha  = document.getElementById('fHomeAway').value;
+  const sel = isAdmin ? document.getElementById('fSelection').value : '';
+  const fr  = document.getElementById('fFrom').value;
+  const to  = document.getElementById('fTo').value;
+  return allMatches.filter(m => {
+    const ds = (m.match_date || '').slice(0,10);
+    return (
+      (!q   || (m.opponent||'').toLowerCase().includes(q)) &&
+      (!r   || m.result === r) &&
+      (!t   || m.match_type === t) &&
+      (!ha  || m.home_away === ha) &&
+      (!sel || String(m.selection_id) === sel) &&
+      (!fr  || ds >= fr) &&
+      (!to  || ds <= to)
+    );
+  });
+}
+
+function renderTable() {
+  const rows = filtered();
+  document.getElementById('matchCount').textContent = rows.length + ' utakmica';
+  const RESULT_STYLES = {
+    win:     'background:#dcfce7;color:#166534',
+    loss:    'background:#fee2e2;color:#991b1b',
+    draw:    'background:#fef9c3;color:#854d0e',
+    pending: 'background:#f1f5f9;color:#475569',
+  };
+  const RESULT_LABELS = { win:'Pobjeda', loss:'Poraz', draw:'Remi', pending:'Na čekanju' };
+
+  document.getElementById('tableBody').innerHTML = rows.length ? rows.map(m => {
+    const rs = RESULT_STYLES[m.result] || RESULT_STYLES.pending;
+    const rl = RESULT_LABELS[m.result] || m.result || '-';
+    const upcoming = !m.result || m.result === 'pending';
+
+    // RSVP cell
+    let rsvpCell = '';
+    if (isMember && upcoming) {
+      const st = myRsvpMap[m.id] || null;
+      rsvpCell = `
+        <div class="rsvp-group">
+          <button class="rsvp-btn rsvp-yes ${st==='yes'?'active':''}"
+            onclick="setRsvp(${m.id},'yes',this)" title="Idem"><i class="bi bi-check2"></i> Idem</button>
+          <button class="rsvp-btn rsvp-maybe ${st==='maybe'?'active':''}"
+            onclick="setRsvp(${m.id},'maybe',this)" title="Možda"><i class="bi bi-question"></i></button>
+          <button class="rsvp-btn rsvp-no ${st==='no'?'active':''}"
+            onclick="setRsvp(${m.id},'no',this)" title="Ne idem"><i class="bi bi-x-lg"></i> Ne</button>
+        </div>`;
+    } else if (upcoming) {
+      rsvpCell = `<span class="rsvp-count"><i class="bi bi-people me-1"></i>-</span>`;
+    } else {
+      rsvpCell = '<span class="text-muted small">-</span>';
+    }
+
+    return `<tr>
+      <td data-label="Protivnik" class="fw-semibold">${esc(m.opponent)}</td>
+      <td data-label="Datum">${formatDate(m.match_date)}</td>
+      <td data-label="Lokacija" class="text-muted small">${esc(m.location || '-')}</td>
+      ${isAdmin ? `<td data-label="Selekcija" class="small">${m.selection_name ? `<span class="badge bg-secondary bg-opacity-75">${esc(m.selection_name)}</span>` : '<span class="text-muted">-</span>'}</td>` : ''}
+      <td data-label="Vrsta">${statusBadge(m.match_type)}</td>
+      <td data-label="D/G">${statusBadge(m.home_away)}</td>
+      <td data-label="RSVP">${rsvpCell}</td>
+      <td data-label="Ishod"><span class="badge" style="${rs};font-size:.72rem;padding:3px 9px;border-radius:10px;">${rl}</span></td>
+      <td data-label="Rezultat" class="fw-bold">
+        ${m.result && m.result !== 'pending'
+          ? `<span class="text-success">${m.goals_for}</span> <span class="text-muted">:</span> <span class="text-danger">${m.goals_against}</span>`
+          : '<span class="text-muted">-</span>'}
+      </td>
+      <td>
+        <a href="detail.html?id=${m.id}" class="btn btn-sm btn-outline-secondary me-1" title="Detalji">
+          <i class="bi bi-eye"></i>
+        </a>
+        ${canEdit ? `
+          <button class="btn btn-sm btn-primary me-1" onclick="openResultModal(${m.id})" title="Unesi rezultat">
+            <i class="bi bi-pencil-square"></i>
+          </button>
+          <button class="btn btn-sm btn-outline-danger" onclick="deleteMatch(${m.id})" title="Obriši">
+            <i class="bi bi-trash"></i>
+          </button>` : ''}
+      </td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="${isAdmin ? 10 : 9}" class="text-center py-5 text-muted"><i class="bi bi-inbox fs-2 d-block mb-2"></i>Nema pronađenih utakmica</td></tr>`;
+}
+
+function resetFilters() {
+  ['fSearch','fFrom','fTo'].forEach(id => document.getElementById(id).value = '');
+  ['fResult','fType','fHomeAway'].forEach(id => document.getElementById(id).value = '');
+  if (isAdmin) document.getElementById('fSelection').value = '';
+  renderTable();
+}
+
+/* ── Delete ── */
+async function deleteMatch(id) {
+  confirmDelete(async () => {
+    try { await apiDelete('/matches/' + id); showToast('Utakmica obrisana'); load(); }
+    catch(e) { showToast(e.message, 'error'); }
+  });
+}
+
+/* ── Result Modal ── */
+async function openResultModal(matchId) {
+  const m = allMatches.find(x => x.id === matchId);
+  if (!m) return;
+  editMatchId = matchId;
+
+  document.getElementById('rmTitle').textContent = 'Rezultat - ' + m.opponent;
+  document.getElementById('rmSub').textContent   =
+    formatDate(m.match_date) + ' · ' +
+    (m.match_type === 'league' ? 'Liga' : m.match_type === 'cup' ? 'Kup' : 'Prijateljska') +
+    ' · ' + (m.home_away === 'home' ? 'Domaći' : 'Gostujući');
+  document.getElementById('rmOpponentLabel').textContent = m.opponent;
+  document.getElementById('eGoalsFor').value    = m.goals_for    ?? 0;
+  document.getElementById('eGoalsAgainst').value = m.goals_against ?? 0;
+  document.getElementById('eNotes').value        = m.notes || '';
+
+  selectResult(m.result || 'pending');
+
+  if (canEdit) {
+    loadPlayerStats(matchId);
+  }
+
+  const modal = document.getElementById('resultModal');
+  (bootstrap.Modal.getInstance(modal) || new bootstrap.Modal(modal)).show();
+}
+
+function selectResult(result) {
+  selectedResult = result;
+  document.querySelectorAll('.result-btn').forEach(btn => {
+    const active = btn.dataset.result === result;
+    btn.classList.toggle('selected', active);
+  });
+}
+
+function toggleStats() {
+  statsExpanded = !statsExpanded;
+  document.getElementById('playerStatsBody').style.display = statsExpanded ? '' : 'none';
+  document.getElementById('btnToggleStats').innerHTML =
+    statsExpanded
+      ? '<i class="bi bi-chevron-up" id="statsChevron"></i> Sklopi'
+      : '<i class="bi bi-chevron-down"></i> Proširi';
+}
+
+async function loadPlayerStats(matchId) {
+  document.getElementById('psBody').innerHTML =
+    '<tr><td colspan="7" class="text-center py-3 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Učitavanje...</td></tr>';
+  try {
+    const [members, existing] = await Promise.all([
+      apiGet('/members'),
+      apiGet('/stats/match/' + matchId).catch(() => [])
+    ]);
+    psMembers = members;
+    const statsMap = {};
+    (Array.isArray(existing) ? existing : []).forEach(s => { statsMap[s.member_id] = s; });
+
+    if (!members.length) {
+      document.getElementById('psBody').innerHTML =
+        '<tr><td colspan="7" class="text-center text-muted py-3">Nema registrovanih članova</td></tr>';
+      return;
+    }
+
+    document.getElementById('psBody').innerHTML = members.map(m => {
+      const s = statsMap[m.id] || {};
+      const hasData = s.goals > 0 || s.assists > 0 || s.yellow_cards > 0 || s.red_cards > 0 || s.started;
+      return `<tr class="player-row">
+        <td class="fw-semibold small">${esc(m.name)}</td>
+        <td class="text-center">
+          <input type="checkbox" class="form-check-input" id="ps_s_${m.id}" ${s.started ? 'checked' : ''}>
+        </td>
+        <td class="text-center">
+          <input type="number" class="form-control form-control-sm stat-input" id="ps_g_${m.id}"
+            value="${s.goals || 0}" min="0" max="20">
+        </td>
+        <td class="text-center">
+          <input type="number" class="form-control form-control-sm stat-input" id="ps_a_${m.id}"
+            value="${s.assists || 0}" min="0" max="20">
+        </td>
+        <td class="text-center">
+          <input type="number" class="form-control form-control-sm stat-input" id="ps_y_${m.id}"
+            value="${s.yellow_cards || 0}" min="0" max="2">
+        </td>
+        <td class="text-center">
+          <input type="number" class="form-control form-control-sm stat-input" id="ps_r_${m.id}"
+            value="${s.red_cards || 0}" min="0" max="1">
+        </td>
+        <td class="text-center">
+          <input type="number" class="form-control form-control-sm" id="ps_m_${m.id}"
+            value="${s.minutes_played ?? (hasData ? 90 : 0)}" min="0" max="120" style="width:62px;text-align:center;">
+        </td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    document.getElementById('psBody').innerHTML =
+      `<tr><td colspan="7" class="text-center text-danger py-3 small">${esc(e.message)}</td></tr>`;
+  }
+}
+
+/* ── Save ── */
+async function saveResult() {
+  const spinner = document.getElementById('saveSpinner');
+  spinner.classList.remove('d-none');
+  document.querySelector('#resultModal .btn-primary').disabled = true;
+
+  try {
+    await apiPut('/matches/' + editMatchId, {
+      result:        selectedResult,
+      goals_for:     parseInt(document.getElementById('eGoalsFor').value)     || 0,
+      goals_against: parseInt(document.getElementById('eGoalsAgainst').value) || 0,
+      notes:         document.getElementById('eNotes').value.trim()
+    });
+
+    if (canEdit && psMembers.length) {
+      for (const m of psMembers) {
+        const started = document.getElementById('ps_s_' + m.id)?.checked || false;
+        const goals   = parseInt(document.getElementById('ps_g_' + m.id)?.value) || 0;
+        const assists = parseInt(document.getElementById('ps_a_' + m.id)?.value) || 0;
+        const yellow  = parseInt(document.getElementById('ps_y_' + m.id)?.value) || 0;
+        const red     = parseInt(document.getElementById('ps_r_' + m.id)?.value) || 0;
+        const minutes = parseInt(document.getElementById('ps_m_' + m.id)?.value) || 0;
+        if (started || goals || assists || yellow || red || minutes) {
+          await apiPost('/stats/match/' + editMatchId, {
+            member_id: m.id, goals, assists,
+            yellow_cards: yellow, red_cards: red,
+            minutes_played: minutes, started
+          });
+        }
+      }
+    }
+
+    showToast('Rezultat uspješno sačuvan', 'success');
+    bootstrap.Modal.getInstance(document.getElementById('resultModal')).hide();
+    load();
+  } catch(e) {
+    showToast(e.message, 'error');
+  } finally {
+    spinner.classList.add('d-none');
+    document.querySelector('#resultModal .btn-primary').disabled = false;
+  }
+}
+
+/* ── RSVP ── */
+async function setRsvp(matchId, status, btnEl) {
+  try {
+    await apiPost(`/availability/match/${matchId}`, { status });
+    myRsvpMap[matchId] = status;
+    const group = btnEl.closest('.rsvp-group');
+    group.querySelectorAll('.rsvp-btn').forEach(b => b.classList.remove('active'));
+    btnEl.classList.add('active');
+    showToast(status === 'yes' ? 'Potvrđeno - ideš!' : status === 'no' ? 'Označeno - ne ideš' : 'Označeno - možda', 'success');
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+load();
+</script>
+</body>
+</html>

@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Statistike igrača | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    .player-stat-card {
+      border: 1px solid var(--neutral-100); border-radius: var(--radius-md);
+      box-shadow: var(--shadow-xs); background: var(--neutral-0);
+      text-align: center; padding: 1.4rem 1rem;
+    }
+    .player-stat-card .stat-val { font-size: 2rem; font-weight: 800; line-height: 1; }
+    .player-stat-card .stat-lbl { font-size: var(--fs-xs); color: var(--neutral-400); text-transform: uppercase; letter-spacing: var(--ls-caps); margin-top: 4px; }
+    [data-theme="dark"] .player-stat-card { background: var(--neutral-0); }
+
+    .player-header {
+      background: linear-gradient(135deg, var(--club-accent,#2563eb), #6366f1);
+      border-radius: 16px;
+      color: #fff;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .player-avatar-lg {
+      width: 72px; height: 72px; border-radius: 50%;
+      border: 3px solid rgba(255,255,255,0.45);
+      overflow: hidden; flex-shrink: 0;
+      background: rgba(255,255,255,0.15);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem; font-weight: 800; color: #fff;
+    }
+    .jersey-badge {
+      width: 40px; height: 40px; border-radius: 10px;
+      background: rgba(255,255,255,0.2);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; font-weight: 800; color: #fff;
+      border: 1.5px solid rgba(255,255,255,0.35);
+    }
+
+    .match-row { border-bottom: 1px solid #f1f5f9; padding: 10px 0; }
+    [data-theme="dark"] .match-row { border-color: #334155; }
+    .match-row:last-child { border-bottom: none; }
+
+    .card-icon-header {
+      display: flex; align-items: center; gap: 8px;
+      font-weight: 700; font-size: 0.88rem;
+    }
+
+    .att-bar { height: 8px; border-radius: 8px; background: #e2e8f0; overflow: hidden; }
+    .att-fill { height: 100%; border-radius: 8px; transition: width 0.6s; }
+
+    [data-theme="dark"] .stat-card { background: #1e293b; }
+    [data-theme="dark"] .att-bar   { background: #334155; }
+  </style>
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Statistike igrača</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-primary" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+  <div class="page-body">
+
+    <!-- Header (populated by JS) -->
+    <div id="playerHeader">
+      <div class="text-center py-5 text-muted">
+        <div class="spinner-border spinner-border-sm me-2"></div>Učitavanje...
+      </div>
+    </div>
+
+    <!-- Stats content (hidden until loaded) -->
+    <div id="statsContent" style="display:none">
+
+      <!-- Totals row -->
+      <div class="row g-3 mb-4" id="totalsRow"></div>
+
+      <!-- Charts + match history -->
+      <div class="row g-3">
+
+        <!-- Left: performance chart -->
+        <div class="col-lg-5">
+          <div class="card border-0 shadow-sm mb-3" style="border-radius:14px">
+            <div class="card-header border-bottom py-2 px-3" style="border-radius:14px 14px 0 0">
+              <span class="card-icon-header">
+                <i class="bi bi-bar-chart-line text-primary"></i>Performanse po utakmici
+              </span>
+            </div>
+            <div class="card-body">
+              <div style="position:relative;height:220px"><canvas id="perfChart"></canvas></div>
+            </div>
+          </div>
+
+          <!-- Attendance card -->
+          <div class="card border-0 shadow-sm" style="border-radius:14px">
+            <div class="card-header border-bottom py-2 px-3" style="border-radius:14px 14px 0 0">
+              <span class="card-icon-header">
+                <i class="bi bi-calendar-check text-success"></i>Prisustvo treninzima
+              </span>
+            </div>
+            <div class="card-body" id="attendanceCard">
+              <div><div class="skeleton mb-2" style="height:8px;border-radius:999px;"></div><div class="d-flex justify-content-around mt-3"><div class="text-center"><div class="skeleton mx-auto mb-1" style="height:24px;width:36px;border-radius:4px;"></div><div class="skeleton mx-auto" style="height:10px;width:50px;border-radius:4px;"></div></div><div class="text-center"><div class="skeleton mx-auto mb-1" style="height:24px;width:36px;border-radius:4px;"></div><div class="skeleton mx-auto" style="height:10px;width:55px;border-radius:4px;"></div></div><div class="text-center"><div class="skeleton mx-auto mb-1" style="height:24px;width:36px;border-radius:4px;"></div><div class="skeleton mx-auto" style="height:10px;width:50px;border-radius:4px;"></div></div></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: match history -->
+        <div class="col-lg-7">
+          <div class="card border-0 shadow-sm" style="border-radius:14px">
+            <div class="card-header border-bottom py-2 px-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="card-icon-header">
+                  <i class="bi bi-list-check text-warning"></i>Historija utakmica
+                </span>
+                <span class="badge bg-secondary" id="matchCountBadge">0</span>
+              </div>
+            </div>
+            <div class="card-body p-0" style="max-height:460px;overflow-y:auto" id="matchHistory">
+              <div class="p-3"><div class="skeleton mb-2" style="height:40px;border-radius:8px;"></div><div class="skeleton mb-2" style="height:40px;border-radius:8px;"></div><div class="skeleton" style="height:40px;border-radius:8px;"></div></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+const user = requireAuth();
+setUserInfo(user);
+buildSidebar();
+
+// Resolve member ID: from URL param, or for member role - their own
+const params   = new URLSearchParams(location.search);
+let memberId   = params.get('id');
+let memberName = params.get('name') || 'Igrač';
+
+let perfChartInstance = null;
+
+async function load() {
+  try {
+    // If no ID given and user is a member, find their member record
+    if (!memberId && user.role === 'member') {
+      const me = await apiGet('/auth/profile');
+      memberId = me.member_id;
+      memberName = me.name;
+    }
+
+    if (!memberId) {
+      document.getElementById('playerHeader').innerHTML =
+        `<div class="alert alert-warning">Nije specificiran igrač. Dodajte <code>?id=X</code> u URL.</div>`;
+      return;
+    }
+
+    const [statsData, attData, members] = await Promise.all([
+      apiGet('/stats/player/' + memberId),
+      apiGet('/stats/attendance'),
+      apiGet('/members').catch(() => [])
+    ]);
+
+    const member    = members.find(m => m.id == memberId) || {};
+    const totals    = statsData.totals || {};
+    const matchList = statsData.stats  || [];
+    const attRow    = attData.find(r => r.id == memberId) || {};
+
+    memberName = member.name || memberName;
+
+    renderHeader(member, totals);
+    renderTotals(totals, matchList.length, attRow);
+    renderCharts(matchList);
+    renderAttendance(attRow);
+    renderMatchHistory(matchList);
+
+    document.getElementById('statsContent').style.display = '';
+  } catch(e) {
+    document.getElementById('playerHeader').innerHTML =
+      `<div class="alert alert-danger"><i class="bi bi-exclamation-triangle me-2"></i>${esc(e.message)}</div>`;
+  }
+}
+
+function renderHeader(member, totals) {
+  const initials = (member.name || 'IG').split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+  document.getElementById('playerHeader').innerHTML = `
+    <div class="player-header">
+      <div class="d-flex align-items-center gap-3 flex-wrap">
+        <div class="player-avatar-lg">${initials}</div>
+        <div class="flex-grow-1">
+          <h4 class="fw-bold mb-1 text-white">${esc(member.name || memberName)}</h4>
+          <div class="d-flex flex-wrap gap-3 small" style="opacity:0.85">
+            ${member.position ? `<span><i class="bi bi-person-badge me-1"></i>${esc(member.position)}</span>` : ''}
+            ${member.membership_number ? `<span><i class="bi bi-hash me-1"></i>${esc(member.membership_number)}</span>` : ''}
+            ${member.selection_name ? `<span><i class="bi bi-layers me-1"></i>${esc(member.selection_name)}</span>` : ''}
+          </div>
+        </div>
+        ${member.jersey_number != null ? `
+          <div class="jersey-badge" title="Broj dresa">
+            ${member.jersey_number}
+          </div>` : ''}
+      </div>
+      <div class="d-flex gap-2 mt-3">
+        <a href="../members/list.html" class="btn btn-sm" style="background:rgba(255,255,255,0.2);color:#fff;border:1.5px solid rgba(255,255,255,0.3)">
+          <i class="bi bi-arrow-left me-1"></i>Nazad
+        </a>
+        ${['admin','super_admin'].includes(user.role) ? `
+          <a href="../members/detail.html?id=${memberId}" class="btn btn-sm"
+            style="background:rgba(255,255,255,0.2);color:#fff;border:1.5px solid rgba(255,255,255,0.3)">
+            <i class="bi bi-person-circle me-1"></i>Profil
+          </a>` : ''}
+      </div>
+    </div>`;
+}
+
+function renderTotals(t, matchCount, att) {
+  const pct = att.total > 0 ? Math.round((att.present / att.total) * 100) : 0;
+  document.getElementById('totalsRow').innerHTML = `
+    <div class="col-6 col-md-3 col-lg-2">
+      <div class="player-stat-card">
+        <div class="stat-val text-primary">${t.matches || matchCount || 0}</div>
+        <div class="stat-lbl">Utakmice</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3 col-lg-2">
+      <div class="player-stat-card">
+        <div class="stat-val text-success">${t.goals || 0}</div>
+        <div class="stat-lbl">Golovi</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3 col-lg-2">
+      <div class="player-stat-card">
+        <div class="stat-val" style="color:#6366f1">${t.assists || 0}</div>
+        <div class="stat-lbl">Asistencije</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3 col-lg-2">
+      <div class="player-stat-card">
+        <div class="stat-val text-warning">${t.yellow_cards || 0}</div>
+        <div class="stat-lbl">Žuti kartoni</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3 col-lg-2">
+      <div class="player-stat-card">
+        <div class="stat-val text-danger">${t.red_cards || 0}</div>
+        <div class="stat-lbl">Crveni kartoni</div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3 col-lg-2">
+      <div class="player-stat-card">
+        <div class="stat-val ${pct >= 80 ? 'text-success' : pct >= 50 ? 'text-warning' : 'text-danger'}">${pct}%</div>
+        <div class="stat-lbl">Prisustvo</div>
+      </div>
+    </div>`;
+}
+
+function renderCharts(matchList) {
+  if (!matchList.length) return;
+  const last10   = matchList.slice(0, 10).reverse();
+  const labels   = last10.map(m => (m.opponent || '?').slice(0, 8));
+  const goals    = last10.map(m => m.goals || 0);
+  const assists  = last10.map(m => m.assists || 0);
+
+  if (perfChartInstance) perfChartInstance.destroy();
+  const ctx = document.getElementById('perfChart').getContext('2d');
+  perfChartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Golovi',     data: goals,   backgroundColor: 'rgba(34,197,94,0.75)',  borderRadius: 4 },
+        { label: 'Asistencije', data: assists, backgroundColor: 'rgba(99,102,241,0.65)', borderRadius: 4 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { font: { size: 11 } } } },
+      scales: {
+        y: { beginAtZero: true, ticks: { stepSize: 1 } },
+        x: { ticks: { font: { size: 10 } } }
+      }
+    }
+  });
+}
+
+function renderAttendance(att) {
+  if (!att || !att.total) {
+    document.getElementById('attendanceCard').innerHTML =
+      '<p class="text-muted small text-center py-2">Nema podataka o prisustvu.</p>';
+    return;
+  }
+  const pct = Math.round((att.present / att.total) * 100);
+  const color = pct >= 80 ? '#16a34a' : pct >= 50 ? '#d97706' : '#dc2626';
+  document.getElementById('attendanceCard').innerHTML = `
+    <div class="d-flex justify-content-between mb-2">
+      <span class="fw-bold" style="color:${color}">${pct}% prisustvo</span>
+      <span class="text-muted small">${att.present} / ${att.total} treninga</span>
+    </div>
+    <div class="att-bar mb-3">
+      <div class="att-fill" style="width:${pct}%;background:${color}"></div>
+    </div>
+    <div class="row g-2 text-center">
+      <div class="col-4">
+        <div class="fw-bold text-success" style="font-size:1.3rem">${att.present || 0}</div>
+        <div class="text-muted" style="font-size:0.7rem">Prisutan</div>
+      </div>
+      <div class="col-4">
+        <div class="fw-bold text-warning" style="font-size:1.3rem">${att.excused || 0}</div>
+        <div class="text-muted" style="font-size:0.7rem">Opravdano</div>
+      </div>
+      <div class="col-4">
+        <div class="fw-bold text-danger" style="font-size:1.3rem">${att.absent || 0}</div>
+        <div class="text-muted" style="font-size:0.7rem">Odsutan</div>
+      </div>
+    </div>`;
+}
+
+function renderMatchHistory(matchList) {
+  document.getElementById('matchCountBadge').textContent = matchList.length;
+  if (!matchList.length) {
+    document.getElementById('matchHistory').innerHTML =
+      '<p class="text-center text-muted small py-4">Nema evidentiranih utakmica.</p>';
+    return;
+  }
+
+  const RESULT_STYLE = { win: 'background:#dcfce7;color:#166534', loss: 'background:#fee2e2;color:#991b1b', draw: 'background:#fef9c3;color:#854d0e' };
+  const RESULT_LABEL = { win: 'Pobjeda', loss: 'Poraz', draw: 'Remi' };
+
+  document.getElementById('matchHistory').innerHTML = `
+    <div class="px-3 py-1">
+      ${matchList.map(m => `
+        <div class="match-row">
+          <div class="d-flex align-items-start gap-2">
+            <div class="flex-grow-1">
+              <div class="fw-semibold small">${esc(m.opponent)}</div>
+              <div class="text-muted" style="font-size:0.72rem">${formatDate(m.match_date)}</div>
+            </div>
+            <div class="text-end">
+              ${m.result ? `<span class="badge" style="${RESULT_STYLE[m.result] || ''};font-size:0.67rem;padding:2px 7px;border-radius:8px">${RESULT_LABEL[m.result] || m.result}</span>` : ''}
+              <div class="fw-bold small mt-1">${m.goals_for} : ${m.goals_against}</div>
+            </div>
+          </div>
+          <div class="d-flex gap-2 flex-wrap mt-1" style="font-size:0.72rem">
+            ${m.goals       > 0 ? `<span class="text-success fw-semibold"><i class="bi bi-bullseye"></i> ${m.goals} gol${m.goals > 1 ? 'ova' : ''}</span>` : ''}
+            ${m.assists     > 0 ? `<span style="color:#6366f1"><i class="bi bi-magic"></i> ${m.assists} ast.</span>` : ''}
+            ${m.yellow_cards > 0 ? `<span class="text-warning fw-semibold"><i class="bi bi-square-fill"></i> Žuti</span>` : ''}
+            ${m.red_cards   > 0 ? `<span class="text-danger fw-semibold"><i class="bi bi-square-fill"></i> Crveni</span>` : ''}
+            ${m.started ? `<span class="text-muted"><i class="bi bi-play-circle"></i> Starter</span>` : `<span class="text-muted"><i class="bi bi-person-down"></i> Zamjena</span>`}
+            ${m.minutes_played > 0 ? `<span class="text-muted"><i class="bi bi-clock"></i> ${m.minutes_played}'</span>` : ''}
+          </div>
+        </div>`).join('')}
+    </div>`;
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+load();
+</script>
+</body>
+</html>

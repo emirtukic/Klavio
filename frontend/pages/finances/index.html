@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Finansije | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+  <style>
+    .finance-type-income  { background: #dcfce7; color: #166534; }
+    .finance-type-expense { background: #fee2e2; color: #991b1b; }
+  </style>
+</head>
+<body>
+<div class="sidebar"></div>
+
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Finansije</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-primary" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+
+  <div class="page-body">
+
+    <!-- Page header -->
+    <div class="page-header d-flex justify-content-between align-items-center">
+      <div>
+        <h4>Finansije</h4>
+        <p class="text-muted mb-0">Prihodi i rashodi kluba</p>
+      </div>
+      <button class="btn btn-primary" onclick="openModal()">
+        <i class="bi bi-plus-lg me-1"></i> Dodaj zapis
+      </button>
+    </div>
+
+    <!-- Stats row -->
+    <div class="row g-3 mb-4" id="statsRow">
+      <div class="col-sm-6 col-xl-4">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="stat-icon bg-success bg-opacity-10 flex-shrink-0"><i class="bi bi-arrow-down-circle text-success fs-5"></i></div>
+            <div class="min-w-0">
+              <div class="stat-kpi-label">Ukupni prihodi</div>
+              <div class="stat-kpi-value text-success" id="statIncome">-</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-6 col-xl-4">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="stat-icon bg-danger bg-opacity-10 flex-shrink-0"><i class="bi bi-arrow-up-circle text-danger fs-5"></i></div>
+            <div class="min-w-0">
+              <div class="stat-kpi-label">Ukupni rashodi</div>
+              <div class="stat-kpi-value text-danger" id="statExpense">-</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-12 col-xl-4">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="stat-icon bg-primary bg-opacity-10 flex-shrink-0" id="balanceIcon"><i class="bi bi-wallet2 text-primary fs-5"></i></div>
+            <div class="min-w-0">
+              <div class="stat-kpi-label">Stanje</div>
+              <div class="stat-kpi-value" id="statBalance">-</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Financial goals -->
+    <div class="card mb-4" id="goalsCard">
+      <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <span class="fw-semibold"><i class="bi bi-bullseye me-2 text-primary"></i>Finansijski ciljevi</span>
+        <button class="btn btn-sm btn-outline-primary" onclick="openGoalModal()"><i class="bi bi-pencil me-1"></i>Postavi ciljeve</button>
+      </div>
+      <div class="card-body">
+        <div class="row g-4">
+          <div class="col-md-6">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="small fw-semibold">Cilj prihoda</span>
+              <span class="small text-muted"><span id="goalIncomeVal">0</span> / <span id="goalIncomeTarget">0</span> KM</span>
+            </div>
+            <div class="progress" style="height:12px;border-radius:8px;">
+              <div class="progress-bar bg-success" id="goalIncomeBar" style="width:0%;transition:width .6s;" role="progressbar"></div>
+            </div>
+            <div class="d-flex justify-content-between mt-1">
+              <span class="text-muted" style="font-size:.72rem;" id="goalIncomeLeft"></span>
+              <span class="fw-bold small text-success" id="goalIncomePct">0%</span>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <span class="small fw-semibold">Limit rashoda</span>
+              <span class="small text-muted"><span id="goalExpenseVal">0</span> / <span id="goalExpenseTarget">0</span> KM</span>
+            </div>
+            <div class="progress" style="height:12px;border-radius:8px;">
+              <div class="progress-bar" id="goalExpenseBar" style="width:0%;transition:width .6s;" role="progressbar"></div>
+            </div>
+            <div class="d-flex justify-content-between mt-1">
+              <span class="text-muted" style="font-size:.72rem;" id="goalExpenseLeft"></span>
+              <span class="fw-bold small" id="goalExpensePct">0%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts row -->
+    <div class="row g-3 mb-4">
+      <div class="col-lg-7">
+        <div class="card chart-card h-100">
+          <div class="card-header">
+            <span class="fw-semibold"><i class="bi bi-bar-chart-line me-2 text-primary"></i>Prihodi vs rashodi - po mjesecima</span>
+          </div>
+          <div class="card-body">
+            <div style="position:relative;height:240px;"><canvas id="monthlyChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="card chart-card h-100">
+          <div class="card-header">
+            <span class="fw-semibold"><i class="bi bi-pie-chart me-2 text-primary"></i>Raspodjela po kategorijama</span>
+          </div>
+          <div class="card-body d-flex align-items-center justify-content-center">
+            <div style="position:relative;height:240px;"><canvas id="categoryChart"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table card -->
+    <div class="card table-card">
+      <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <span class="fw-semibold">Zapisi</span>
+        <div class="d-flex gap-2 flex-wrap">
+          <select class="form-select form-select-sm" id="filterYear" style="width:auto;" onchange="applyFilters()">
+            <!-- populated by JS -->
+          </select>
+          <select class="form-select form-select-sm" id="filterType" style="width:auto;" onchange="applyFilters()">
+            <option value="">Sve vrste</option>
+            <option value="income">Prihodi</option>
+            <option value="expense">Rashodi</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0 table-mobile-cards">
+          <thead>
+            <tr>
+              <th>Datum</th>
+              <th>Vrsta</th>
+              <th>Kategorija</th>
+              <th>Opis</th>
+              <th>Iznos</th>
+              <th>Referenca</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr><td colspan="7" class="p-2"><span class="skeleton sk-row"></span></td></tr>
+            <tr><td colspan="7" class="p-2"><span class="skeleton sk-row"></span></td></tr>
+            <tr><td colspan="7" class="p-2"><span class="skeleton sk-row"></span></td></tr>
+            <tr><td colspan="7" class="p-2"><span class="skeleton sk-row" style="width:75%"></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /page-body -->
+</div><!-- /main-content -->
+
+<!-- Create/Edit Modal -->
+<div class="modal fade" id="financeModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalTitle"><i class="bi bi-wallet2 me-2"></i>Dodaj zapis</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editId">
+
+        <!-- Type radio -->
+        <div class="mb-3">
+          <label class="form-label">Vrsta *</label>
+          <div class="d-flex gap-3">
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="type" id="typeIncome" value="income" checked>
+              <label class="form-check-label text-success fw-semibold" for="typeIncome">
+                <i class="bi bi-arrow-down-circle me-1"></i>Prihod
+              </label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="type" id="typeExpense" value="expense">
+              <label class="form-check-label text-danger fw-semibold" for="typeExpense">
+                <i class="bi bi-arrow-up-circle me-1"></i>Rashod
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-3">
+          <!-- Category -->
+          <div class="col-md-6">
+            <label class="form-label" for="fCategory">Kategorija *</label>
+            <div class="input-group">
+              <select class="form-select" id="fCategory">
+                <option value="">-- Odaberi kategoriju --</option>
+              </select>
+              <button type="button" class="btn btn-outline-secondary" id="btnNewCat" title="Nova kategorija" onclick="toggleNewCategory()">
+                <i class="bi bi-plus-lg"></i>
+              </button>
+            </div>
+            <div id="newCatWrap" class="d-none mt-2">
+              <div class="input-group input-group-sm">
+                <input type="text" class="form-control" id="newCatInput" placeholder="Naziv nove kategorije..." autocomplete="off" onkeydown="if(event.key==='Enter'){event.preventDefault();confirmNewCategory();}">
+                <button type="button" class="btn btn-success" onclick="confirmNewCategory()">Dodaj</button>
+                <button type="button" class="btn btn-outline-secondary" onclick="toggleNewCategory()">Odustani</button>
+              </div>
+            </div>
+          </div>
+          <!-- Amount -->
+          <div class="col-md-6">
+            <label class="form-label" for="fAmount">Iznos (KM) *</label>
+            <div class="input-group">
+              <input type="number" class="form-control" id="fAmount" min="0" step="0.01" placeholder="0.00">
+              <span class="input-group-text">KM</span>
+            </div>
+          </div>
+          <!-- Date -->
+          <div class="col-md-6">
+            <label class="form-label" for="fDate">Datum *</label>
+            <input type="date" class="form-control" id="fDate">
+          </div>
+          <!-- Reference -->
+          <div class="col-md-6">
+            <label class="form-label" for="fReference">Referenca</label>
+            <input type="text" class="form-control" id="fReference" placeholder="Br. računa, ugovora...">
+          </div>
+          <!-- Description -->
+          <div class="col-12">
+            <label class="form-label" for="fDescription">Opis</label>
+            <textarea class="form-control" id="fDescription" rows="3" placeholder="Detaljan opis zapisa..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
+        <button type="button" class="btn btn-primary" id="saveBtn" onclick="saveEntry()">
+          <span class="spinner-border spinner-border-sm d-none me-1" id="saveSpinner"></span>
+          Spremi
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+  const user = requireRole('admin', 'super_admin');
+  setUserInfo(user);
+  buildSidebar();
+
+  let allEntries = [];
+  let monthlyChart = null;
+  let categoryChart = null;
+
+  const DEFAULT_CATEGORIES = ['Članarine','Oprema','Kotizacije','Iznajmljivanje terena','Plate/honorari','Marketing','Transport','Ostalo'];
+  let extraCategories = []; // admin-added categories this session
+
+  function buildCategorySelect(selected = '') {
+    const sel = document.getElementById('fCategory');
+    const existing = allEntries.map(e => e.category).filter(Boolean);
+    const all = [...new Set([...DEFAULT_CATEGORIES, ...existing, ...extraCategories])].sort();
+    sel.innerHTML = '<option value="">-- Odaberi kategoriju --</option>' +
+      all.map(c => `<option value="${c}" ${c === selected ? 'selected' : ''}>${c}</option>`).join('');
+  }
+
+  function toggleNewCategory() {
+    const wrap = document.getElementById('newCatWrap');
+    const input = document.getElementById('newCatInput');
+    const isHidden = wrap.classList.contains('d-none');
+    wrap.classList.toggle('d-none');
+    if (isHidden) { input.value = ''; input.focus(); }
+  }
+
+  function confirmNewCategory() {
+    const input = document.getElementById('newCatInput');
+    const name = input.value.trim();
+    if (!name) { input.focus(); return; }
+    if (!extraCategories.includes(name)) extraCategories.push(name);
+    buildCategorySelect(name);
+    toggleNewCategory();
+  }
+
+  /* ── Year filter setup ── */
+  function buildYearFilter() {
+    const sel = document.getElementById('filterYear');
+    const cur = new Date().getFullYear();
+    let html = `<option value="">Sve godine</option>`;
+    for (let y = cur; y >= cur - 3; y--) {
+      html += `<option value="${y}" ${y === cur ? 'selected' : ''}>${y}</option>`;
+    }
+    sel.innerHTML = html;
+  }
+
+  /* ── Load data ── */
+  async function load() {
+    const year  = document.getElementById('filterYear').value;
+    const type  = document.getElementById('filterType').value;
+    const qp    = new URLSearchParams();
+    if (year) qp.set('year', year);
+    if (type) qp.set('type', type);
+    const qs = qp.toString() ? '?' + qp.toString() : '';
+
+    try {
+      const [entries, stats] = await Promise.all([
+        apiGet('/finances' + qs),
+        apiGet('/finances/stats' + qs)
+      ]);
+      allEntries = Array.isArray(entries) ? entries : (entries.data || []);
+      renderStats(stats);
+      renderCharts(stats);
+      renderTable(allEntries);
+      buildCategorySelect();
+    } catch(e) {
+      showToast(e.message, 'error');
+    }
+  }
+
+  function applyFilters() { load(); }
+
+  /* ── Stats ── */
+  function renderStats(stats) {
+    const income  = parseFloat(stats.income  || 0);
+    const expense = parseFloat(stats.expense || 0);
+    const balance = parseFloat(stats.balance || (income - expense));
+    document.getElementById('statIncome').textContent  = income.toFixed(2)  + ' KM';
+    document.getElementById('statExpense').textContent = expense.toFixed(2) + ' KM';
+    const balEl   = document.getElementById('statBalance');
+    const iconEl  = document.getElementById('balanceIcon');
+    balEl.textContent = (balance >= 0 ? '+' : '') + balance.toFixed(2) + ' KM';
+    balEl.className   = 'fw-bold fs-5 ' + (balance >= 0 ? 'text-primary' : 'text-danger');
+    iconEl.className  = 'stat-icon ' + (balance >= 0 ? 'bg-primary bg-opacity-10' : 'bg-danger bg-opacity-10');
+    iconEl.innerHTML  = `<i class="bi bi-wallet2 ${balance >= 0 ? 'text-primary' : 'text-danger'}"></i>`;
+    renderGoals(income, expense);
+  }
+
+  /* ── Charts ── */
+  function renderCharts(stats) {
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    const t = { grid: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', label: dark ? '#94a3b8' : '#64748b', tbg: dark ? 'rgba(15,23,42,0.95)' : 'rgba(15,23,42,0.88)', isDark: dark };
+
+    // Pivot monthly data: backend sends [{month, type, total}] → need [{month, income, expense}]
+    const pivot = {};
+    (stats.monthly || []).forEach(r => {
+      if (!pivot[r.month]) pivot[r.month] = { month: r.month, income: 0, expense: 0 };
+      pivot[r.month][r.type] = parseFloat(r.total || 0);
+    });
+    const months_bs = ['Jan','Feb','Mar','Apr','Maj','Jun','Jul','Aug','Sep','Okt','Nov','Dec'];
+    const pivoted = Object.values(pivot).sort((a, b) => a.month - b.month);
+    const mLabels     = pivoted.length ? pivoted.map(m => months_bs[(m.month||1)-1]) : months_bs.slice(0,6);
+    const incomeData  = pivoted.length ? pivoted.map(m => m.income)  : Array(6).fill(0);
+    const expenseData = pivoted.length ? pivoted.map(m => m.expense) : Array(6).fill(0);
+
+    const mCtx = document.getElementById('monthlyChart').getContext('2d');
+    if (monthlyChart) monthlyChart.destroy();
+    monthlyChart = new Chart(mCtx, {
+      type: 'bar',
+      data: {
+        labels: mLabels,
+        datasets: [
+          { label: 'Prihodi', data: incomeData,  backgroundColor: 'rgba(34,197,94,0.8)',  hoverBackgroundColor: 'rgba(34,197,94,1)',  borderRadius: 6, borderSkipped: false },
+          { label: 'Rashodi', data: expenseData, backgroundColor: 'rgba(239,68,68,0.75)', hoverBackgroundColor: 'rgba(239,68,68,1)',  borderRadius: 6, borderSkipped: false }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { labels: { color: t.label, font: { size: 12 }, usePointStyle: true, pointStyle: 'rectRounded', padding: 16 } },
+          tooltip: { backgroundColor: t.tbg, titleColor: '#f1f5f9', bodyColor: '#cbd5e1', padding: 10, cornerRadius: 8, callbacks: { label: c => '  ' + c.dataset.label + ': ' + c.parsed.y.toFixed(2) + ' KM' } }
+        },
+        scales: {
+          x: { ticks: { color: t.label, font: { size: 11 } }, grid: { color: t.grid, drawBorder: false } },
+          y: { beginAtZero: true, ticks: { color: t.label, font: { size: 11 }, callback: v => v + ' KM' }, grid: { color: t.grid, drawBorder: false } }
+        }
+      }
+    });
+
+    // Category doughnut
+    const cats = Array.isArray(stats.categories) ? stats.categories : [];
+    const palette = ['#3b82f6','#22c55e','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#84cc16'];
+    const cCtx = document.getElementById('categoryChart').getContext('2d');
+    if (categoryChart) categoryChart.destroy();
+    if (!cats.length) { cCtx.clearRect(0, 0, cCtx.canvas.width, cCtx.canvas.height); return; }
+    categoryChart = new Chart(cCtx, {
+      type: 'doughnut',
+      data: {
+        labels: cats.map(c => c.category || 'Ostalo'),
+        datasets: [{ data: cats.map(c => parseFloat(c.total||0)), backgroundColor: palette, borderWidth: 0, hoverOffset: 6 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '65%',
+        plugins: {
+          legend: { position: 'right', labels: { color: t.label, font: { size: 11 }, boxWidth: 10, usePointStyle: true, padding: 10 } },
+          tooltip: { backgroundColor: t.tbg, titleColor: '#f1f5f9', bodyColor: '#cbd5e1', padding: 10, cornerRadius: 8, callbacks: { label: ctx => '  ' + ctx.label + ': ' + ctx.raw.toFixed(2) + ' KM' } }
+        }
+      }
+    });
+  }
+
+  /* ── Table ── */
+  function renderTable(entries) {
+    const tbody = document.getElementById('tableBody');
+    if (!entries.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-5"><i class="bi bi-inbox fs-2 d-block mb-2"></i>Nema finansijskih zapisa</td></tr>';
+      return;
+    }
+    tbody.innerHTML = entries.map(e => `
+      <tr>
+        <td data-label="Datum">${formatDate(e.date)}</td>
+        <td data-label="Vrsta">
+          <span class="badge ${e.type === 'income' ? 'finance-type-income' : 'finance-type-expense'}">
+            <i class="bi bi-arrow-${e.type === 'income' ? 'down' : 'up'}-circle me-1"></i>
+            ${e.type === 'income' ? 'Prihod' : 'Rashod'}
+          </span>
+        </td>
+        <td data-label="Kategorija">${e.category || '-'}</td>
+        <td data-label="Opis" class="text-muted small">${e.description || '-'}</td>
+        <td data-label="Iznos">
+          <span class="fw-semibold ${e.type === 'income' ? 'text-success' : 'text-danger'}">
+            ${e.type === 'expense' ? '-' : '+'}${parseFloat(e.amount || 0).toFixed(2)} KM
+          </span>
+        </td>
+        <td data-label="Referenca"><span class="text-muted small">${e.reference || '-'}</span></td>
+        <td>
+          <button class="btn btn-sm btn-outline-secondary me-1" onclick="openEdit(${e.id})" title="Uredi">
+            <i class="bi bi-pencil"></i>
+          </button>
+          <button class="btn btn-sm btn-outline-danger" onclick="deleteEntry(${e.id})" title="Obriši">
+            <i class="bi bi-trash"></i>
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  /* ── Modal helpers ── */
+  function resetModal() {
+    document.getElementById('editId').value        = '';
+    document.getElementById('typeIncome').checked  = true;
+    document.getElementById('fAmount').value       = '';
+    document.getElementById('fDate').value         = new Date().toISOString().slice(0, 10);
+    document.getElementById('fReference').value    = '';
+    document.getElementById('fDescription').value  = '';
+    document.getElementById('newCatWrap').classList.add('d-none');
+    buildCategorySelect('');
+  }
+
+  function openModal() {
+    resetModal();
+    document.getElementById('modalTitle').innerHTML = '<i class="bi bi-wallet2 me-2"></i>Dodaj finansijski zapis';
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('financeModal')).show();
+  }
+
+  function openEdit(id) {
+    const e = allEntries.find(x => x.id === id);
+    if (!e) return;
+    document.getElementById('editId').value        = e.id;
+    document.getElementById('typeIncome').checked  = e.type === 'income';
+    document.getElementById('typeExpense').checked = e.type === 'expense';
+    document.getElementById('fAmount').value       = e.amount      || '';
+    document.getElementById('fDate').value         = e.date ? e.date.slice(0, 10) : '';
+    document.getElementById('fReference').value    = e.reference   || '';
+    document.getElementById('fDescription').value  = e.description || '';
+    document.getElementById('newCatWrap').classList.add('d-none');
+    buildCategorySelect(e.category || '');
+    document.getElementById('modalTitle').innerHTML = '<i class="bi bi-pencil me-2"></i>Uredi zapis';
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('financeModal')).show();
+  }
+
+  /* ── Save ── */
+  async function saveEntry() {
+    const id   = document.getElementById('editId').value;
+    const type = document.querySelector('input[name="type"]:checked').value;
+    const category    = document.getElementById('fCategory').value;
+    const amount      = parseFloat(document.getElementById('fAmount').value);
+    const date        = document.getElementById('fDate').value;
+    const reference   = document.getElementById('fReference').value.trim();
+    const description = document.getElementById('fDescription').value.trim();
+
+    if (!category) { showToast('Kategorija je obavezna.', 'error'); return; }
+    if (!amount || amount <= 0) { showToast('Unesite ispravan iznos.', 'error'); return; }
+    if (!date) { showToast('Datum je obavezan.', 'error'); return; }
+
+    const payload = { type, category, amount, date, reference, description };
+    const spinner = document.getElementById('saveSpinner');
+    const btn     = document.getElementById('saveBtn');
+    spinner.classList.remove('d-none');
+    btn.disabled = true;
+
+    try {
+      if (id) {
+        await apiPut('/finances/' + id, payload);
+        showToast('Zapis uspješno ažuriran.', 'success');
+      } else {
+        await apiPost('/finances', payload);
+        showToast('Zapis uspješno dodan.', 'success');
+      }
+      bootstrap.Modal.getInstance(document.getElementById('financeModal')).hide();
+      load();
+    } catch(e) {
+      showToast(e.message, 'error');
+    } finally {
+      spinner.classList.add('d-none');
+      btn.disabled = false;
+    }
+  }
+
+  /* ── Delete ── */
+  function deleteEntry(id) {
+    confirmDelete(async () => {
+      try {
+        await apiDelete('/finances/' + id);
+        showToast('Zapis obrisan.', 'success');
+        load();
+      } catch(e) {
+        showToast(e.message, 'error');
+      }
+    });
+  }
+
+  /* ── Financial Goals ── */
+  let goalData = { income_goal: 0, expense_limit: 0 };
+  let goalModal = null;
+  let currentStats = { income: 0, expense: 0 };
+
+  async function loadGoals() {
+    try {
+      goalData = await apiGet('/finances/goal');
+      renderGoals(currentStats.income, currentStats.expense);
+    } catch(e) {}
+  }
+
+  function renderGoals(income, expense) {
+    currentStats = { income, expense };
+    const ig = parseFloat(goalData.income_goal  || 0);
+    const el = parseFloat(goalData.expense_limit || 0);
+
+    // Income progress
+    const ipct = ig > 0 ? Math.min(100, Math.round(income / ig * 100)) : 0;
+    document.getElementById('goalIncomeVal').textContent    = income.toFixed(0);
+    document.getElementById('goalIncomeTarget').textContent = ig.toFixed(0);
+    document.getElementById('goalIncomeBar').style.width   = ipct + '%';
+    document.getElementById('goalIncomePct').textContent   = ipct + '%';
+    document.getElementById('goalIncomeLeft').textContent  = ig > 0 ? `Još ${Math.max(0,(ig-income)).toFixed(0)} KM` : 'Cilj nije postavljen';
+
+    // Expense bar
+    const epct = el > 0 ? Math.min(100, Math.round(expense / el * 100)) : 0;
+    const eBar = document.getElementById('goalExpenseBar');
+    eBar.style.width       = epct + '%';
+    eBar.className         = 'progress-bar ' + (epct >= 90 ? 'bg-danger' : epct >= 75 ? 'bg-warning' : 'bg-success');
+    document.getElementById('goalExpenseVal').textContent    = expense.toFixed(0);
+    document.getElementById('goalExpenseTarget').textContent = el.toFixed(0);
+    document.getElementById('goalExpensePct').textContent   = epct + '%';
+    document.getElementById('goalExpensePct').className     = 'fw-bold small ' + (epct >= 90 ? 'text-danger' : epct >= 75 ? 'text-warning' : 'text-success');
+    document.getElementById('goalExpenseLeft').textContent  = el > 0 ? `${Math.max(0,(el-expense)).toFixed(0)} KM preostalo` : 'Limit nije postavljen';
+  }
+
+  function openGoalModal() {
+    if (!goalModal) goalModal = new bootstrap.Modal(document.getElementById('goalModal'));
+    document.getElementById('gIncomeGoal').value   = goalData.income_goal   || '';
+    document.getElementById('gExpenseLimit').value = goalData.expense_limit || '';
+    goalModal.show();
+  }
+
+  async function saveGoal() {
+    const income_goal    = parseFloat(document.getElementById('gIncomeGoal').value)   || 0;
+    const expense_limit  = parseFloat(document.getElementById('gExpenseLimit').value) || 0;
+    try {
+      await apiPut('/finances/goal', { income_goal, expense_limit, year: new Date().getFullYear() });
+      goalData = { income_goal, expense_limit };
+      renderGoals(currentStats.income, currentStats.expense);
+      goalModal.hide();
+      showToast('Ciljevi sačuvani');
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  /* ── Init ── */
+  buildYearFilter();
+  load();
+  loadGoals();
+</script>
+
+<!-- Goal modal -->
+<div class="modal fade" id="goalModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0">
+        <h5 class="modal-title fw-bold"><i class="bi bi-bullseye me-2 text-primary"></i>Postavi finansijske ciljeve</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Cilj ukupnih prihoda (KM)</label>
+          <input type="number" class="form-control" id="gIncomeGoal" min="0" step="100" placeholder="npr. 50000">
+          <div class="form-text">Postavi godišnji cilj prihoda koji ciljate ostvariti.</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Limit rashoda (KM)</label>
+          <input type="number" class="form-control" id="gExpenseLimit" min="0" step="100" placeholder="npr. 30000">
+          <div class="form-text">Upozorenje se prikazuje kad rashodi dostignu 75% limita.</div>
+        </div>
+      </div>
+      <div class="modal-footer border-0">
+        <button class="btn btn-light" data-bs-dismiss="modal">Odustani</button>
+        <button class="btn btn-primary" onclick="saveGoal()"><i class="bi bi-check-lg me-1"></i>Sačuvaj</button>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detalji utakmice | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+  <style>
+    .score-display { font-size: 3.5rem; font-weight: 900; line-height: 1; letter-spacing: -2px; }
+    .score-sep { font-size: 2.8rem; font-weight: 300; color: #94a3b8; margin: 0 0.5rem; }
+    .team-label { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; }
+    .match-hero { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 16px; color: #fff; padding: 2rem; }
+    .match-hero .badge-pill { background: rgba(255,255,255,.15); color: #e2e8f0; font-size: .75rem; padding: .35em .75em; border-radius: 999px; }
+    .stat-row { display: flex; align-items: center; gap: .5rem; padding: .5rem 0; border-bottom: 1px solid #f1f5f9; }
+    .stat-row:last-child { border-bottom: none; }
+    .player-chip { display: inline-flex; align-items: center; gap: .35rem; background: #f8fafc; border-radius: 999px; padding: .15rem .6rem .15rem .15rem; font-size: .78rem; }
+    .player-chip .avatar { width: 22px; height: 22px; border-radius: 50%; background: var(--club-accent,#3b82f6); display: flex; align-items: center; justify-content: center; font-size: .6rem; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .lineup-spot { display: flex; align-items: center; gap: .6rem; padding: .4rem .75rem; border-radius: 8px; background: #f8fafc; font-size: .83rem; }
+    .lineup-spot .num { width: 22px; height: 22px; border-radius: 50%; background: #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: .68rem; font-weight: 700; color: #475569; flex-shrink: 0; }
+    .lineup-spot.starter .num { background: var(--club-accent,#3b82f6); color: #fff; }
+    [data-theme="dark"] .match-hero { background: linear-gradient(135deg, #0f172a 0%, #020617 100%); }
+    [data-theme="dark"] .lineup-spot { background: #1e293b; }
+    [data-theme="dark"] .player-chip { background: #1e293b; color: #e2e8f0; }
+    [data-theme="dark"] .stat-row { border-bottom-color: #1e293b; }
+  </style>
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Detalji utakmice</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-primary" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+
+  <div class="page-body">
+
+    <!-- Back + actions -->
+    <div class="page-header d-flex align-items-center gap-2 flex-wrap mb-4">
+      <a href="list.html" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+      <h4 class="mb-0 flex-grow-1" id="pageTitle">Utakmica</h4>
+      <div id="editBtnWrap" class="d-none d-flex gap-2">
+        <button class="btn btn-sm btn-outline-primary" onclick="openEditModal()">
+          <i class="bi bi-pencil me-1"></i>Uredi rezultat
+        </button>
+      </div>
+    </div>
+
+    <!-- Hero card -->
+    <div class="match-hero mb-4" id="matchHero">
+      <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+        <div class="d-flex gap-2 flex-wrap" id="heroBadges">
+          <span class="badge-pill" id="heroBadgeType">-</span>
+          <span class="badge-pill" id="heroBadgeHA">-</span>
+          <span class="badge-pill" id="heroBadgeSel">-</span>
+        </div>
+        <div class="text-end">
+          <div class="fw-semibold" id="heroDate">-</div>
+          <div class="small" style="opacity:.6;" id="heroLocation">-</div>
+        </div>
+      </div>
+
+      <!-- Score -->
+      <div class="d-flex align-items-center justify-content-center gap-3 flex-wrap mb-3" id="scoreWrap">
+        <div class="text-center">
+          <div class="team-label mb-1" id="heroTeamLabel">Tim</div>
+          <div class="score-display text-white" id="heroGoalsFor">-</div>
+        </div>
+        <div class="score-sep">:</div>
+        <div class="text-center">
+          <div class="team-label mb-1" id="heroOpponentLabel">Protivnik</div>
+          <div class="score-display" style="color:#94a3b8;" id="heroGoalsAgainst">-</div>
+        </div>
+      </div>
+
+      <!-- Result badge -->
+      <div class="text-center" id="resultBadgeWrap"></div>
+    </div>
+
+    <div class="row g-4">
+
+      <!-- Left: Player stats -->
+      <div class="col-lg-8">
+        <div class="card table-card mb-4">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-semibold"><i class="bi bi-people me-2 text-primary"></i>Statistike igrača</span>
+            <span class="text-muted small" id="psCount"></span>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead>
+                <tr>
+                  <th>Igrač</th>
+                  <th class="text-center" title="Starter"><i class="bi bi-play-circle text-success"></i></th>
+                  <th class="text-center"><i class="bi bi-bullseye text-success"></i></th>
+                  <th class="text-center"><i class="bi bi-magic text-primary"></i></th>
+                  <th class="text-center"><i class="bi bi-square-fill text-warning"></i></th>
+                  <th class="text-center"><i class="bi bi-square-fill text-danger"></i></th>
+                  <th class="text-center">Min</th>
+                </tr>
+              </thead>
+              <tbody id="psTable">
+                <tr class="sk-row"><td colspan="7"><div class="skeleton" style="height:14px;"></div></td></tr>
+                <tr class="sk-row"><td colspan="7"><div class="skeleton" style="height:14px;"></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Top performers -->
+        <div class="card mb-4" id="topPerfCard">
+          <div class="card-header fw-semibold"><i class="bi bi-star me-2 text-warning"></i>Istaknuti igrači</div>
+          <div class="card-body" id="topPerfBody">
+            <div class="text-muted small text-center py-2">Učitavanje...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Info + lineup -->
+      <div class="col-lg-4">
+
+        <!-- Match info -->
+        <div class="card mb-4">
+          <div class="card-header fw-semibold"><i class="bi bi-info-circle me-2 text-primary"></i>Informacije</div>
+          <div class="card-body p-0">
+            <table class="table table-sm mb-0">
+              <tbody id="infoTable">
+                <tr class="sk-row"><td><div class="skeleton" style="height:12px;width:60%;"></div></td><td><div class="skeleton" style="height:12px;width:70%;"></div></td></tr>
+                <tr class="sk-row"><td><div class="skeleton" style="height:12px;width:55%;"></div></td><td><div class="skeleton" style="height:12px;width:65%;"></div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Lineup -->
+        <div class="card mb-4">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-semibold"><i class="bi bi-grid-3x3-gap me-2 text-success"></i>Postava</span>
+            <span class="badge bg-secondary bg-opacity-15 text-secondary" id="formationBadge"></span>
+          </div>
+          <div class="card-body">
+            <div id="lineupContent">
+              <div class="text-muted small text-center py-2">Učitavanje...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="card" id="notesCard">
+          <div class="card-header fw-semibold"><i class="bi bi-journal-text me-2 text-secondary"></i>Napomene</div>
+          <div class="card-body">
+            <p class="mb-0 text-muted small" id="notesContent" style="white-space:pre-line;">—</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit result modal -->
+<div class="modal fade" id="editModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0">
+        <h5 class="modal-title fw-bold">Uredi rezultat</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-6">
+            <label class="form-label">Golovi (naš tim)</label>
+            <input type="number" class="form-control" id="eGoalsFor" min="0">
+          </div>
+          <div class="col-6">
+            <label class="form-label">Golovi (protivnik)</label>
+            <input type="number" class="form-control" id="eGoalsAgainst" min="0">
+          </div>
+          <div class="col-12">
+            <label class="form-label">Rezultat</label>
+            <select class="form-select" id="eResult">
+              <option value="pending">Na čekanju</option>
+              <option value="win">Pobjeda</option>
+              <option value="draw">Remi</option>
+              <option value="loss">Poraz</option>
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Napomene</label>
+            <textarea class="form-control" id="eNotes" rows="3"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-0">
+        <button class="btn btn-light" data-bs-dismiss="modal">Odustani</button>
+        <button class="btn btn-primary" onclick="saveEdit()"><i class="bi bi-check-lg me-1"></i>Sačuvaj</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+  const user     = requireAuth();
+  setUserInfo(user); buildSidebar();
+
+  const canEdit  = ['super_admin','admin','coach'].includes(user.role);
+  const matchId  = new URLSearchParams(location.search).get('id');
+  if (!matchId) { location.href = 'list.html'; }
+
+  const MATCH_TYPE  = { league:'Liga', cup:'Kup', friendly:'Prijateljska' };
+  const HOME_AWAY   = { home:'Domaćin', away:'Gost', neutral:'Neutralno' };
+  const RESULT_LABEL = { win:'Pobjeda', draw:'Remi', loss:'Poraz', pending:'Na čekanju' };
+  const RESULT_CLS   = { win:'bg-success', draw:'bg-warning text-dark', loss:'bg-danger', pending:'bg-secondary' };
+
+  let matchData = null;
+  let editModal = null;
+
+  async function init() {
+    editModal = new bootstrap.Modal(document.getElementById('editModal'));
+    try {
+      const [match, stats, lineup] = await Promise.all([
+        apiGet('/matches/' + matchId),
+        apiGet('/stats/match/' + matchId).catch(() => []),
+        apiGet('/lineup/' + matchId).catch(() => ({ players: [], formation: null }))
+      ]);
+      matchData = match;
+      renderHero(match);
+      renderInfo(match);
+      renderPlayerStats(stats);
+      renderTopPerformers(stats);
+      renderLineup(lineup);
+      document.getElementById('notesContent').textContent = match.notes || '—';
+      document.getElementById('pageTitle').textContent = `vs ${match.opponent}`;
+      if (canEdit) document.getElementById('editBtnWrap').classList.remove('d-none');
+    } catch(e) {
+      showToast('Greška pri učitavanju: ' + e.message, 'error');
+    }
+  }
+
+  function renderHero(m) {
+    const clubName = getClub()?.name || 'Naš tim';
+    document.getElementById('heroTeamLabel').textContent = clubName;
+    document.getElementById('heroOpponentLabel').textContent = m.opponent;
+    document.getElementById('heroDate').textContent = m.match_date ? new Date(m.match_date).toLocaleString('bs-BA', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+    document.getElementById('heroLocation').textContent = m.location ? '📍 ' + m.location : '';
+    document.getElementById('heroBadgeType').textContent = MATCH_TYPE[m.match_type] || m.match_type;
+    document.getElementById('heroBadgeHA').textContent   = HOME_AWAY[m.home_away]   || m.home_away;
+    document.getElementById('heroBadgeSel').textContent  = m.selection_name || 'Selekcija';
+
+    const pending = !m.result || m.result === 'pending';
+    document.getElementById('heroGoalsFor').textContent     = pending ? '–' : (m.goals_for ?? '–');
+    document.getElementById('heroGoalsAgainst').textContent = pending ? '–' : (m.goals_against ?? '–');
+
+    if (!pending) {
+      document.getElementById('resultBadgeWrap').innerHTML =
+        `<span class="badge ${RESULT_CLS[m.result]} px-3 py-2 fs-6">${RESULT_LABEL[m.result]}</span>`;
+      if (m.result === 'win') document.getElementById('heroGoalsFor').style.color = '#4ade80';
+      if (m.result === 'loss') document.getElementById('heroGoalsAgainst').style.color = '#f87171';
+    } else {
+      document.getElementById('resultBadgeWrap').innerHTML = `<span class="badge bg-secondary px-3 py-2">Na čekanju</span>`;
+    }
+  }
+
+  function renderInfo(m) {
+    const rows = [
+      ['Datum i vrijeme', m.match_date ? new Date(m.match_date).toLocaleString('bs-BA', {weekday:'long',day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—'],
+      ['Lokacija', m.location || '—'],
+      ['Vrsta utakmice', MATCH_TYPE[m.match_type] || m.match_type],
+      ['Domaćin/Gost', HOME_AWAY[m.home_away] || m.home_away],
+      ['Selekcija', m.selection_name || '—'],
+      ['Formacija', m.formation || '—'],
+    ];
+    document.getElementById('infoTable').innerHTML = rows.map(([k,v]) =>
+      `<tr><td class="text-muted small" style="width:45%">${k}</td><td class="fw-medium small">${v}</td></tr>`
+    ).join('');
+  }
+
+  function renderPlayerStats(stats) {
+    const tbody = document.getElementById('psTable');
+    const arr   = Array.isArray(stats) ? stats : [];
+    document.getElementById('psCount').textContent = arr.length + ' igrača';
+    if (!arr.length) {
+      tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4"><i class="bi bi-inbox d-block fs-3 mb-2"></i>Nema statistika za ovu utakmicu</td></tr>';
+      return;
+    }
+    const sorted = [...arr].sort((a,b) => (b.is_starter||0) - (a.is_starter||0));
+    tbody.innerHTML = sorted.map(p => `<tr>
+      <td>
+        <div class="d-flex align-items-center gap-2">
+          <span class="fw-semibold small">${p.name || '—'}</span>
+          ${p.jersey_number ? `<span class="badge bg-secondary bg-opacity-15 text-secondary" style="font-size:.65rem;">#${p.jersey_number}</span>` : ''}
+        </div>
+        <div class="text-muted" style="font-size:.7rem;">${p.position || ''}</div>
+      </td>
+      <td class="text-center">${p.started || p.is_starter ? '<i class="bi bi-play-circle-fill text-success"></i>' : '<i class="bi bi-dash text-muted"></i>'}</td>
+      <td class="text-center fw-bold text-success">${p.goals || 0}</td>
+      <td class="text-center text-primary">${p.assists || 0}</td>
+      <td class="text-center"><span class="badge bg-warning text-dark">${p.yellow_cards || 0}</span></td>
+      <td class="text-center"><span class="badge bg-danger">${p.red_cards || 0}</span></td>
+      <td class="text-center text-muted small">${p.minutes_played || 0}'</td>
+    </tr>`).join('');
+  }
+
+  function renderTopPerformers(stats) {
+    const arr = Array.isArray(stats) ? stats : [];
+    const el  = document.getElementById('topPerfBody');
+    if (!arr.length) { el.innerHTML = '<div class="text-muted small text-center py-2">Nema podataka</div>'; return; }
+    const topScorer   = [...arr].sort((a,b) => (b.goals||0)-(a.goals||0))[0];
+    const topAssist   = [...arr].sort((a,b) => (b.assists||0)-(a.assists||0))[0];
+    const mostMinutes = [...arr].sort((a,b) => (b.minutes_played||0)-(a.minutes_played||0))[0];
+    const cards = [
+      { icon:'bi-bullseye', color:'text-success', label:'Top strijelac', name:topScorer?.name, val:(topScorer?.goals||0)+' gol(ova)' },
+      { icon:'bi-magic',    color:'text-primary',  label:'Asistencija',   name:topAssist?.name, val:(topAssist?.assists||0)+' ast.' },
+      { icon:'bi-clock',    color:'text-info',     label:'Najviše minuta', name:mostMinutes?.name, val:(mostMinutes?.minutes_played||0)+' min' },
+    ].filter(c => c.name);
+    el.innerHTML = `<div class="row g-2">${cards.map(c => `
+      <div class="col-sm-4">
+        <div class="p-2 rounded-3 border text-center">
+          <i class="bi ${c.icon} ${c.color} fs-5 d-block mb-1"></i>
+          <div class="fw-bold small">${c.name}</div>
+          <div class="text-muted" style="font-size:.72rem;">${c.val}</div>
+          <div class="text-muted" style="font-size:.65rem;opacity:.7;">${c.label}</div>
+        </div>
+      </div>`).join('')}</div>`;
+  }
+
+  function renderLineup(data) {
+    const players   = data.players || [];
+    const formation = data.formation;
+    document.getElementById('formationBadge').textContent = formation || '—';
+
+    const el        = document.getElementById('lineupContent');
+    if (!players.length) { el.innerHTML = '<div class="text-muted small text-center py-2">Postava nije unesena</div>'; return; }
+
+    const starters  = players.filter(p => p.is_starter);
+    const bench     = players.filter(p => !p.is_starter);
+
+    const mkList = (arr, title) => !arr.length ? '' : `
+      <div class="fw-semibold small text-muted mb-2 mt-3">${title}</div>
+      <div class="d-flex flex-column gap-1">
+        ${arr.map(p => `<div class="lineup-spot ${p.is_starter?'starter':''}">
+          <span class="num">${p.jersey_number || '#'}</span>
+          <span class="small fw-medium flex-grow-1">${p.name || '—'}</span>
+          ${p.position ? `<span style="font-size:.68rem;color:#94a3b8;">${p.position}</span>` : ''}
+        </div>`).join('')}
+      </div>`;
+
+    el.innerHTML = mkList(starters, `Startna postava (${starters.length})`) + mkList(bench, `Rezerve (${bench.length})`);
+  }
+
+  /* ── Edit ── */
+  function openEditModal() {
+    if (!matchData) return;
+    document.getElementById('eGoalsFor').value     = matchData.goals_for ?? '';
+    document.getElementById('eGoalsAgainst').value = matchData.goals_against ?? '';
+    document.getElementById('eResult').value       = matchData.result || 'pending';
+    document.getElementById('eNotes').value        = matchData.notes || '';
+    editModal.show();
+  }
+
+  async function saveEdit() {
+    const body = {
+      goals_for:     parseInt(document.getElementById('eGoalsFor').value) || 0,
+      goals_against: parseInt(document.getElementById('eGoalsAgainst').value) || 0,
+      result:        document.getElementById('eResult').value,
+      notes:         document.getElementById('eNotes').value,
+    };
+    try {
+      await apiPut('/matches/' + matchId, body);
+      editModal.hide();
+      showToast('Utakmica ažurirana');
+      await init();
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  init();
+</script>
+</body>
+</html>

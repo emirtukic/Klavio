@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Selekcije | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="sidebar"></div>
+
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Selekcije</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-primary" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+  <div class="page-body">
+    <div class="page-header d-flex justify-content-between align-items-start">
+      <div><h4>Selekcije</h4><p class="text-muted mb-0">Upravljanje selekcijama, igračima i trenerima.</p></div>
+      <button class="btn btn-primary" onclick="openCreate()"><i class="bi bi-plus me-1"></i>Nova selekcija</button>
+    </div>
+    <div class="row g-3" id="selectionsGrid">
+      <div class="col-md-6 col-xl-4"><div class="card p-3"><div class="skeleton mb-2" style="height:18px;width:55%;border-radius:6px;"></div><div class="skeleton mb-2" style="height:13px;width:80%;border-radius:4px;"></div><div class="skeleton" style="height:13px;width:60%;border-radius:4px;"></div></div></div>
+      <div class="col-md-6 col-xl-4"><div class="card p-3"><div class="skeleton mb-2" style="height:18px;width:45%;border-radius:6px;"></div><div class="skeleton mb-2" style="height:13px;width:70%;border-radius:4px;"></div><div class="skeleton" style="height:13px;width:55%;border-radius:4px;"></div></div></div>
+      <div class="col-md-6 col-xl-4"><div class="card p-3"><div class="skeleton mb-2" style="height:18px;width:60%;border-radius:6px;"></div><div class="skeleton mb-2" style="height:13px;width:75%;border-radius:4px;"></div><div class="skeleton" style="height:13px;width:50%;border-radius:4px;"></div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Create/Edit Modal -->
+<div class="modal fade" id="selModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="selModalTitle">Nova selekcija</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="selId">
+        <div class="mb-3">
+          <label class="form-label">Naziv <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="selName" placeholder="npr. Juniori, Kadeti, Prvi tim...">
+        </div>
+        <div class="mb-1">
+          <label class="form-label">Opis</label>
+          <input type="text" class="form-control" id="selDesc" placeholder="Kratki opis (opcionalno)">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
+        <button class="btn btn-primary" onclick="saveSelection()">
+          <span id="selSpinner" class="spinner-border spinner-border-sm d-none me-1"></span>Spremi
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Manage Modal -->
+<div class="modal fade" id="manageModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="manageTitle">Upravljanje selekcijom</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <ul class="nav nav-tabs mb-3" id="manageTabs">
+          <li class="nav-item"><button class="nav-link active" onclick="switchTab('members')"><i class="bi bi-people me-1"></i>Igrači <span class="badge bg-secondary ms-1" id="tabMemberCount">0</span></button></li>
+          <li class="nav-item"><button class="nav-link" onclick="switchTab('coaches')"><i class="bi bi-person-badge me-1"></i>Treneri <span class="badge bg-secondary ms-1" id="tabCoachCount">0</span></button></li>
+        </ul>
+
+        <!-- Members tab -->
+        <div id="tabMembers">
+          <div id="membersList" class="mb-3"></div>
+          <hr>
+          <p class="fw-semibold mb-2 small text-muted text-uppercase">Dodaj igrača</p>
+          <div class="d-flex gap-2 flex-wrap">
+            <select class="form-select flex-grow-1" id="addMemberSelect"><option value="">- Odaberi igrača -</option></select>
+            <button class="btn btn-primary" onclick="addMember()"><i class="bi bi-plus me-1"></i>Dodaj</button>
+          </div>
+        </div>
+
+        <!-- Coaches tab -->
+        <div id="tabCoaches" style="display:none">
+          <div id="coachesList" class="mb-3"></div>
+          <hr>
+          <p class="fw-semibold mb-2 small text-muted text-uppercase">Dodaj trenera</p>
+          <div class="d-flex gap-2 flex-wrap">
+            <select class="form-select flex-grow-1" id="addCoachSelect"><option value="">- Odaberi trenera -</option></select>
+            <button class="btn btn-primary" onclick="addCoach()"><i class="bi bi-plus me-1"></i>Dodaj</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+  const user = requireRole('super_admin', 'admin');
+  setUserInfo(user); buildSidebar();
+
+  let currentSelId = null;
+  let allMembers = [], allCoaches = [];
+  let activeTab = 'members';
+
+  async function loadSelections() {
+    try {
+      const sels = await apiGet('/selections');
+      if (!sels.length) {
+        document.getElementById('selectionsGrid').innerHTML = `
+          <div class="col-12">
+            <div class="card border-dashed text-center py-5" style="border:2px dashed #cbd5e1;border-radius:14px;">
+              <i class="bi bi-layers text-muted" style="font-size:2.5rem"></i>
+              <p class="text-muted mt-2 mb-3">Nema selekcija. Kreirajte prvu.</p>
+              <button class="btn btn-primary mx-auto" style="width:fit-content" onclick="openCreate()"><i class="bi bi-plus me-1"></i>Nova selekcija</button>
+            </div>
+          </div>`;
+        return;
+      }
+      document.getElementById('selectionsGrid').innerHTML = sels.map(s => {
+        const totalMatches = parseInt(s.match_count || 0);
+        const wins = parseInt(s.win_count || 0);
+        const winPct = totalMatches > 0 ? Math.round((wins / totalMatches) * 100) : null;
+        const winBar = winPct !== null ? `
+          <div class="mt-2">
+            <div class="d-flex justify-content-between small text-muted mb-1">
+              <span>Pobjede</span><span>${winPct}%</span>
+            </div>
+            <div class="progress" style="height:6px">
+              <div class="progress-bar bg-success" style="width:${winPct}%"></div>
+            </div>
+          </div>` : '';
+        return `
+        <div class="col-md-6 col-xl-4">
+          <div class="card border-0 shadow-sm h-100" style="border-radius:14px!important;">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                  <h5 class="fw-bold mb-1">${s.name}</h5>
+                  <p class="text-muted small mb-0">${s.description || '-'}</p>
+                </div>
+                <div class="d-flex gap-1">
+                  <button class="btn btn-sm btn-outline-secondary" onclick="openEdit(${s.id},'${s.name.replace(/'/g,"\\'")}','${(s.description||'').replace(/'/g,"\\'")}')"><i class="bi bi-pencil"></i></button>
+                  <button class="btn btn-sm btn-outline-danger" onclick="deleteSelection(${s.id},'${s.name.replace(/'/g,"\\'")}')"><i class="bi bi-trash"></i></button>
+                </div>
+              </div>
+              <div class="row g-2 text-center mb-2">
+                <div class="col-3">
+                  <div class="fw-bold fs-5 text-primary">${s.member_count}</div>
+                  <div class="text-muted" style="font-size:0.7rem">Igrači</div>
+                </div>
+                <div class="col-3">
+                  <div class="fw-bold fs-5 text-info">${s.coach_count}</div>
+                  <div class="text-muted" style="font-size:0.7rem">Treneri</div>
+                </div>
+                <div class="col-3">
+                  <div class="fw-bold fs-5 text-success">${s.training_count}</div>
+                  <div class="text-muted" style="font-size:0.7rem">Treninzi</div>
+                </div>
+                <div class="col-3">
+                  <div class="fw-bold fs-5 text-warning">${s.match_count}</div>
+                  <div class="text-muted" style="font-size:0.7rem">Utakmice</div>
+                </div>
+              </div>
+              ${winBar}
+              <div class="d-flex gap-2 mt-3">
+                <a href="detail.html?id=${s.id}" class="btn btn-outline-primary btn-sm flex-fill">
+                  <i class="bi bi-graph-up me-1"></i>Detalji
+                </a>
+                <button class="btn btn-primary btn-sm flex-fill" onclick="openManage(${s.id},'${s.name.replace(/'/g,"\\'")}')">
+                  <i class="bi bi-people me-1"></i>Upravljaj
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>`;
+      }).join('');
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  function openCreate() {
+    document.getElementById('selModalTitle').textContent = 'Nova selekcija';
+    document.getElementById('selId').value = '';
+    document.getElementById('selName').value = '';
+    document.getElementById('selDesc').value = '';
+    new bootstrap.Modal(document.getElementById('selModal')).show();
+  }
+
+  function openEdit(id, name, desc) {
+    document.getElementById('selModalTitle').textContent = 'Uredi selekciju';
+    document.getElementById('selId').value = id;
+    document.getElementById('selName').value = name;
+    document.getElementById('selDesc').value = desc;
+    new bootstrap.Modal(document.getElementById('selModal')).show();
+  }
+
+  async function saveSelection() {
+    const id = document.getElementById('selId').value;
+    const name = document.getElementById('selName').value.trim();
+    const description = document.getElementById('selDesc').value.trim();
+    if (!name) { showToast('Naziv je obavezan', 'error'); return; }
+    const spinner = document.getElementById('selSpinner');
+    spinner.classList.remove('d-none');
+    try {
+      if (id) await apiPut(`/selections/${id}`, { name, description });
+      else await apiPost('/selections', { name, description });
+      bootstrap.Modal.getInstance(document.getElementById('selModal')).hide();
+      showToast(id ? 'Selekcija ažurirana' : 'Selekcija kreirana', 'success');
+      loadSelections();
+    } catch(e) { showToast(e.message, 'error'); }
+    finally { spinner.classList.add('d-none'); }
+  }
+
+  function deleteSelection(id, name) {
+    confirmDelete(async () => {
+      try {
+        await apiDelete(`/selections/${id}`);
+        showToast('Selekcija obrisana', 'success');
+        loadSelections();
+      } catch(e) { showToast(e.message, 'error'); }
+    }, `Obrisati selekciju "${name}"? Igrači i treneri će biti odvojeni od selekcije.`);
+  }
+
+  async function openManage(id, name) {
+    currentSelId = id;
+    activeTab = 'members';
+    document.getElementById('manageTitle').textContent = `Upravljanje - ${name}`;
+    switchTab('members');
+    new bootstrap.Modal(document.getElementById('manageModal')).show();
+    [allMembers, allCoaches] = await Promise.all([apiGet('/members'), apiGet('/coaches')]);
+    await refreshManage();
+  }
+
+  function switchTab(tab) {
+    activeTab = tab;
+    document.getElementById('tabMembers').style.display = tab === 'members' ? '' : 'none';
+    document.getElementById('tabCoaches').style.display = tab === 'coaches' ? '' : 'none';
+    document.querySelectorAll('#manageTabs .nav-link').forEach((b,i) => b.classList.toggle('active', (i===0&&tab==='members')||(i===1&&tab==='coaches')));
+  }
+
+  async function refreshManage() {
+    try {
+      const [members, coaches] = await Promise.all([
+        apiGet(`/selections/${currentSelId}/members`),
+        apiGet(`/selections/${currentSelId}/coaches`)
+      ]);
+      document.getElementById('tabMemberCount').textContent = members.length;
+      document.getElementById('tabCoachCount').textContent = coaches.length;
+
+      document.getElementById('membersList').innerHTML = members.length
+        ? members.map(m => `
+          <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+            <div>
+              <div class="fw-semibold">${m.name}</div>
+              <div class="text-muted small">${m.membership_number || '-'} · ${statusBadge(m.status)}</div>
+            </div>
+            <button class="btn btn-sm btn-outline-danger" onclick="removeMember(${m.id})"><i class="bi bi-x-lg"></i></button>
+          </div>`).join('')
+        : '<p class="text-muted small">Nema igrača u ovoj selekciji.</p>';
+
+      document.getElementById('coachesList').innerHTML = coaches.length
+        ? coaches.map(c => `
+          <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+            <div>
+              <div class="fw-semibold">${c.name}</div>
+              <div class="text-muted small">${c.specialization || '-'}</div>
+            </div>
+            <button class="btn btn-sm btn-outline-danger" onclick="removeCoach(${c.id})"><i class="bi bi-x-lg"></i></button>
+          </div>`).join('')
+        : '<p class="text-muted small">Nema trenera u ovoj selekciji.</p>';
+
+      const assignedMemberIds = new Set(members.map(m => m.id));
+      const assignedCoachIds = new Set(coaches.map(c => c.id));
+
+      document.getElementById('addMemberSelect').innerHTML =
+        '<option value="">- Odaberi igrača -</option>' +
+        allMembers.filter(m => !assignedMemberIds.has(m.id)).map(m =>
+          `<option value="${m.id}">${m.name}${m.selection_id ? ' (druga selekcija)' : ''}</option>`).join('');
+
+      document.getElementById('addCoachSelect').innerHTML =
+        '<option value="">- Odaberi trenera -</option>' +
+        allCoaches.filter(c => !assignedCoachIds.has(c.id)).map(c =>
+          `<option value="${c.id}">${c.name}${c.selection_id ? ' (druga selekcija)' : ''}</option>`).join('');
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  async function addMember() {
+    const id = document.getElementById('addMemberSelect').value;
+    if (!id) { showToast('Odaberite igrača', 'error'); return; }
+    try {
+      await apiPost(`/selections/${currentSelId}/members`, { member_id: id });
+      showToast('Igrač dodat', 'success');
+      allMembers = await apiGet('/members');
+      await refreshManage();
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  async function removeMember(memberId) {
+    try {
+      await apiDelete(`/selections/${currentSelId}/members/${memberId}`);
+      showToast('Igrač uklonjen', 'success');
+      allMembers = await apiGet('/members');
+      await refreshManage();
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  async function addCoach() {
+    const id = document.getElementById('addCoachSelect').value;
+    if (!id) { showToast('Odaberite trenera', 'error'); return; }
+    try {
+      await apiPost(`/selections/${currentSelId}/coaches`, { coach_id: id });
+      showToast('Trener dodat', 'success');
+      allCoaches = await apiGet('/coaches');
+      await refreshManage();
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  async function removeCoach(coachId) {
+    try {
+      await apiDelete(`/selections/${currentSelId}/coaches/${coachId}`);
+      showToast('Trener uklonjen', 'success');
+      allCoaches = await apiGet('/coaches');
+      await refreshManage();
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  loadSelections();
+</script>
+</body>
+</html>

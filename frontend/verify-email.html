@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Potvrda e-maila - Klavio</title>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Manrope', system-ui, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 55%, #2563eb 100%);
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center; flex-direction: column;
+      padding: 24px; gap: 20px;
+    }
+    .card {
+      background: #fff; border-radius: 20px;
+      padding: 48px 40px; max-width: 460px; width: 100%;
+      text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.28);
+    }
+    .icon { font-size: 2.75rem; margin-bottom: 18px; line-height: 1; }
+    h1 { font-size: 1.4rem; font-weight: 700; color: #0f172a; margin-bottom: 12px; letter-spacing: -0.015em; }
+    p { color: #475569; font-size: 0.9rem; line-height: 1.65; margin-bottom: 28px; }
+    .btn {
+      display: inline-block; background: #2563eb; color: #fff;
+      padding: 11px 26px; border-radius: 10px; text-decoration: none;
+      font-weight: 600; font-size: 0.875rem; transition: background 0.12s; margin: 4px;
+    }
+    .btn:hover { background: #1d4ed8; }
+    .btn-ghost { background: transparent; color: #2563eb; border: 1.5px solid #2563eb; }
+    .btn-ghost:hover { background: #eff6ff; }
+    .back-link { font-size: 0.75rem; color: rgba(255,255,255,0.4); text-decoration: none; }
+    .back-link:hover { color: rgba(255,255,255,0.65); }
+    @media (max-width: 480px) { .card { padding: 36px 24px; } }
+  </style>
+</head>
+<body>
+<div class="card" id="card">
+  <div class="icon">⏳</div>
+  <h1>Provjera...</h1>
+  <p>Molimo pričekajte.</p>
+</div>
+<a href="/website/" class="back-link">← Nazad na klavio.ba</a>
+<script>
+  const params  = new URLSearchParams(window.location.search);
+  const success = params.get('success');
+  const error   = params.get('error');
+  const card    = document.getElementById('card');
+
+  if (success) {
+    card.innerHTML = `
+      <div class="icon">✅</div>
+      <h1>E-mail potvrđen!</h1>
+      <p>Vaš nalog je aktiviran. Sada se možete prijaviti u Klavio i početi koristiti platformu.</p>
+      <a href="/" class="btn">Prijavite se</a>
+    `;
+  } else if (error === 'expired') {
+    card.innerHTML = `
+      <div class="icon">⏰</div>
+      <h1>Link je istekao</h1>
+      <p>Link za potvrdu e-maila je istekao (važi 24 sata). Molimo registrujte se ponovo ili nas kontaktirajte.</p>
+      <a href="/website/register.html" class="btn">Registrujte se ponovo</a>
+      <a href="mailto:klavio.app@gmail.com" class="btn btn-ghost">Kontakt</a>
+    `;
+  } else {
+    card.innerHTML = `
+      <div class="icon">❌</div>
+      <h1>Nevalidan link</h1>
+      <p>Ovaj link za potvrdu nije validan ili je već iskorišten. Pokušajte se prijaviti ili kontaktirajte podršku.</p>
+      <a href="/" class="btn">Pokušajte se prijaviti</a>
+      <a href="mailto:klavio.app@gmail.com" class="btn btn-ghost">Kontakt</a>
+    `;
+  }
+</script>
+</body>
+</html>

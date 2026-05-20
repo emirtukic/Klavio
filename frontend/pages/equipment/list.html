@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oprema | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="sidebar"></div>
+
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Oprema</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-primary" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+
+  <div class="page-body">
+    <div class="page-header d-flex justify-content-between align-items-center">
+      <div>
+        <h4>Oprema</h4>
+        <p class="text-muted mb-0" id="pageSubtitle">Upravljanje klubskom opremom</p>
+      </div>
+      <button class="btn btn-primary" id="addBtn" onclick="openModal()" style="display:none;">
+        <i class="bi bi-plus-lg me-1"></i> Dodaj opremu
+      </button>
+    </div>
+
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="stat-icon bg-primary bg-opacity-10 flex-shrink-0"><i class="bi bi-box-seam text-primary fs-5"></i></div>
+            <div class="min-w-0"><div class="stat-kpi-label">Ukupno</div><div class="stat-kpi-value" id="statTotal">-</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="stat-icon bg-warning bg-opacity-10 flex-shrink-0"><i class="bi bi-person-check text-warning fs-5"></i></div>
+            <div class="min-w-0"><div class="stat-kpi-label">Dodijeljeno</div><div class="stat-kpi-value" id="statAssigned">-</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="stat-icon bg-success bg-opacity-10 flex-shrink-0"><i class="bi bi-check-circle text-success fs-5"></i></div>
+            <div class="min-w-0"><div class="stat-kpi-label">Slobodno</div><div class="stat-kpi-value" id="statFree">-</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="stat-icon bg-danger bg-opacity-10 flex-shrink-0"><i class="bi bi-exclamation-triangle text-danger fs-5"></i></div>
+            <div class="min-w-0"><div class="stat-kpi-label">Loše / Izgubljeno</div><div class="stat-kpi-value" id="statBad">-</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card table-card">
+      <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <input type="text" class="form-control form-control-sm" style="max-width:260px;" id="search"
+          autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly')" placeholder="Pretraži opremu...">
+        <select class="form-select form-select-sm" style="max-width:180px;" id="filterType" onchange="applyFilters()">
+          <option value="">Sve vrste</option>
+          <option>Dres</option>
+          <option>Lopta</option>
+          <option>Štitnici</option>
+          <option>Torba</option>
+          <option>Ostalo</option>
+        </select>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0 table-mobile-cards">
+          <thead id="tableHead"></thead>
+          <tbody id="tableBody">
+            <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:80%;"></div></td><td><div class="skeleton" style="height:20px;width:60px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:13px;width:30px;"></div></td><td><div class="skeleton" style="height:13px;width:65%;"></div></td><td><div class="skeleton" style="height:13px;width:65%;"></div></td><td><div class="skeleton" style="height:20px;width:60px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:13px;width:55%;"></div></td><td><div class="skeleton" style="height:28px;width:60px;border-radius:6px;"></div></td></tr>
+            <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:65%;"></div></td><td><div class="skeleton" style="height:20px;width:50px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:13px;width:25px;"></div></td><td><div class="skeleton" style="height:13px;width:70%;"></div></td><td><div class="skeleton" style="height:13px;width:70%;"></div></td><td><div class="skeleton" style="height:20px;width:70px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:13px;width:45%;"></div></td><td><div class="skeleton" style="height:28px;width:60px;border-radius:6px;"></div></td></tr>
+            <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:72%;"></div></td><td><div class="skeleton" style="height:20px;width:55px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:13px;width:20px;"></div></td><td><div class="skeleton" style="height:13px;width:55%;"></div></td><td><div class="skeleton" style="height:13px;width:55%;"></div></td><td><div class="skeleton" style="height:20px;width:50px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:13px;width:60%;"></div></td><td><div class="skeleton" style="height:28px;width:60px;border-radius:6px;"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal fade" id="equipmentModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalTitle"><i class="bi bi-box-seam me-2"></i>Dodaj opremu</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editId">
+
+        <!-- Coach info banner -->
+        <div class="alert alert-info py-2 d-none mb-3" id="coachBanner">
+          <i class="bi bi-info-circle me-1"></i>
+          <span id="coachBannerText">Oprema će biti dodijeljena vašoj selekciji.</span>
+        </div>
+
+        <div class="row g-3">
+          <!-- Admin-only: selection + coach assignment -->
+          <div class="col-md-6 d-none" id="fSelectionWrap">
+            <label class="form-label">Selekcija</label>
+            <select class="form-select" id="fSelection" onchange="onSelectionChange()">
+              <option value="">- Bez selekcije -</option>
+            </select>
+          </div>
+          <div class="col-md-6 d-none" id="fCoachWrap">
+            <label class="form-label">Zadužio (trener)</label>
+            <select class="form-select" id="fCoach">
+              <option value="">- Nije dodijeljeno treneru -</option>
+            </select>
+          </div>
+
+          <!-- Common fields -->
+          <div class="col-md-6">
+            <label class="form-label">Naziv <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="fName" placeholder="Npr. Dres bijeli br.10">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Vrsta <span class="text-danger">*</span></label>
+            <select class="form-select" id="fType">
+              <option value="">- Odaberi -</option>
+              <option>Dres</option>
+              <option>Lopta</option>
+              <option>Štitnici</option>
+              <option>Torba</option>
+              <option>Ostalo</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Količina <span class="text-danger">*</span></label>
+            <input type="number" class="form-control" id="fQty" min="0" value="1">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Stanje</label>
+            <select class="form-select" id="fCondition">
+              <option value="good">Dobro</option>
+              <option value="fair">Zadovoljavajuće</option>
+              <option value="poor">Loše</option>
+              <option value="lost">Izgubljen</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Dodijeljeno članu</label>
+            <select class="form-select" id="fAssigned">
+              <option value="">- Nije dodijeljeno -</option>
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Napomena</label>
+            <textarea class="form-control" id="fNotes" rows="2" placeholder="Opcionalna napomena..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
+        <button type="button" class="btn btn-primary" id="saveBtn" onclick="saveEquipment()">
+          <span class="spinner-border spinner-border-sm d-none me-1" id="saveSpinner"></span>
+          Spremi
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+  const user = requireRole('admin', 'super_admin', 'coach', 'member');
+  setUserInfo(user); buildSidebar();
+
+  const canEdit = ['admin', 'super_admin', 'coach'].includes(user.role);
+  const isAdmin = ['admin', 'super_admin'].includes(user.role);
+  const isCoach = user.role === 'coach';
+
+  if (canEdit) document.getElementById('addBtn').style.display = '';
+
+  let allEquipment = [], allMembers = [], allCoaches = [], allSelections = [];
+
+  /* ── Table header ─────────────────────────────────────────────────── */
+  function renderHeader() {
+    const cols = ['Naziv', 'Vrsta', 'Kol.'];
+    if (isAdmin) cols.push('Selekcija');
+    cols.push('Zadužio (trener)', 'Stanje', 'Napomena', 'Akcije');
+    document.getElementById('tableHead').innerHTML =
+      '<tr>' + cols.map(c => `<th>${c}</th>`).join('') + '</tr>';
+  }
+
+  /* ── Boot ─────────────────────────────────────────────────────────── */
+  async function init() {
+    renderHeader();
+    try {
+      const promises = [apiGet('/equipment'), apiGet('/members')];
+      if (isAdmin) {
+        promises.push(apiGet('/coaches'));
+        promises.push(apiGet('/selections'));
+      }
+      const results = await Promise.all(promises);
+      allEquipment  = results[0];
+      allMembers    = results[1];
+      if (isAdmin) { allCoaches = results[2]; allSelections = results[3]; }
+
+      // Populate member select in modal
+      const memSel = document.getElementById('fAssigned');
+      allMembers.forEach(m => memSel.add(new Option(m.name, m.id)));
+
+      if (isAdmin) {
+        const selSel = document.getElementById('fSelection');
+        allSelections.forEach(s => selSel.add(new Option(s.name, s.id)));
+        document.getElementById('fSelectionWrap').classList.remove('d-none');
+        document.getElementById('fCoachWrap').classList.remove('d-none');
+      }
+
+      if (isCoach) {
+        const sel = getSelection();
+        const selName = sel ? sel.name : '';
+        if (selName) {
+          document.getElementById('pageSubtitle').textContent = `Oprema vaše selekcije — ${selName}`;
+          document.getElementById('coachBannerText').textContent = `Oprema će biti dodijeljena selekciji: ${selName}.`;
+        }
+        document.getElementById('coachBanner').classList.remove('d-none');
+      }
+
+      render(allEquipment);
+      updateStats(allEquipment);
+    } catch (e) {
+      showToast('Greška pri učitavanju: ' + e.message, 'error');
+    }
+  }
+
+  /* ── Admin: filter coaches by selected selection ──────────────────── */
+  function onSelectionChange() {
+    const selId = parseInt(document.getElementById('fSelection').value) || 0;
+    const coachSel = document.getElementById('fCoach');
+    const prev = coachSel.value;
+    coachSel.innerHTML = '<option value="">- Nije dodijeljeno treneru -</option>';
+    const filtered = selId ? allCoaches.filter(c => c.selection_id === selId) : allCoaches;
+    filtered.forEach(c => coachSel.add(new Option(c.name, c.id)));
+    if (filtered.find(c => String(c.id) === prev)) coachSel.value = prev;
+  }
+
+  /* ── Stats ───────────────────────────────────────────────────────── */
+  function updateStats(data) {
+    document.getElementById('statTotal').textContent    = data.length;
+    document.getElementById('statAssigned').textContent = data.filter(e => e.assigned_to).length;
+    document.getElementById('statFree').textContent     = data.filter(e => !e.assigned_to).length;
+    document.getElementById('statBad').textContent      = data.filter(e => e.item_condition === 'poor' || e.item_condition === 'lost').length;
+  }
+
+  /* ── Render ──────────────────────────────────────────────────────── */
+  const conditionMap = {
+    good: { label: 'Dobro',           cls: 'bg-success text-white' },
+    fair: { label: 'Zadovoljavajuće', cls: 'bg-warning text-dark'  },
+    poor: { label: 'Loše',            cls: 'bg-danger text-white'  },
+    lost: { label: 'Izgubljen',       cls: 'bg-dark text-white'    }
+  };
+
+  function conditionBadge(c) {
+    const m = conditionMap[c] || { label: c, cls: 'bg-secondary text-white' };
+    return `<span class="badge ${m.cls}">${m.label}</span>`;
+  }
+
+  const colCount = () => isAdmin ? 8 : 7;
+
+  function render(data) {
+    if (!data.length) {
+      document.getElementById('tableBody').innerHTML =
+        `<tr><td colspan="${colCount()}" class="text-center text-muted py-4">Nema opreme</td></tr>`;
+      return;
+    }
+    document.getElementById('tableBody').innerHTML = data.map(e => `
+      <tr>
+        <td data-label="Naziv" class="fw-semibold">${escHtml(e.name)}</td>
+        <td data-label="Vrsta"><span class="badge bg-secondary bg-opacity-75">${escHtml(e.type || '-')}</span></td>
+        <td data-label="Kol.">${e.quantity ?? '-'}</td>
+        ${isAdmin ? `<td data-label="Selekcija"><span class="small ${e.selection_name ? '' : 'text-muted'}">${escHtml(e.selection_name || '-')}</span></td>` : ''}
+        <td data-label="Zadužio">${e.assigned_by_name
+          ? `<span class="small"><i class="bi bi-person-badge me-1 text-primary"></i>${escHtml(e.assigned_by_name)}</span>`
+          : '<span class="text-muted small">-</span>'}</td>
+        <td data-label="Stanje">${conditionBadge(e.item_condition)}</td>
+        <td data-label="Napomena" class="text-muted small">${escHtml(e.notes) || '-'}</td>
+        <td>
+          ${canEdit ? `
+            <button class="btn btn-sm btn-outline-primary me-1" onclick="openModal(${e.id})" title="Uredi"><i class="bi bi-pencil"></i></button>
+            <button class="btn btn-sm btn-outline-danger" onclick="deleteEquipment(${e.id})" title="Obriši"><i class="bi bi-trash"></i></button>
+          ` : '<span class="text-muted small">-</span>'}
+        </td>
+      </tr>`).join('');
+  }
+
+  /* ── Filters ─────────────────────────────────────────────────────── */
+  function applyFilters() {
+    const q    = document.getElementById('search').value.toLowerCase();
+    const type = document.getElementById('filterType').value;
+    const filtered = allEquipment.filter(e => {
+      const matchQ    = !q    || e.name.toLowerCase().includes(q) || (e.notes || '').toLowerCase().includes(q);
+      const matchType = !type || e.type === type;
+      return matchQ && matchType;
+    });
+    render(filtered);
+    updateStats(filtered);
+  }
+
+  document.getElementById('search').addEventListener('input', applyFilters);
+
+  /* ── Modal ───────────────────────────────────────────────────────── */
+  function openModal(id) {
+    document.getElementById('editId').value      = id || '';
+    document.getElementById('fName').value       = '';
+    document.getElementById('fType').value       = '';
+    document.getElementById('fQty').value        = '1';
+    document.getElementById('fCondition').value  = 'good';
+    document.getElementById('fAssigned').value   = '';
+    document.getElementById('fNotes').value      = '';
+    if (isAdmin) {
+      document.getElementById('fSelection').value = '';
+      onSelectionChange();
+    }
+    document.getElementById('modalTitle').innerHTML = id
+      ? '<i class="bi bi-pencil me-2"></i>Uredi opremu'
+      : '<i class="bi bi-box-seam me-2"></i>Dodaj opremu';
+
+    if (id) {
+      const item = allEquipment.find(e => e.id === id);
+      if (item) {
+        document.getElementById('fName').value      = item.name || '';
+        document.getElementById('fType').value      = item.type || '';
+        document.getElementById('fQty').value       = item.quantity ?? 1;
+        document.getElementById('fCondition').value = item.item_condition || 'good';
+        document.getElementById('fAssigned').value  = item.assigned_to || '';
+        document.getElementById('fNotes').value     = item.notes || '';
+        if (isAdmin) {
+          document.getElementById('fSelection').value = item.selection_id || '';
+          onSelectionChange();
+          document.getElementById('fCoach').value = item.assigned_by || '';
+        }
+      }
+    }
+    new bootstrap.Modal(document.getElementById('equipmentModal')).show();
+  }
+
+  /* ── Save ────────────────────────────────────────────────────────── */
+  async function saveEquipment() {
+    const id   = document.getElementById('editId').value;
+    const name = document.getElementById('fName').value.trim();
+    const type = document.getElementById('fType').value;
+    const qty  = parseInt(document.getElementById('fQty').value);
+
+    if (!name) { showToast('Naziv je obavezan', 'error'); return; }
+    if (!type) { showToast('Odaberi vrstu opreme', 'error'); return; }
+    if (isNaN(qty) || qty < 0) { showToast('Unesite ispravnu količinu', 'error'); return; }
+
+    const payload = {
+      name,
+      type,
+      quantity:       qty,
+      item_condition: document.getElementById('fCondition').value,
+      assigned_to:    document.getElementById('fAssigned').value || null,
+      notes:          document.getElementById('fNotes').value.trim() || null
+    };
+
+    if (isAdmin) {
+      payload.selection_id = document.getElementById('fSelection').value || null;
+      payload.assigned_by  = document.getElementById('fCoach').value     || null;
+    }
+
+    const spinner = document.getElementById('saveSpinner');
+    const btn     = document.getElementById('saveBtn');
+    spinner.classList.remove('d-none'); btn.disabled = true;
+
+    try {
+      if (id) await apiPut('/equipment/' + id, payload);
+      else    await apiPost('/equipment', payload);
+      showToast(id ? 'Oprema ažurirana' : 'Oprema dodana', 'success');
+      bootstrap.Modal.getInstance(document.getElementById('equipmentModal')).hide();
+      allEquipment = await apiGet('/equipment');
+      applyFilters();
+    } catch (e) {
+      showToast('Greška: ' + e.message, 'error');
+    } finally {
+      spinner.classList.add('d-none'); btn.disabled = false;
+    }
+  }
+
+  /* ── Delete ──────────────────────────────────────────────────────── */
+  function deleteEquipment(id) {
+    confirmDelete(async () => {
+      try {
+        await apiDelete('/equipment/' + id);
+        showToast('Oprema obrisana', 'success');
+        allEquipment = allEquipment.filter(e => e.id !== id);
+        applyFilters();
+      } catch (e) {
+        showToast('Greška: ' + e.message, 'error');
+      }
+    });
+  }
+
+  /* ── Helper ──────────────────────────────────────────────────────── */
+  function escHtml(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  init();
+</script>
+</body>
+</html>

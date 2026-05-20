@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Moja pretplata | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+  <style>
+    .feat-row { display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid var(--border-color,#e2e8f0); font-size:.9rem; }
+    .feat-row:last-child { border-bottom:none; }
+    .feat-check { width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.65rem; font-weight:800; flex-shrink:0; }
+    .feat-yes  { background:#dcfce7; color:#16a34a; }
+    .feat-no   { background:#f1f5f9; color:#94a3b8; }
+    .feat-plan-badge { font-size:.62rem; font-weight:700; padding:1px 7px; border-radius:20px; margin-left:auto; flex-shrink:0; }
+  </style>
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Moja pretplata</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-primary" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+  <div class="page-body">
+
+    <div class="page-header">
+      <h4>Pretplata platforme</h4>
+      <p class="text-muted mb-0">Pregled statusa pretplate i funkcija dostupnih vašem klubu.</p>
+    </div>
+
+    <div id="noSub" class="d-none">
+      <div class="card border-0 text-center py-5">
+        <div class="card-body">
+          <i class="bi bi-credit-card text-muted" style="font-size:3rem;"></i>
+          <h5 class="mt-3 text-muted">Nema aktivne pretplate</h5>
+          <p class="text-muted small">Kontaktirajte Klavio tim za informacije o pretplati.</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="subContent" class="d-none">
+
+      <!-- Status hero card -->
+      <div class="card border-0 mb-4" id="heroCard">
+        <div class="card-body p-4">
+          <div class="row align-items-center g-3">
+            <div class="col-auto">
+              <div id="planIcon" style="width:64px;height:64px;border-radius:16px;display:flex;align-items:center;justify-content:center;">
+                <i class="bi bi-shield-check" style="font-size:2rem;color:#fff;"></i>
+              </div>
+            </div>
+            <div class="col">
+              <div class="d-flex align-items-center gap-2 flex-wrap">
+                <h4 class="mb-0 fw-bold" id="planName">-</h4>
+                <span class="badge fs-6" id="statusBadge">-</span>
+              </div>
+              <p class="text-muted mb-0 mt-1" id="planDesc"></p>
+            </div>
+            <div class="col-sm-auto text-sm-end">
+              <div class="fw-bold fs-3" id="priceDisplay">-</div>
+              <div class="text-muted small" id="billingCycleDisplay"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detail cards row -->
+      <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-lg-3">
+          <div class="card stat-card h-100">
+            <div class="card-body">
+              <div class="text-muted small mb-1"><i class="bi bi-calendar-check me-1"></i>Period počinje</div>
+              <div class="fw-semibold" id="periodStart">-</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <div class="card stat-card h-100">
+            <div class="card-body">
+              <div class="text-muted small mb-1"><i class="bi bi-calendar-x me-1"></i>Period završava</div>
+              <div class="fw-semibold" id="periodEnd">-</div>
+              <div class="small" id="daysLeftLabel"></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <div class="card stat-card h-100">
+            <div class="card-body">
+              <div class="text-muted small mb-1"><i class="bi bi-arrow-repeat me-1"></i>Ciklus naplate</div>
+              <div class="fw-semibold" id="billingCycle">-</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Expiry alert -->
+      <div id="expiryAlert" class="d-none alert border-0 d-flex align-items-center gap-3 mb-4" role="alert">
+        <i class="bi bi-exclamation-triangle-fill fs-4 flex-shrink-0"></i>
+        <div id="expiryAlertText"></div>
+      </div>
+
+      <!-- Features included in plan -->
+      <div class="row g-4 mb-4">
+        <div class="col-lg-7">
+          <div class="card border-0 h-100">
+            <div class="card-header fw-semibold d-flex align-items-center gap-2">
+              <i class="bi bi-check2-circle text-success"></i> Šta uključuje vaš plan
+            </div>
+            <div class="card-body" id="featList"></div>
+          </div>
+        </div>
+        <div class="col-lg-5" id="upgradeCol">
+          <!-- filled by JS if on starter/pro -->
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="card border-0" id="notesCard" style="display:none!important;">
+        <div class="card-header fw-semibold"><i class="bi bi-chat-left-text me-2"></i>Napomene</div>
+        <div class="card-body text-muted" id="notesText"></div>
+      </div>
+
+      <!-- Contact actions -->
+      <div class="card border-0 mt-4" style="background:linear-gradient(135deg,#f8fafc,#f1f5f9);border:1.5px solid #e2e8f0!important;">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <i class="bi bi-envelope-at text-primary fs-4"></i>
+            <div>
+              <div class="fw-semibold">Kontaktirajte Klavio tim</div>
+              <div class="text-muted small">Za sva pitanja, obnovu ili promjenu pretplate — pišite nam direktno.</div>
+            </div>
+          </div>
+          <div class="d-flex gap-2 flex-wrap">
+            <a id="mailInfo" href="mailto:klavio.app@gmail.com?subject=Upit o pretplati" class="btn btn-outline-primary btn-sm">
+              <i class="bi bi-info-circle me-1"></i>Zatražite informacije
+            </a>
+            <a id="mailChange" href="mailto:klavio.app@gmail.com?subject=Promjena pretplate" class="btn btn-primary btn-sm">
+              <i class="bi bi-arrow-repeat me-1"></i>Promjena pretplate
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /subContent -->
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+const user = requireRole('admin', 'super_admin');
+setUserInfo(user);
+buildSidebar();
+
+const PLAN_COLORS = { starter:'#6c757d', pro:'#10b981', klub:'#8b5cf6' };
+const PLAN_LABEL  = { starter:'Starter', pro:'Pro', klub:'Klub' };
+const PLAN_DESC   = {
+  starter: 'Besplatni plan — osnovni pristup platformi.',
+  pro:     'Pro plan — pun pristup svim funkcijama platforme. 40 KM/mj.',
+  klub:    'Klub plan — sve Pro funkcije + napredne opcije za profesionalne klubove. 60 KM/mj.',
+};
+const STATUS_LABEL = { active:'Aktivna', overdue:'Istekla', cancelled:'Otkazana' };
+const STATUS_COLOR = { active:'#22c55e', overdue:'#ef4444', cancelled:'#6b7280' };
+
+// Feature matrix — { label, minPlan (1=starter,2=pro,3=klub), icon }
+const FEATURES = [
+  { label: 'Upravljanje članovima',         icon: 'people',              minPlan: 1 },
+  { label: 'Do 25 članova',                 icon: 'person-check',        minPlan: 1, maxPlan: 1 },
+  { label: 'Do 150 članova',                icon: 'person-check',        minPlan: 2, maxPlan: 2 },
+  { label: 'Neograničeni članovi',          icon: 'person-check',        minPlan: 3 },
+  { label: 'Treninzi i prisustvo',          icon: 'calendar-check',      minPlan: 1 },
+  { label: 'Utakmice i rezultati',          icon: 'trophy',              minPlan: 1 },
+  { label: 'Vizualna postava',              icon: 'grid-3x3-gap',        minPlan: 1 },
+  { label: 'Finansije i članarine',         icon: 'wallet2',             minPlan: 2 },
+  { label: 'Statistike igrača',            icon: 'graph-up',            minPlan: 2 },
+  { label: 'Razvoj igrača',                icon: 'person-lines-fill',   minPlan: 2 },
+  { label: 'Galerija fotografija',         icon: 'images',              minPlan: 2 },
+  { label: 'Izvještaji',                   icon: 'bar-chart-line',      minPlan: 2 },
+  { label: 'Digitalni obrazci (FSKS, NS BiH, NS FBiH)', icon: 'file-earmark-text', minPlan: 2 },
+  { label: 'Medicinski dosijei',           icon: 'heart-pulse',         minPlan: 3 },
+  { label: 'Evidencija opreme',            icon: 'box-seam',            minPlan: 3 },
+  { label: 'Sponzori i termini',           icon: 'briefcase',           minPlan: 3 },
+  { label: 'Backup podataka',              icon: 'cloud-arrow-up',      minPlan: 3 },
+  { label: 'Prioritetna podrška',          icon: 'headset',             minPlan: 3 },
+];
+
+const PLAN_LEVEL = { starter: 1, pro: 2, klub: 3 };
+const PLAN_NEXT  = { starter: { label: 'Pro', plan: 'pro', price: '40 KM/mj' }, pro: { label: 'Klub', plan: 'klub', price: '60 KM/mj' } };
+
+function fmtDate(d) {
+  if (!d) return '-';
+  return new Date(d).toLocaleDateString('bs-BA', { day:'2-digit', month:'2-digit', year:'numeric' });
+}
+
+function renderFeatures(plan) {
+  const level = PLAN_LEVEL[plan] || 1;
+  const el = document.getElementById('featList');
+
+  const html = FEATURES
+    .filter(f => {
+      // hide "per-plan member limits" rows that don't match current plan
+      if (f.maxPlan && f.minPlan !== level) return false;
+      return true;
+    })
+    .map(f => {
+      const included = level >= f.minPlan;
+      const needsPlan = !included ? (f.minPlan === 2 ? 'Pro' : 'Klub') : null;
+      return `<div class="feat-row">
+        <span class="feat-check ${included ? 'feat-yes' : 'feat-no'}">${included ? '✓' : '✗'}</span>
+        <span style="${included ? '' : 'color:#94a3b8'}">${f.label}</span>
+        ${needsPlan ? `<span class="feat-plan-badge" style="background:#dbeafe;color:#1d4ed8">${needsPlan}</span>` : ''}
+      </div>`;
+    }).join('');
+
+  el.innerHTML = html;
+}
+
+function renderUpgradeCol(plan) {
+  const col = document.getElementById('upgradeCol');
+  const next = PLAN_NEXT[plan];
+  if (!next) { col.innerHTML = ''; return; }
+
+  const unlockFeats = FEATURES.filter(f => {
+    if (f.maxPlan) return false;
+    return f.minPlan === PLAN_LEVEL[next.plan];
+  });
+
+  col.innerHTML = `
+    <div class="card border-0 h-100" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1.5px solid #bfdbfe!important;">
+      <div class="card-body">
+        <div class="d-flex align-items-center gap-2 mb-3">
+          <div style="width:40px;height:40px;border-radius:10px;background:#2563eb;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <i class="bi bi-arrow-up-circle" style="color:#fff;font-size:1.2rem;"></i>
+          </div>
+          <div>
+            <div class="fw-bold" style="color:#1d4ed8">Nadogradite na ${next.label}</div>
+            <div class="text-muted small">${next.price}</div>
+          </div>
+        </div>
+        <p class="small text-muted mb-3">Sa <strong>${next.label}</strong> planom dobijate pristup naprednim funkcijama:</p>
+        <ul class="list-unstyled mb-3" style="font-size:.875rem">
+          ${unlockFeats.map(f => `<li class="mb-1"><i class="bi bi-check-lg text-success me-2"></i>${f.label}</li>`).join('')}
+        </ul>
+        <a href="mailto:klavio.app@gmail.com?subject=Nadogradnja na ${next.label} plan" class="btn btn-primary btn-sm w-100">
+          <i class="bi bi-envelope me-1"></i>Kontaktirajte nas za nadogradnju
+        </a>
+      </div>
+    </div>`;
+}
+
+async function load() {
+  try {
+    const sub = await apiGet('/platform/my-subscription');
+
+    if (!sub) {
+      document.getElementById('noSub').classList.remove('d-none');
+      return;
+    }
+
+    document.getElementById('subContent').classList.remove('d-none');
+
+    const planColor = PLAN_COLORS[sub.plan]   || '#6c757d';
+    const planLabel = PLAN_LABEL[sub.plan]     || sub.plan   || '-';
+    const statLabel = STATUS_LABEL[sub.status] || sub.status || '-';
+    const statColor = STATUS_COLOR[sub.status] || '#6c757d';
+
+    document.getElementById('heroCard').style.borderLeft   = `5px solid ${planColor}`;
+    document.getElementById('planIcon').style.background   = planColor;
+    document.getElementById('planName').textContent        = planLabel;
+    document.getElementById('planDesc').textContent        = PLAN_DESC[sub.plan] || '';
+    document.getElementById('statusBadge').textContent     = statLabel;
+    document.getElementById('statusBadge').style.background = statColor;
+
+    const price = parseFloat(sub.price || 0);
+    document.getElementById('priceDisplay').textContent        = price > 0 ? `${price.toFixed(2)} KM` : 'Besplatno';
+    document.getElementById('billingCycleDisplay').textContent = price > 0
+      ? (sub.billing_cycle === 'yearly' ? 'godišnje' : 'mjesečno') : '';
+
+    const endDate  = sub.current_period_end;
+    const endStr   = endDate ? new Date(endDate).toISOString().slice(0,10) : null;
+    const daysLeft = endStr ? Math.ceil((new Date(endStr) - new Date()) / 86400000) : null;
+
+    document.getElementById('periodStart').textContent  = fmtDate(sub.current_period_start);
+    document.getElementById('periodEnd').textContent    = fmtDate(sub.current_period_end);
+    document.getElementById('billingCycle').textContent = sub.billing_cycle === 'yearly' ? 'Godišnje' : sub.billing_cycle === 'monthly' ? 'Mjesečno' : '-';
+
+    if (daysLeft !== null && endStr) {
+      const label = document.getElementById('daysLeftLabel');
+      if (daysLeft > 0) {
+        label.textContent = `Još ${daysLeft} dana`;
+        label.className   = daysLeft <= 30 ? 'small text-danger fw-semibold' : 'small text-muted';
+      } else {
+        label.textContent = 'Isteklo';
+        label.className   = 'small text-danger fw-semibold';
+      }
+    }
+
+    const alertEl   = document.getElementById('expiryAlert');
+    const alertText = document.getElementById('expiryAlertText');
+    if (sub.status === 'overdue' || sub.status === 'cancelled') {
+      alertEl.classList.remove('d-none');
+      alertEl.classList.add('alert-danger');
+      const reason = sub.status === 'cancelled' ? 'otkazana' : 'istekla';
+      alertText.innerHTML =
+        `Vaša pretplata <strong>(${planLabel})</strong> je <strong>${reason}</strong>. Kontaktirajte Klavio tim za obnovu ili promjenu pretplate.`;
+    } else if (daysLeft !== null && daysLeft > 0 && daysLeft <= 30) {
+      alertEl.classList.remove('d-none');
+      alertEl.classList.add('alert-warning');
+      alertText.innerHTML =
+        `Vaša pretplata <strong>(${planLabel})</strong> ističe za <strong>${daysLeft} ${daysLeft === 1 ? 'dan' : 'dana'}</strong> — ${endStr}. Kontaktirajte Klavio tim za obnovu.`;
+    }
+
+    if (sub.notes) {
+      document.getElementById('notesCard').style.removeProperty('display');
+      document.getElementById('notesText').textContent = sub.notes;
+    }
+
+    renderFeatures(sub.plan || 'starter');
+    renderUpgradeCol(sub.plan || 'starter');
+
+    const club = getClub();
+    const clubName = (club && club.name) ? encodeURIComponent(club.name) : '';
+    const planLabelEnc = encodeURIComponent(planLabel);
+    document.getElementById('mailInfo').href =
+      `mailto:klavio.app@gmail.com?subject=Upit o pretplati - ${clubName}&body=Pozdrav Klavio timu,%0A%0AMoj klub: ${clubName}%0ATrenutni plan: ${planLabelEnc}%0A%0A`;
+    document.getElementById('mailChange').href =
+      `mailto:klavio.app@gmail.com?subject=Promjena pretplate - ${clubName}&body=Pozdrav Klavio timu,%0A%0AMoj klub: ${clubName}%0ATrenutni plan: ${planLabelEnc}%0A%0AŽelim promijeniti pretplatu na: %0A`;
+
+  } catch(e) { showToast('Greška: ' + e.message, 'error'); }
+}
+
+load();
+</script>
+</body>
+</html>

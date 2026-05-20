@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Postavke | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+  <style>
+    .avatar-wrap {
+      position: relative; width: 96px; height: 96px;
+      margin: 0 auto 1rem; cursor: pointer;
+    }
+    .avatar-wrap img {
+      width: 96px; height: 96px; border-radius: 50%;
+      object-fit: cover; border: 3px solid #e2e8f0;
+      transition: opacity 0.2s;
+    }
+    .avatar-wrap:hover img { opacity: 0.7; }
+    .avatar-overlay {
+      position: absolute; inset: 0; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.35); color: #fff;
+      font-size: 1.4rem; opacity: 0; transition: opacity 0.2s;
+      pointer-events: none;
+    }
+    .avatar-wrap:hover .avatar-overlay { opacity: 1; }
+    .avatar-initials {
+      width: 96px; height: 96px; border-radius: 50%;
+      background: var(--club-accent, #3b82f6);
+      color: #fff; font-size: 2rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1rem; border: 3px solid #e2e8f0;
+      cursor: pointer; transition: opacity 0.2s; user-select: none;
+    }
+    .avatar-initials:hover { opacity: 0.8; }
+    .settings-section-title {
+      font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: #94a3b8; margin-bottom: 0.75rem;
+    }
+    .info-row { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
+    .info-row:last-child { border-bottom: none; }
+    .info-row .label { color: #64748b; font-weight: 500; }
+    .info-row .value { font-weight: 600; color: #1e293b; text-align: right; }
+    .pwd-strength { height: 4px; border-radius: 2px; margin-top: 6px; transition: all 0.3s; }
+  </style>
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Postavke</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-primary" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+  <div class="page-body">
+    <div class="page-header"><h4>Postavke profila</h4><p class="text-muted mb-0">Upravljajte svojim računom i sigurnošću</p></div>
+
+    <div class="row g-4">
+
+      <!-- LEFT: Avatar + Account info -->
+      <div class="col-lg-4">
+
+        <!-- Avatar card -->
+        <div class="card form-card mb-3">
+          <div class="card-body p-4 text-center">
+            <div class="settings-section-title">Profilna slika</div>
+            <div id="avatarWrap" class="avatar-wrap" onclick="document.getElementById('avatarInput').click()" title="Kliknite za promjenu slike">
+              <img id="avatarImg" src="" alt="Avatar" style="display:none">
+              <div id="avatarInitials" class="avatar-initials"></div>
+              <div class="avatar-overlay"><i class="bi bi-camera-fill"></i></div>
+            </div>
+            <input type="file" id="avatarInput" accept="image/*" hidden>
+            <p class="text-muted small mb-0">Kliknite na sliku za promjenu<br><span class="text-muted" style="font-size:0.75rem">Max 5 MB · JPG, PNG, WEBP</span></p>
+            <div id="avatarSpinnerWrap" class="mt-2 d-none">
+              <span class="spinner-border spinner-border-sm text-primary me-1"></span>
+              <span class="small text-muted">Učitavanje...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Account info card -->
+        <div class="card form-card">
+          <div class="card-body p-4">
+            <div class="settings-section-title">Informacije o računu</div>
+            <div class="info-row"><span class="label">Uloga</span><span class="value" id="infoRole">-</span></div>
+            <div class="info-row"><span class="label">Klub</span><span class="value" id="infoClub">-</span></div>
+            <div class="info-row"><span class="label">E-mail</span><span class="value" id="infoEmail" style="word-break:break-all">-</span></div>
+            <div class="info-row"><span class="label">Registriran</span><span class="value" id="infoCreated">-</span></div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT: Forms -->
+      <div class="col-lg-8">
+
+        <!-- Personal info -->
+        <div class="card form-card mb-4">
+          <div class="card-body p-4">
+            <div class="settings-section-title">Osobni podaci</div>
+            <div id="profileAlert" class="alert d-none py-2 small mb-3"></div>
+            <form id="profileForm">
+              <div class="row g-3">
+                <div class="col-sm-6">
+                  <label class="form-label">Ime i prezime <span class="text-danger">*</span></label>
+                  <input type="text" class="form-control" id="pName" placeholder="Vaše puno ime">
+                </div>
+                <div class="col-sm-6">
+                  <label class="form-label">Telefon</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-phone"></i></span>
+                    <input type="tel" class="form-control" id="pPhone" placeholder="+387 61 000 000">
+                  </div>
+                </div>
+                <div class="col-sm-12">
+                  <label class="form-label">E-mail adresa</label>
+                  <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                    <input type="email" class="form-control" id="pEmail" placeholder="vasa@email.com">
+                  </div>
+                </div>
+              </div>
+              <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary px-4" id="saveProfileBtn">
+                  <span id="profileSpinner" class="spinner-border spinner-border-sm d-none me-1"></span>
+                  <i class="bi bi-check-lg me-1"></i>Spremi promjene
+                </button>
+                <button type="button" class="btn btn-outline-secondary" id="cancelProfileBtn">Poništi</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Password -->
+        <div class="card form-card mb-4">
+          <div class="card-body p-4">
+            <div class="settings-section-title">Sigurnost - Promjena lozinke</div>
+            <div id="pwdAlert" class="alert d-none py-2 small mb-3"></div>
+            <form id="passwordForm">
+              <div class="mb-3">
+                <label class="form-label">Trenutna lozinka</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                  <input type="password" class="form-control" id="cpCurrent" placeholder="••••••••">
+                  <button type="button" class="btn btn-outline-secondary" onclick="togglePwd('cpCurrent',this)"><i class="bi bi-eye"></i></button>
+                </div>
+              </div>
+              <div class="mb-3">
+                <label class="form-label">Nova lozinka</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                  <input type="password" class="form-control" id="cpNew" placeholder="Min. 6 znakova" oninput="checkStrength(this.value)">
+                  <button type="button" class="btn btn-outline-secondary" onclick="togglePwd('cpNew',this)"><i class="bi bi-eye"></i></button>
+                </div>
+                <div id="strengthBar" class="pwd-strength mt-1" style="width:0;background:#e2e8f0"></div>
+                <div id="strengthLabel" class="small text-muted mt-1"></div>
+              </div>
+              <div class="mb-4">
+                <label class="form-label">Ponovi novu lozinku</label>
+                <div class="input-group">
+                  <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                  <input type="password" class="form-control" id="cpConfirm" placeholder="••••••••">
+                  <button type="button" class="btn btn-outline-secondary" onclick="togglePwd('cpConfirm',this)"><i class="bi bi-eye"></i></button>
+                </div>
+              </div>
+              <button type="submit" class="btn btn-warning px-4" id="savePwdBtn">
+                <span id="pwdSpinner" class="spinner-border spinner-border-sm d-none me-1"></span>
+                <i class="bi bi-shield-lock me-1"></i>Promijeni lozinku
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Appearance -->
+        <div class="card form-card mb-4">
+          <div class="card-body p-4">
+            <div class="settings-section-title">Izgled</div>
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <div class="fw-semibold">Tamna tema</div>
+                <div class="text-muted small">Prebacite između svijetle i tamne teme aplikacije.</div>
+              </div>
+              <div class="form-check form-switch ms-3">
+                <input class="form-check-input" type="checkbox" role="switch" id="darkModeToggle" style="width:2.5em;height:1.3em;cursor:pointer;">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Backup (admin only) -->
+        <div class="card form-card mb-4" id="backupCard">
+          <div class="card-body p-4">
+            <div class="settings-section-title">Backup podataka</div>
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <div class="fw-semibold">Export podataka kluba</div>
+                <div class="text-muted small">Preuzmite sve podatke kluba u JSON formatu kao sigurnosnu kopiju.</div>
+              </div>
+              <button class="btn btn-outline-primary ms-3 flex-shrink-0" onclick="downloadBackup()">
+                <i class="bi bi-download me-1"></i>Preuzmi backup
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Danger zone -->
+        <div class="card form-card border-danger border-opacity-25">
+          <div class="card-body p-4">
+            <div class="settings-section-title text-danger">Opasna zona</div>
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <div class="fw-semibold">Odjava sa svih uređaja</div>
+                <div class="text-muted small">Vaša sesija će biti završena i bićete preusmjereni na stranicu za prijavu.</div>
+              </div>
+              <button class="btn btn-outline-danger ms-3 flex-shrink-0" onclick="logout()">
+                <i class="bi bi-box-arrow-right me-1"></i>Odjavi se
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+  const user = requireAuth();
+  setUserInfo(user); buildSidebar();
+
+  const roleLabels ={ super_admin:'Super Admin', admin:'Administrator', coach:'Trener', member:'Član' };
+  let originalName = '', originalPhone = '', originalEmail = '';
+
+  async function loadProfile() {
+    try {
+      const p = await apiGet('/auth/profile');
+      originalName  = p.name  || '';
+      originalPhone = p.phone || '';
+      originalEmail = p.email || '';
+
+      document.getElementById('pName').value  = originalName;
+      document.getElementById('pPhone').value = originalPhone;
+      document.getElementById('pEmail').value = originalEmail;
+
+      const displayRole = (p.role === 'super_admin' && p.club_id) ? 'admin' : p.role;
+      document.getElementById('infoRole').textContent    = roleLabels[displayRole] || p.role;
+      document.getElementById('infoClub').textContent    = p.club_name || '-';
+      document.getElementById('infoEmail').textContent   = p.email;
+      document.getElementById('infoCreated').textContent = new Date(p.created_at).toLocaleDateString('bs-BA');
+
+      renderAvatar(p.avatar_url, p.name);
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  function renderAvatar(url, name) {
+    const img = document.getElementById('avatarImg');
+    const ini = document.getElementById('avatarInitials');
+    if (url) {
+      img.src = url + '?t=' + Date.now();
+      img.style.display = '';
+      ini.style.display = 'none';
+    } else {
+      img.style.display = 'none';
+      ini.style.display = '';
+      ini.textContent = (name || '?').split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
+    }
+  }
+
+  // Avatar upload
+  document.getElementById('avatarInput').addEventListener('change', async function() {
+    if (!this.files[0]) return;
+    const spinner = document.getElementById('avatarSpinnerWrap');
+    spinner.classList.remove('d-none');
+    try {
+      const fd = new FormData();
+      fd.append('avatar', this.files[0]);
+      const res = await fetch('/api/auth/profile/avatar', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + getToken() },
+        body: fd
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      renderAvatar(data.avatar_url, document.getElementById('pName').value);
+      refreshTopbarAvatar(data.avatar_url);
+      showToast('Profilna slika ažurirana', 'success');
+    } catch(e) { showToast(e.message, 'error'); }
+    finally { spinner.classList.add('d-none'); this.value = ''; }
+  });
+
+  // Profile form
+  document.getElementById('profileForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const alertEl = document.getElementById('profileAlert');
+    alertEl.classList.add('d-none');
+    const name  = document.getElementById('pName').value.trim();
+    const phone = document.getElementById('pPhone').value.trim();
+    const email = document.getElementById('pEmail').value.trim();
+    if (!name) { showAlert(alertEl, 'Ime je obavezno.', 'danger'); return; }
+    const btn = document.getElementById('saveProfileBtn');
+    const spinner = document.getElementById('profileSpinner');
+    btn.disabled = true; spinner.classList.remove('d-none');
+    try {
+      const res = await fetch('/api/auth/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+        body: JSON.stringify({ name, phone, email })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      // Update localStorage so topbar + initials reflect the new name
+      const stored = JSON.parse(localStorage.getItem('user') || '{}');
+      stored.name = data.user.name;
+      localStorage.setItem('user', JSON.stringify(stored));
+      originalName = name; originalPhone = phone; originalEmail = email;
+      document.getElementById('userName').textContent = name;
+      const p2 = await apiGet('/auth/profile');
+      renderAvatar(p2.avatar_url, p2.name);
+      refreshTopbarAvatar(p2.avatar_url);
+      showAlert(alertEl, 'Profil uspješno ažuriran.', 'success');
+    } catch(e) { showAlert(alertEl, e.message, 'danger'); }
+    finally { btn.disabled = false; spinner.classList.add('d-none'); }
+  });
+
+  document.getElementById('cancelProfileBtn').addEventListener('click', () => {
+    document.getElementById('pName').value  = originalName;
+    document.getElementById('pPhone').value = originalPhone;
+    document.getElementById('pEmail').value = originalEmail;
+    document.getElementById('profileAlert').classList.add('d-none');
+  });
+
+  // Password form
+  document.getElementById('passwordForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const alertEl  = document.getElementById('pwdAlert');
+    alertEl.classList.add('d-none');
+    const current  = document.getElementById('cpCurrent').value;
+    const newPass  = document.getElementById('cpNew').value;
+    const confirm  = document.getElementById('cpConfirm').value;
+    if (!current || !newPass || !confirm) { showAlert(alertEl, 'Popunite sva polja.', 'danger'); return; }
+    if (newPass.length < 6) { showAlert(alertEl, 'Nova lozinka mora imati najmanje 6 znakova.', 'danger'); return; }
+    if (newPass !== confirm) { showAlert(alertEl, 'Nove lozinke se ne podudaraju.', 'danger'); return; }
+    const btn = document.getElementById('savePwdBtn');
+    const spinner = document.getElementById('pwdSpinner');
+    btn.disabled = true; spinner.classList.remove('d-none');
+    try {
+      const res = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+        body: JSON.stringify({ currentPassword: current, newPassword: newPass })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      ['cpCurrent','cpNew','cpConfirm'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('strengthBar').style.width = '0';
+      document.getElementById('strengthLabel').textContent = '';
+      showAlert(alertEl, 'Lozinka uspješno promijenjena.', 'success');
+    } catch(e) { showAlert(alertEl, e.message, 'danger'); }
+    finally { btn.disabled = false; spinner.classList.add('d-none'); }
+  });
+
+  // Password strength indicator
+  function checkStrength(val) {
+    const bar = document.getElementById('strengthBar');
+    const lbl = document.getElementById('strengthLabel');
+    if (!val) { bar.style.width = '0'; lbl.textContent = ''; return; }
+    let score = 0;
+    if (val.length >= 6)  score++;
+    if (val.length >= 10) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+    const levels = [
+      { w:'20%',  bg:'#ef4444', text:'Veoma slaba' },
+      { w:'40%',  bg:'#f97316', text:'Slaba' },
+      { w:'60%',  bg:'#eab308', text:'Srednja' },
+      { w:'80%',  bg:'#3b82f6', text:'Jaka' },
+      { w:'100%', bg:'#22c55e', text:'Veoma jaka' },
+    ];
+    const l = levels[Math.min(score, 4)];
+    bar.style.width = l.w; bar.style.background = l.bg;
+    lbl.textContent = l.text; lbl.style.color = l.bg;
+  }
+
+  // Show/hide password
+  function togglePwd(id, btn) {
+    const inp = document.getElementById(id);
+    const isText = inp.type === 'text';
+    inp.type = isText ? 'password' : 'text';
+    btn.innerHTML = isText ? '<i class="bi bi-eye"></i>' : '<i class="bi bi-eye-slash"></i>';
+  }
+
+  function showAlert(el, msg, type) {
+    el.className = `alert alert-${type} py-2 small`;
+    el.textContent = msg;
+    el.classList.remove('d-none');
+  }
+
+  // Dark mode toggle
+  const darkToggle = document.getElementById('darkModeToggle');
+  darkToggle.checked = localStorage.getItem('theme') === 'dark';
+  darkToggle.addEventListener('change', () => {
+    const theme = darkToggle.checked ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+    showToast(theme === 'dark' ? 'Tamna tema aktivirana' : 'Svijetla tema aktivirana', 'success');
+  });
+
+  function downloadBackup() {
+    fetch('/api/backup/export', { headers: { 'Authorization': 'Bearer ' + getToken() } })
+      .then(r => r.blob())
+      .then(blob => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `klavio_backup_${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('Backup preuzet', 'success');
+      })
+      .catch(() => showToast('Greška pri preuzimanju', 'error'));
+  }
+
+  // Only admins need the club data export
+  if (user.role !== 'admin') {
+    document.getElementById('backupCard').style.display = 'none';
+  }
+
+  loadProfile();
+</script>
+</body>
+</html>

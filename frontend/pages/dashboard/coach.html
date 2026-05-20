@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trener - Nadzorna ploča | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Nadzorna ploča</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-info" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+  <div class="page-body">
+
+    <!-- Welcome -->
+    <div class="page-header">
+      <h4 class="mb-1">Dobro došli, <span id="welcomeName"></span>!</h4>
+      <p class="text-muted mb-0">Pregled vaše selekcije i aktivnosti.</p>
+    </div>
+
+    <!-- Stats row: 4 cards -->
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-xl-3">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3 p-3">
+            <div class="stat-icon bg-primary bg-opacity-10 flex-shrink-0">
+              <i class="bi bi-people text-primary"></i>
+            </div>
+            <div class="min-w-0">
+              <div class="stat-kpi-label">Moja selekcija</div>
+              <div class="stat-kpi-value" id="statMembers">-</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3 p-3">
+            <div class="stat-icon bg-info bg-opacity-10 flex-shrink-0">
+              <i class="bi bi-calendar3 text-info"></i>
+            </div>
+            <div class="min-w-0">
+              <div class="stat-kpi-label">Zakazani treninzi</div>
+              <div class="stat-kpi-value" id="statTraining">-</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3 p-3">
+            <div class="stat-icon bg-warning bg-opacity-10 flex-shrink-0">
+              <i class="bi bi-trophy text-warning"></i>
+            </div>
+            <div class="min-w-0">
+              <div class="stat-kpi-label">Nadolazeće utakmice</div>
+              <div class="stat-kpi-value" id="statMatches">-</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3 p-3">
+            <div class="stat-icon bg-success bg-opacity-10 flex-shrink-0">
+              <i class="bi bi-calendar-check text-success"></i>
+            </div>
+            <div class="min-w-0">
+              <div class="stat-kpi-label">Moji termini</div>
+              <div class="stat-kpi-value" id="statAppts">-</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Charts row -->
+    <div class="row g-3 mb-4">
+      <div class="col-lg-7">
+        <div class="card chart-card h-100">
+          <div class="card-header fw-semibold">
+            <i class="bi bi-bar-chart me-2 text-primary"></i>Dolaznost članova selekcije (top 8)
+          </div>
+          <div class="card-body">
+            <div style="position:relative;height:240px;"><canvas id="chartAttendance"></canvas></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="card chart-card h-100">
+          <div class="card-header fw-semibold">
+            <i class="bi bi-trophy me-2 text-warning"></i>Rezultati utakmica
+          </div>
+          <div class="card-body">
+            <div style="position:relative;height:230px;"><canvas id="chartResults"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom row -->
+    <div class="row g-3">
+      <!-- Upcoming trainings -->
+      <div class="col-lg-6">
+        <div class="card table-card h-100">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-semibold"><i class="bi bi-calendar3 me-1 text-info"></i>Nadolazeći treninzi</span>
+            <a href="/pages/training/schedule.html" class="btn btn-sm btn-outline-primary">Prikaži sve</a>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover table-sm table-mobile-cards mb-0">
+              <thead><tr><th>Datum</th><th>Vrijeme</th><th>Lokacija</th><th>Status</th></tr></thead>
+              <tbody id="trainingsTable">
+                <tr><td colspan="4" class="p-2"><span class="skeleton sk-row"></span></td></tr>
+                <tr><td colspan="4" class="p-2"><span class="skeleton sk-row"></span></td></tr>
+                <tr><td colspan="4" class="p-2"><span class="skeleton sk-row" style="width:75%"></span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pending appointments -->
+      <div class="col-lg-6">
+        <div class="card table-card h-100">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-semibold"><i class="bi bi-calendar-check me-1 text-success"></i>Termini na čekanju</span>
+            <a href="/pages/appointments/list.html" class="btn btn-sm btn-outline-primary">Prikaži sve</a>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover table-sm table-mobile-cards mb-0">
+              <thead><tr><th>Član</th><th>Datum</th><th>Naslov</th><th>Akcija</th></tr></thead>
+              <tbody id="apptsTable">
+                <tr><td colspan="4" class="p-2"><span class="skeleton sk-row"></span></td></tr>
+                <tr><td colspan="4" class="p-2"><span class="skeleton sk-row"></span></td></tr>
+                <tr><td colspan="4" class="p-2"><span class="skeleton sk-row" style="width:70%"></span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /page-body -->
+</div><!-- /main-content -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+  const user = requireRole('coach');
+  setUserInfo(user);
+  buildSidebar();
+  document.getElementById('welcomeName').textContent = (user.name || '').split(' ')[0];
+
+  let attendanceChart, resultsChart;
+
+  function chartTheme() {
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    return { isDark: dark, grid: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', label: dark ? '#94a3b8' : '#64748b', tbg: dark ? 'rgba(15,23,42,0.95)' : 'rgba(15,23,42,0.88)' };
+  }
+
+  /* ── Confirm/cancel appointment ── */
+  async function updateAppt(id, status) {
+    try {
+      await apiPut('/appointments/' + id, { status });
+      showToast(status === 'confirmed' ? 'Termin potvrđen.' : 'Termin otkazan.', 'success');
+      loadDashboard();
+    } catch (e) {
+      showToast('Greška: ' + e.message, 'error');
+    }
+  }
+
+  /* ── Charts ── */
+  function buildAttendanceChart(members, attendanceData) {
+    const t = chartTheme();
+    const selId = user.selection_id;
+    let selMembers = selId ? members.filter(m => m.selection_id === selId) : members;
+    selMembers = selMembers.slice(0, 8);
+    const labels = selMembers.map(m => (m.name || '').split(' ')[0]);
+    const values = selMembers.map(m => {
+      const found = Array.isArray(attendanceData) ? attendanceData.find(a => a.member_id === m.id || a.id === m.id) : null;
+      if (!found) return 0;
+      if (found.attendance_pct || found.percentage || found.pct) return parseFloat(found.attendance_pct || found.percentage || found.pct);
+      const total = parseInt(found.total||0) || (parseInt(found.present||0) + parseInt(found.absent||0) + parseInt(found.excused||0));
+      return total > 0 ? Math.round(parseInt(found.present||0) / total * 100) : 0;
+    });
+    const palette = ['#3b82f6','#22c55e','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#f97316','#84cc16'];
+    const ctx = document.getElementById('chartAttendance').getContext('2d');
+    if (attendanceChart) attendanceChart.destroy();
+    attendanceChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{ label: 'Dolaznost (%)', data: values, backgroundColor: labels.map((_, i) => palette[i % palette.length] + 'cc'), hoverBackgroundColor: labels.map((_, i) => palette[i % palette.length]), borderRadius: 6, borderSkipped: false }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { backgroundColor: t.tbg, titleColor: '#f1f5f9', bodyColor: '#cbd5e1', padding: 10, cornerRadius: 8, callbacks: { label: c => '  ' + c.parsed.y.toFixed(1) + ' %' } }
+        },
+        scales: {
+          x: { ticks: { color: t.label, font: { size: 11 } }, grid: { color: t.grid, drawBorder: false } },
+          y: { beginAtZero: true, max: 100, ticks: { color: t.label, font: { size: 11 }, callback: v => v + '%' }, grid: { color: t.grid, drawBorder: false } }
+        }
+      }
+    });
+  }
+
+  function buildResultsChart(clubStats) {
+    const t = chartTheme();
+    const mr = Array.isArray(clubStats.matchResults) ? clubStats.matchResults : [];
+    const wins   = parseInt((mr.find(r => r.result==='win')  || {count:0}).count) || clubStats.wins  || clubStats.won  || 0;
+    const losses = parseInt((mr.find(r => r.result==='loss') || {count:0}).count) || clubStats.losses|| clubStats.lost || 0;
+    const draws  = parseInt((mr.find(r => r.result==='draw') || {count:0}).count) || clubStats.draws || clubStats.drawn|| 0;
+    const total  = wins + losses + draws;
+    const winPct = total > 0 ? Math.round(wins / total * 100) : 0;
+    const ctx = document.getElementById('chartResults').getContext('2d');
+    if (resultsChart) resultsChart.destroy();
+    const centerPlugin = {
+      id: 'centerText',
+      afterDraw(chart) {
+        const { ctx: c, width, height } = chart;
+        c.save(); c.textAlign = 'center'; c.textBaseline = 'middle';
+        c.font = 'bold 1.5rem system-ui'; c.fillStyle = t.isDark ? '#e2e8f0' : '#1e293b';
+        c.fillText(winPct + '%', width / 2, height / 2 - 9);
+        c.font = '0.65rem system-ui'; c.fillStyle = t.label;
+        c.fillText('pobjeda', width / 2, height / 2 + 12); c.restore();
+      }
+    };
+    resultsChart = new Chart(ctx, {
+      type: 'doughnut',
+      plugins: [centerPlugin],
+      data: {
+        labels: ['Pobjede', 'Porazi', 'Remiji'],
+        datasets: [{ data: total > 0 ? [wins, losses, draws] : [1, 1, 1], backgroundColor: total > 0 ? ['rgba(34,197,94,0.85)','rgba(239,68,68,0.85)','rgba(234,179,8,0.85)'] : ['rgba(148,163,184,0.2)','rgba(148,163,184,0.2)','rgba(148,163,184,0.2)'], borderWidth: 0, hoverOffset: 6 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '70%',
+        plugins: {
+          legend: { position: 'bottom', labels: { color: t.label, boxWidth: 10, padding: 12, usePointStyle: true, pointStyle: 'circle' } },
+          tooltip: { backgroundColor: t.tbg, titleColor: '#f1f5f9', bodyColor: '#cbd5e1', padding: 10, cornerRadius: 8, callbacks: { label: c => total > 0 ? ' ' + c.label + ': ' + c.parsed : ' Nema podataka' } }
+        }
+      }
+    });
+  }
+
+  /* ── Main load ── */
+  async function loadDashboard() {
+    try {
+      const [members, training, matches, appointments, attendanceData, clubStats] = await Promise.all([
+        apiGet('/members'),
+        apiGet('/training'),
+        apiGet('/matches'),
+        apiGet('/appointments/my'),
+        apiGet('/stats/attendance').catch(() => []),
+        apiGet('/stats/club').catch(() => ({}))
+      ]);
+
+      /* ── Stats ── */
+      const selId = user.selection_id;
+      const myMembers = selId ? members.filter(m => m.selection_id === selId) : members;
+      document.getElementById('statMembers').textContent = myMembers.length;
+
+      const scheduledCount = training.filter(t => t.status === 'scheduled').length;
+      document.getElementById('statTraining').textContent = scheduledCount;
+
+      const upcomingMatches = matches.filter(m => !m.result || m.result === 'pending' || m.result === null);
+      document.getElementById('statMatches').textContent = upcomingMatches.length;
+
+      const activeAppts = appointments.filter(a => a.status === 'pending' || a.status === 'confirmed');
+      document.getElementById('statAppts').textContent = activeAppts.length;
+
+      /* ── Charts ── */
+      buildAttendanceChart(myMembers, attendanceData);
+      buildResultsChart(clubStats);
+
+      /* ── Upcoming trainings table ── */
+      const upcoming = training
+        .filter(t => t.status === 'scheduled')
+        .sort((a, b) => new Date(a.session_date) - new Date(b.session_date))
+        .slice(0, 6);
+      document.getElementById('trainingsTable').innerHTML = upcoming.length
+        ? upcoming.map(t => `
+            <tr>
+              <td data-label="Datum">${formatDate(t.session_date)}</td>
+              <td data-label="Vrijeme" class="small">${t.start_time || '-'}${t.end_time ? ' – ' + t.end_time : ''}</td>
+              <td data-label="Lokacija" class="small text-muted">${t.location || '-'}</td>
+              <td data-label="Status">${statusBadge(t.status)}</td>
+            </tr>`).join('')
+        : '<tr><td colspan="4" class="text-center text-muted py-3">Nema zakazanih treninga</td></tr>';
+
+      /* ── Pending appointments table ── */
+      const pendingAppts = appointments.filter(a => a.status === 'pending').slice(0, 6);
+      document.getElementById('apptsTable').innerHTML = pendingAppts.length
+        ? pendingAppts.map(a => `
+            <tr>
+              <td data-label="Član" class="fw-medium">${a.member_name || '-'}</td>
+              <td data-label="Datum" class="small">${formatDate(a.appointment_date)}</td>
+              <td data-label="Naslov" class="small text-muted">${a.title || a.notes || '-'}</td>
+              <td data-label="Akcija" class="text-nowrap">
+                <button class="btn btn-xs btn-success py-0 px-1 me-1" style="font-size:0.72rem;" onclick="updateAppt(${a.id},'confirmed')">
+                  <i class="bi bi-check"></i>
+                </button>
+                <button class="btn btn-xs btn-outline-danger py-0 px-1" style="font-size:0.72rem;" onclick="updateAppt(${a.id},'cancelled')">
+                  <i class="bi bi-x"></i>
+                </button>
+              </td>
+            </tr>`).join('')
+        : '<tr><td colspan="4" class="text-center text-muted py-3">Nema termina na čekanju</td></tr>';
+
+    } catch (e) {
+      showToast('Greška pri učitavanju: ' + e.message, 'error');
+    }
+  }
+
+  loadDashboard();
+</script>
+</body>
+</html>

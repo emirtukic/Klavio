@@ -1,0 +1,107 @@
+﻿<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dodaj članarinu | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Dodaj članarinu</span>
+    <div class="d-flex align-items-center gap-2"><span class="badge bg-primary" id="userRole"></span><span class="fw-semibold small" id="userName"></span></div>
+  </div>
+  <div class="page-body">
+    <div class="page-header d-flex align-items-center gap-2">
+      <a href="list.html" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+      <h4 class="mb-0">Dodaj članarinu</h4>
+    </div>
+    <div class="card form-card">
+      <div class="card-body p-4">
+        <div id="alert" class="alert alert-danger d-none"></div>
+        <form id="form">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Član *</label>
+              <select class="form-select" name="member_id" required><option value="">Učitavanje članova...</option></select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Iznos (KM) *</label>
+              <input type="number" step="0.01" class="form-control" name="amount" value="50.00" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Početak perioda *</label>
+              <input type="date" class="form-control" name="period_start" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Kraj perioda *</label>
+              <input type="date" class="form-control" name="period_end" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">Datum dospijeća *</label>
+              <input type="date" class="form-control" name="due_date" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Način plaćanja</label>
+              <select class="form-select" name="payment_method">
+                <option value="">-</option><option value="cash">Gotovina</option>
+                <option value="bank_transfer">Bankovni transfer</option><option value="card">Kartica</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Napomena</label>
+              <textarea class="form-control" name="notes" rows="2"></textarea>
+            </div>
+            <div class="col-12">
+              <button type="submit" class="btn btn-primary me-2">
+                <span class="spinner-border spinner-border-sm d-none me-1" id="spinner"></span>Dodaj članarinu
+              </button>
+              <a href="list.html" class="btn btn-outline-secondary">Odustani</a>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+  const user = requireRole('super_admin', 'admin');
+  setUserInfo(user); buildSidebar();
+  async function loadMembers() {
+    try {
+      const members = await apiGet('/members');
+      const sel = document.querySelector('select[name=member_id]');
+      sel.innerHTML = '<option value="">Odaberi člana...</option>' + members.map(m => `<option value="${m.id}">${m.name} (${m.membership_number || m.email})</option>`).join('');
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+  document.getElementById('form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const btn = e.target.querySelector('button[type=submit]');
+    const spinner = document.getElementById('spinner');
+    const alertEl = document.getElementById('alert');
+    btn.disabled = true; spinner.classList.remove('d-none'); alertEl.classList.add('d-none');
+    const fd = new FormData(e.target);
+    const body = Object.fromEntries(fd.entries());
+    Object.keys(body).forEach(k => { if (!body[k]) delete body[k]; });
+    body.member_id = parseInt(body.member_id);
+    body.amount = parseFloat(body.amount);
+    try {
+      await apiPost('/fees', body);
+      showToast('Članarina uspješno dodana');
+      setTimeout(() => window.location.href = 'list.html', 1000);
+    } catch(err) {
+      alertEl.textContent = err.message; alertEl.classList.remove('d-none');
+      btn.disabled = false; spinner.classList.add('d-none');
+    }
+  });
+  loadMembers();
+</script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aktivnost platforme | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Aktivnost platforme</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-danger" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+  <div class="page-body">
+    <div class="page-header">
+      <h4>Log aktivnosti - sve klubovi</h4>
+      <p class="text-muted mb-0">Pregled aktivnosti korisnika na cijeloj platformi.</p>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-body py-2">
+        <div class="row g-2">
+          <div class="col-sm-4">
+            <input type="text" class="form-control form-control-sm" id="filterSearch" placeholder="Pretraži akciju, korisnika..."
+              autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly')" oninput="renderTable()">
+          </div>
+          <div class="col-auto">
+            <select class="form-select form-select-sm" id="filterClub" onchange="renderTable()">
+              <option value="">Svi klubovi</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card table-card">
+      <div class="table-responsive">
+        <table class="table table-hover table-sm mb-0">
+          <thead><tr><th>Klub</th><th>Korisnik</th><th>Akcija</th><th>Entitet</th><th>Detalji</th><th>Datum</th></tr></thead>
+          <tbody id="logTable">
+            <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:80%;"></div></td><td><div class="skeleton" style="height:13px;width:70%;"></div></td><td><div class="skeleton" style="height:20px;width:90px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:13px;width:60%;"></div></td><td><div class="skeleton" style="height:13px;width:80%;"></div></td><td><div class="skeleton" style="height:13px;width:100px;"></div></td></tr>
+            <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:65%;"></div></td><td><div class="skeleton" style="height:13px;width:75%;"></div></td><td><div class="skeleton" style="height:20px;width:90px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:13px;width:50%;"></div></td><td><div class="skeleton" style="height:13px;width:70%;"></div></td><td><div class="skeleton" style="height:13px;width:100px;"></div></td></tr>
+            <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:75%;"></div></td><td><div class="skeleton" style="height:13px;width:60%;"></div></td><td><div class="skeleton" style="height:20px;width:90px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:13px;width:65%;"></div></td><td><div class="skeleton" style="height:13px;width:75%;"></div></td><td><div class="skeleton" style="height:13px;width:100px;"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card-footer d-flex justify-content-between align-items-center py-2">
+        <span class="text-muted small" id="logCount"></span>
+        <button class="btn btn-sm btn-outline-secondary" id="loadMoreBtn" onclick="loadMore()" style="display:none">Učitaj još</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+const user = requireRole('super_admin');
+setUserInfo(user); buildSidebar();
+
+let allLogs=[], clubs=[], offset=0;
+const PAGE=100;
+
+async function load() {
+  [allLogs, clubs] = await Promise.all([
+    apiGet('/activity-log/platform').catch(()=>apiGet('/activity-log')),
+    apiGet('/clubs')
+  ]);
+  const sel=document.getElementById('filterClub');
+  sel.innerHTML='<option value="">Svi klubovi</option>'+clubs.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  renderTable();
+}
+
+function renderTable() {
+  const q  = (document.getElementById('filterSearch').value||'').toLowerCase();
+  const cl = document.getElementById('filterClub').value;
+  const rows = allLogs.filter(l=>
+    (!q  || (l.action||'').toLowerCase().includes(q)||(l.user_name||'').toLowerCase().includes(q)||(l.details||'').toLowerCase().includes(q)) &&
+    (!cl || String(l.club_id)===cl)
+  );
+  const clubMap = Object.fromEntries(clubs.map(c=>[c.id,c.name]));
+  document.getElementById('logTable').innerHTML = rows.slice(0,PAGE).map(l=>`
+    <tr>
+      <td class="small">${clubMap[l.club_id]||'-'}</td>
+      <td class="small fw-semibold">${l.user_name||'-'}</td>
+      <td class="small"><span class="badge bg-primary bg-opacity-10 text-primary">${l.action||'-'}</span></td>
+      <td class="small text-muted">${l.entity_type||''}${l.entity_id?' #'+l.entity_id:''}</td>
+      <td class="small text-muted" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.details||'-'}</td>
+      <td class="small text-muted">${new Date(l.created_at).toLocaleString('bs-BA')}</td>
+    </tr>`).join('')||'<tr><td colspan="6" class="text-center text-muted py-3">Nema podataka</td></tr>';
+  document.getElementById('logCount').textContent=`Prikazano ${Math.min(rows.length,PAGE)} od ${rows.length} unosa`;
+  document.getElementById('loadMoreBtn').style.display=rows.length>PAGE?'':'none';
+}
+
+load();
+</script>
+</body>
+</html>

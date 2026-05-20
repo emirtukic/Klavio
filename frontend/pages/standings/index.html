@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rezultati selekcija | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+  <style>
+    .sel-card {
+      border: none; border-radius: 16px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+      overflow: hidden;
+    }
+    .sel-card-header {
+      padding: 14px 18px;
+      background: linear-gradient(135deg, #1e40af, #3b82f6);
+      color: #fff;
+    }
+    [data-theme="dark"] .sel-card { background: #1e293b; }
+
+    /* Per-match row */
+    .match-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 0.85rem;
+    }
+    [data-theme="dark"] .match-row { border-color: #334155; }
+    .match-row:last-child { border-bottom: none; }
+
+    .result-dot {
+      width: 26px; height: 26px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; font-weight: 800; flex-shrink: 0;
+    }
+    .dot-win  { background: #dcfce7; color: #166534; }
+    .dot-draw { background: #fef9c3; color: #854d0e; }
+    .dot-loss { background: #fee2e2; color: #991b1b; }
+    .dot-pend { background: #f1f5f9; color: #94a3b8; }
+
+    /* Summary stat pills */
+    .stat-pill {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 8px 12px; border-radius: 10px; min-width: 54px;
+    }
+    .stat-pill .val { font-size: 1.3rem; font-weight: 800; line-height: 1; }
+    .stat-pill .lbl { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 3px; opacity: 0.8; }
+
+    /* Form guide dots */
+    .form-pip {
+      width: 22px; height: 22px; border-radius: 50%;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 0.65rem; font-weight: 800; flex-shrink: 0;
+    }
+    .fp-w { background: #16a34a; color: #fff; }
+    .fp-d { background: #d97706; color: #fff; }
+    .fp-l { background: #dc2626; color: #fff; }
+
+    .match-type-filter { display: flex; gap: 5px; flex-wrap: wrap; }
+    .mf-btn {
+      padding: 4px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 600;
+      border: 1.5px solid #e2e8f0; background: #fff; color: #64748b; cursor: pointer; transition: all 0.12s;
+    }
+    .mf-btn:hover  { background: #f1f5f9; border-color: #94a3b8; }
+    .mf-btn.active { background: linear-gradient(135deg,#2563eb,#1d4ed8); border-color: transparent; color: #fff; }
+    [data-theme="dark"] .mf-btn { background: #1e293b; border-color: #334155; color: #94a3b8; }
+    [data-theme="dark"] .mf-btn.active { background: linear-gradient(135deg,#2563eb,#1d4ed8); border-color: transparent; color: #fff; }
+
+    .empty-sel {
+      text-align: center; padding: 2rem 1rem; color: #94a3b8;
+    }
+  </style>
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Rezultati selekcija</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-primary" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+  <div class="page-body">
+
+    <div class="page-header d-flex justify-content-between align-items-start">
+      <div>
+        <h4>Rezultati selekcija</h4>
+        <p class="text-muted mb-0">Sezonski učinak svake selekcije u njenoj ligi</p>
+      </div>
+      <a href="../matches/list.html" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Utakmice
+      </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="card border-0 shadow-sm mb-3" style="border-radius:14px">
+      <div class="card-body py-3">
+        <div class="d-flex flex-wrap gap-3 align-items-center">
+          <div>
+            <div class="text-muted fw-semibold mb-1" style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.06em">Vrsta utakmice</div>
+            <div class="match-type-filter" id="typeFilter">
+              <button class="mf-btn active" onclick="setType(this,'')" >Sve</button>
+              <button class="mf-btn" onclick="setType(this,'league')"  >Liga</button>
+              <button class="mf-btn" onclick="setType(this,'cup')"     >Kup</button>
+              <button class="mf-btn" onclick="setType(this,'friendly')">Prijateljske</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cards grid -->
+    <div class="row g-3" id="cardsGrid">
+      <div class="col-12 text-center py-5 text-muted">
+        <div class="spinner-border spinner-border-sm me-2"></div>Učitavanje...
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+const user = requireAuth();
+setUserInfo(user); buildSidebar();
+
+let allSelections = [];
+let allMatches    = [];
+let currentType   = '';
+
+async function load() {
+  try {
+    [allSelections, allMatches] = await Promise.all([
+      apiGet('/selections'),
+      apiGet('/matches')
+    ]);
+    render();
+  } catch(e) {
+    showToast(e.message, 'error');
+    document.getElementById('cardsGrid').innerHTML =
+      `<div class="col-12"><div class="alert alert-danger">${esc(e.message)}</div></div>`;
+  }
+}
+
+function setType(btn, type) {
+  currentType = type;
+  document.querySelectorAll('.mf-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  render();
+}
+
+function render() {
+  const grid = document.getElementById('cardsGrid');
+
+  if (!allSelections.length) {
+    grid.innerHTML = `<div class="col-12"><div class="alert alert-info">Nema selekcija. Kreirajte ih u sekciji Selekcije.</div></div>`;
+    return;
+  }
+
+  grid.innerHTML = allSelections.map(sel => {
+    // All matches for this selection, filtered by type
+    const matches = allMatches.filter(m =>
+      m.selection_id === sel.id &&
+      (!currentType || m.match_type === currentType)
+    ).sort((a, b) => new Date(b.match_date) - new Date(a.match_date));
+
+    const played = matches.filter(m => m.result && m.result !== 'pending');
+    const wins   = played.filter(m => m.result === 'win').length;
+    const draws  = played.filter(m => m.result === 'draw').length;
+    const losses = played.filter(m => m.result === 'loss').length;
+    const gf     = played.reduce((s, m) => s + (m.goals_for     || 0), 0);
+    const ga     = played.reduce((s, m) => s + (m.goals_against || 0), 0);
+    const pts    = wins * 3 + draws;
+    const pct    = played.length > 0 ? Math.round((wins / played.length) * 100) : null;
+
+    // Last 5 finished matches for form guide
+    const form = played.slice(0, 5).reverse();
+
+    // Upcoming matches (pending)
+    const upcoming = matches.filter(m => !m.result || m.result === 'pending').slice(0, 3);
+
+    // Recent finished matches for table
+    const recent = played.slice(0, 6);
+
+    const winPctBar = pct !== null ? `
+      <div class="mt-2 px-1">
+        <div class="d-flex justify-content-between small mb-1" style="opacity:0.8">
+          <span>Uspješnost</span><span>${pct}%</span>
+        </div>
+        <div style="height:5px;border-radius:5px;background:rgba(255,255,255,0.25)">
+          <div style="height:100%;width:${pct}%;background:#fff;border-radius:5px;"></div>
+        </div>
+      </div>` : '';
+
+    const formGuide = form.length ? `
+      <div class="d-flex align-items-center gap-1 mt-2">
+        <span style="font-size:0.68rem;opacity:0.75;margin-right:2px">Forma:</span>
+        ${form.map(m => {
+          const cls = m.result === 'win' ? 'fp-w' : m.result === 'draw' ? 'fp-d' : 'fp-l';
+          const lbl = m.result === 'win' ? 'P' : m.result === 'draw' ? 'R' : 'L';
+          return `<span class="form-pip ${cls}" title="${esc(m.opponent)}">${lbl}</span>`;
+        }).join('')}
+      </div>` : '';
+
+    const matchRows = recent.length ? recent.map(m => {
+      const dotCls = m.result === 'win' ? 'dot-win' : m.result === 'draw' ? 'dot-draw' : 'dot-loss';
+      const dotLbl = m.result === 'win' ? 'P'  : m.result === 'draw' ? 'R'  : 'G';
+      const typeLabel = m.match_type === 'league' ? 'Liga' : m.match_type === 'cup' ? 'Kup' : 'Prijat.';
+      return `
+        <div class="match-row">
+          <span class="result-dot ${dotCls}">${dotLbl}</span>
+          <div class="flex-grow-1 fw-semibold">${esc(m.opponent)}</div>
+          <span class="text-muted small">${typeLabel}</span>
+          <span class="fw-bold">${m.goals_for} : ${m.goals_against}</span>
+          <span class="text-muted small">${formatDate(m.match_date)}</span>
+        </div>`;
+    }).join('') : `<div class="empty-sel"><i class="bi bi-calendar-x d-block fs-3 mb-2"></i>Nema odigranih utakmica</div>`;
+
+    const upcomingSection = upcoming.length ? `
+      <div class="px-3 py-2 border-top" style="background:#fafafa">
+        <div class="text-muted fw-semibold mb-2" style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.05em">
+          <i class="bi bi-calendar-event me-1"></i>Nadolazeće
+        </div>
+        ${upcoming.map(m => `
+          <div class="d-flex justify-content-between align-items-center py-1 small">
+            <span class="fw-semibold">${esc(m.opponent)}</span>
+            <span class="text-muted">${formatDate(m.match_date)}</span>
+          </div>`).join('')}
+      </div>` : '';
+
+    return `
+      <div class="col-md-6 col-xl-4">
+        <div class="sel-card">
+          <!-- Header with summary stats -->
+          <div class="sel-card-header">
+            <div class="d-flex justify-content-between align-items-start mb-1">
+              <div>
+                <h5 class="fw-bold mb-0">${esc(sel.name)}</h5>
+                ${sel.description ? `<div style="font-size:0.8rem;opacity:0.8">${esc(sel.description)}</div>` : ''}
+              </div>
+              ${pts > 0 ? `<div style="text-align:center">
+                <div style="font-size:1.6rem;font-weight:900;line-height:1">${pts}</div>
+                <div style="font-size:0.65rem;opacity:0.75;text-transform:uppercase">bod</div>
+              </div>` : ''}
+            </div>
+            <!-- Stat pills -->
+            <div class="d-flex gap-2 mt-3">
+              <div class="stat-pill" style="background:rgba(255,255,255,0.15)">
+                <span class="val text-white">${played.length}</span>
+                <span class="lbl text-white">Igr.</span>
+              </div>
+              <div class="stat-pill" style="background:rgba(34,197,94,0.25)">
+                <span class="val" style="color:#86efac">${wins}</span>
+                <span class="lbl text-white">Pob.</span>
+              </div>
+              <div class="stat-pill" style="background:rgba(250,204,21,0.2)">
+                <span class="val" style="color:#fde68a">${draws}</span>
+                <span class="lbl text-white">Rem.</span>
+              </div>
+              <div class="stat-pill" style="background:rgba(239,68,68,0.2)">
+                <span class="val" style="color:#fca5a5">${losses}</span>
+                <span class="lbl text-white">Por.</span>
+              </div>
+              <div class="stat-pill ms-auto" style="background:rgba(255,255,255,0.1)">
+                <span class="val text-white">${gf}:${ga}</span>
+                <span class="lbl text-white">Golovi</span>
+              </div>
+            </div>
+            ${winPctBar}
+            ${formGuide}
+          </div>
+
+          <!-- Recent matches -->
+          <div id="matches-${sel.id}">
+            ${matchRows}
+          </div>
+          ${upcomingSection}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+load();
+</script>
+</body>
+</html>

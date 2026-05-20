@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analitika platforme | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+  <style>
+    /* ── KPI cards ────────────────────────────────────────── */
+    .kpi-card {
+      border-radius: 14px; border: 1px solid #e8edf2;
+      background: #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,.06);
+      transition: box-shadow .18s, transform .18s;
+    }
+    .kpi-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,.10); transform: translateY(-2px); }
+    .kpi-card .accent-bar {
+      height: 3px; border-radius: 14px 14px 0 0; margin: -1px -1px 0;
+    }
+    .kpi-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; flex-shrink: 0;
+    }
+    .kpi-value { font-size: 1.75rem; font-weight: 800; color: #0f172a; line-height: 1.1; }
+    .kpi-label { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: #64748b; }
+    .kpi-sub   { font-size: .77rem; color: #94a3b8; margin-top: 3px; }
+
+    /* KPI small variant */
+    .kpi-sm .kpi-value { font-size: 1.35rem; }
+
+    /* ── Section divider ──────────────────────────────────── */
+    .sec-title {
+      font-size: .68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1.2px; color: #94a3b8;
+      display: flex; align-items: center; gap: .5rem;
+      border-bottom: 1px solid #f1f5f9; padding-bottom: .5rem; margin-bottom: 1.1rem;
+    }
+    .sec-title i { font-size: .82rem; }
+
+    /* ── Chart card ───────────────────────────────────────── */
+    .an-card {
+      border-radius: 14px; border: 1px solid #e8edf2;
+      background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.05);
+    }
+    .an-card .card-header {
+      background: transparent; border-bottom: 1px solid #f1f5f9;
+      padding: .7rem 1rem;
+    }
+    canvas { max-height: 280px; }
+
+    /* ── Period bar ───────────────────────────────────────── */
+    .period-pill {
+      font-size: .78rem; padding: 4px 13px; border-radius: 20px;
+      border: 1px solid #e2e8f0; background: #fff; color: #64748b;
+      cursor: pointer; transition: all .15s; line-height: 1.4;
+    }
+    .period-pill:hover { border-color: #6366f1; color: #6366f1; }
+    .period-pill.active { background: #6366f1; border-color: #6366f1; color: #fff; font-weight: 600; }
+
+    /* ── Subscription health bar ──────────────────────────── */
+    .sub-health-bar {
+      height: 10px; border-radius: 99px; overflow: hidden;
+      background: #f1f5f9; display: flex;
+    }
+    .sub-health-seg { height: 100%; transition: width .7s ease; }
+
+    /* ── Export btns ──────────────────────────────────────── */
+    .btn-export { font-size: .7rem; padding: 2px 9px; }
+
+    /* ── Tables ───────────────────────────────────────────── */
+    .an-table th {
+      font-size: .68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .5px; color: #64748b; background: #f8fafc !important;
+      border-bottom: 2px solid #e2e8f0 !important; white-space: nowrap;
+    }
+    .an-table td { font-size: .82rem; vertical-align: middle; }
+    .rank-dot {
+      width: 26px; height: 26px; border-radius: 50%; font-size: .7rem;
+      font-weight: 800; display: inline-flex; align-items: center; justify-content: center;
+    }
+
+    /* ── Progress mini bar ────────────────────────────────── */
+    .mini-bar { height: 5px; border-radius: 99px; background: #f1f5f9; }
+    .mini-bar-fill { height: 100%; border-radius: 99px; }
+  </style>
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+
+  <div class="topbar">
+    <span class="topbar-title">Analitika platforme</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-danger" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+
+  <div class="page-body">
+
+    <!-- ── Page header ───────────────────────────────────── -->
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-4">
+      <div>
+        <h4 class="fw-bold mb-0">Analitika platforme</h4>
+        <p class="text-muted small mb-0" id="periodLabel">Učitavanje podataka...</p>
+      </div>
+      <button class="btn btn-sm btn-outline-secondary" onclick="exportAllCSV()">
+        <i class="bi bi-download me-1"></i>CSV export
+      </button>
+    </div>
+
+    <!-- ── Period selector ───────────────────────────────── -->
+    <div class="an-card mb-4 p-2 px-3">
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <span class="text-muted small fw-semibold">Period:</span>
+        <button class="period-pill" data-preset="7d"  onclick="setPreset('7d')">7 dana</button>
+        <button class="period-pill" data-preset="30d" onclick="setPreset('30d')">30 dana</button>
+        <button class="period-pill active" data-preset="6m" onclick="setPreset('6m')">6 mj</button>
+        <button class="period-pill" data-preset="1y"  onclick="setPreset('1y')">1 god</button>
+        <button class="period-pill" data-preset="2y"  onclick="setPreset('2y')">2 god</button>
+        <span class="text-muted small">ili</span>
+        <div class="d-flex align-items-center gap-1">
+          <input type="date" class="form-control form-control-sm" id="customFrom" style="width:132px">
+          <span class="text-muted">–</span>
+          <input type="date" class="form-control form-control-sm" id="customTo" style="width:132px">
+          <button class="btn btn-primary btn-sm px-3" onclick="applyCustomRange()">Primijeni</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!-- SECTION: Platforma — ukupno (all-time)              -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div class="sec-title">
+      <i class="bi bi-globe2 text-primary"></i>Platforma — sve vrijem
+    </div>
+    <div class="row g-3 mb-3">
+      <div class="col-6 col-md-3">
+        <div class="kpi-card h-100">
+          <div class="accent-bar" style="background:#22c55e;"></div>
+          <div class="p-3 d-flex align-items-center gap-3">
+            <div class="kpi-icon" style="background:#dcfce7;color:#16a34a"><i class="bi bi-building-check"></i></div>
+            <div class="min-w-0">
+              <div class="kpi-label">Aktivnih klubova</div>
+              <div class="kpi-value" id="hActiveClubs">–</div>
+              <div class="kpi-sub" id="hTotalClubs">od ukupno –</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="kpi-card h-100">
+          <div class="accent-bar" style="background:#8b5cf6;"></div>
+          <div class="p-3 d-flex align-items-center gap-3">
+            <div class="kpi-icon" style="background:#ede9fe;color:#7c3aed"><i class="bi bi-graph-up-arrow"></i></div>
+            <div class="min-w-0">
+              <div class="kpi-label">MRR</div>
+              <div class="kpi-value" id="hMRR">–</div>
+              <div class="kpi-sub" id="hActiveSubs">– aktivnih pretplata</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="kpi-card h-100">
+          <div class="accent-bar" style="background:#3b82f6;"></div>
+          <div class="p-3 d-flex align-items-center gap-3">
+            <div class="kpi-icon" style="background:#dbeafe;color:#2563eb"><i class="bi bi-people-fill"></i></div>
+            <div class="min-w-0">
+              <div class="kpi-label">Ukupno članova</div>
+              <div class="kpi-value" id="hMembers">–</div>
+              <div class="kpi-sub" id="hCoaches">– trenera</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="kpi-card h-100">
+          <div class="accent-bar" style="background:#6366f1;"></div>
+          <div class="p-3 d-flex align-items-center gap-3">
+            <div class="kpi-icon" style="background:#e0e7ff;color:#4f46e5"><i class="bi bi-currency-dollar"></i></div>
+            <div class="min-w-0">
+              <div class="kpi-label">ARR (procjena)</div>
+              <div class="kpi-value" id="hARR">–</div>
+              <div class="kpi-sub">godišnji prihod (MRR × 12)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sub-health bar -->
+    <div class="an-card p-3 mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="small fw-semibold" style="color:#374151">Zdravlje pretplata</span>
+        <div class="d-flex gap-3 small" id="subHealthLegend"></div>
+      </div>
+      <div class="sub-health-bar" id="subHealthBar"></div>
+      <div class="d-flex justify-content-between mt-1">
+        <span class="small text-muted" id="subHealthNote"></span>
+        <span class="small fw-semibold" id="subHealthRate"></span>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!-- SECTION: Odabrani period                            -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div class="sec-title">
+      <i class="bi bi-calendar-range text-success"></i>Odabrani period
+    </div>
+    <div class="row g-3 mb-3">
+      <div class="col-6 col-md-3">
+        <div class="kpi-card h-100">
+          <div class="accent-bar" style="background:#22c55e;"></div>
+          <div class="p-3 d-flex align-items-center gap-3">
+            <div class="kpi-icon" style="background:#dcfce7;color:#16a34a"><i class="bi bi-cash-stack"></i></div>
+            <div class="min-w-0">
+              <div class="kpi-label">Naplaćeno</div>
+              <div class="kpi-value" id="kPaid">–</div>
+              <div class="kpi-sub" id="kPaidSub">–</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="kpi-card h-100">
+          <div class="accent-bar" style="background:#ef4444;"></div>
+          <div class="p-3 d-flex align-items-center gap-3">
+            <div class="kpi-icon" style="background:#fee2e2;color:#dc2626"><i class="bi bi-exclamation-circle"></i></div>
+            <div class="min-w-0">
+              <div class="kpi-label">Nenaplaćeno</div>
+              <div class="kpi-value" id="kUnpaid">–</div>
+              <div class="kpi-sub" id="kUnpaidSub">u periodu</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="kpi-card h-100">
+          <div class="accent-bar" id="kRateBar" style="background:#3b82f6;"></div>
+          <div class="p-3 d-flex align-items-center gap-3">
+            <div class="kpi-icon" style="background:#dbeafe;color:#2563eb"><i class="bi bi-percent"></i></div>
+            <div class="min-w-0">
+              <div class="kpi-label">Stopa naplate</div>
+              <div class="kpi-value" id="kRate">–</div>
+              <div class="kpi-sub" id="kRateSub">–</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="kpi-card h-100">
+          <div class="accent-bar" style="background:#f59e0b;"></div>
+          <div class="p-3 d-flex align-items-center gap-3">
+            <div class="kpi-icon" style="background:#fef3c7;color:#d97706"><i class="bi bi-receipt"></i></div>
+            <div class="min-w-0">
+              <div class="kpi-label">Fakture</div>
+              <div class="kpi-value" id="kInvoices">–</div>
+              <div class="kpi-sub" id="kAvgSub">prosj. –</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-3">
+        <div class="kpi-card kpi-sm h-100">
+          <div class="p-3 d-flex align-items-center gap-3">
+            <div class="kpi-icon" style="background:#cffafe;color:#0891b2;width:40px;height:40px;font-size:1.1rem;"><i class="bi bi-building-add"></i></div>
+            <div class="min-w-0">
+              <div class="kpi-label">Novi klubovi</div>
+              <div class="kpi-value" id="kNewClubs">–</div>
+              <div class="kpi-sub">u periodu</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="kpi-card kpi-sm h-100">
+          <div class="p-3 d-flex align-items-center gap-3">
+            <div class="kpi-icon" style="background:#dbeafe;color:#2563eb;width:40px;height:40px;font-size:1.1rem;"><i class="bi bi-person-plus"></i></div>
+            <div class="min-w-0">
+              <div class="kpi-label">Novi članovi</div>
+              <div class="kpi-value" id="kNewMembers">–</div>
+              <div class="kpi-sub">u periodu</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="kpi-card kpi-sm h-100">
+          <div class="p-3 d-flex align-items-center gap-3">
+            <div class="kpi-icon" style="background:#dcfce7;color:#16a34a;width:40px;height:40px;font-size:1.1rem;"><i class="bi bi-buildings"></i></div>
+            <div class="min-w-0">
+              <div class="kpi-label">Aktivnih (period)</div>
+              <div class="kpi-value" id="kActiveClubs">–</div>
+              <div class="kpi-sub" id="kActiveClubsSub">–</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="kpi-card kpi-sm h-100">
+          <div class="p-3 d-flex align-items-center gap-3">
+            <div class="kpi-icon" style="background:#ede9fe;color:#7c3aed;width:40px;height:40px;font-size:1.1rem;"><i class="bi bi-bar-chart-fill"></i></div>
+            <div class="min-w-0">
+              <div class="kpi-label">Prosj. faktura</div>
+              <div class="kpi-value" id="kAvg">–</div>
+              <div class="kpi-sub">plaćenih</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!-- SECTION: Prihodi                                    -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div class="sec-title">
+      <i class="bi bi-bar-chart-line text-success"></i>Prihodi
+    </div>
+    <div class="an-card mb-3">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-semibold small">Prihodi po mjesecima</span>
+        <div class="d-flex gap-1">
+          <button class="btn btn-outline-secondary btn-export" onclick="exportChartCSV('revenue')"><i class="bi bi-filetype-csv me-1"></i>CSV</button>
+          <button class="btn btn-outline-secondary btn-export" onclick="exportChartPNG('revenueChart')"><i class="bi bi-image me-1"></i>PNG</button>
+        </div>
+      </div>
+      <div class="card-body pb-2"><canvas id="revenueChart" style="max-height:300px;"></canvas></div>
+    </div>
+    <div class="an-card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-semibold small"><i class="bi bi-table me-2 text-primary"></i>Fakture po mjesecima</span>
+        <button class="btn btn-outline-secondary btn-export" onclick="exportChartCSV('revenue')"><i class="bi bi-filetype-csv me-1"></i>CSV</button>
+      </div>
+      <div class="table-responsive">
+        <table class="table an-table mb-0">
+          <thead><tr><th>Mjesec</th><th>Plaćeno</th><th>Neplaćeno</th><th class="text-center">Br. faktura</th><th>Stopa naplate</th><th>Vizualizacija</th></tr></thead>
+          <tbody id="revTableBody">
+            <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:70px;"></div></td><td><div class="skeleton" style="height:13px;width:80px;"></div></td><td><div class="skeleton" style="height:13px;width:70px;"></div></td><td><div class="skeleton" style="height:13px;width:30px;"></div></td><td><div class="skeleton" style="height:13px;width:50px;"></div></td><td><div class="skeleton" style="height:6px;width:120px;border-radius:99px;"></div></td></tr>
+            <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:70px;"></div></td><td><div class="skeleton" style="height:13px;width:80px;"></div></td><td><div class="skeleton" style="height:13px;width:70px;"></div></td><td><div class="skeleton" style="height:13px;width:30px;"></div></td><td><div class="skeleton" style="height:13px;width:50px;"></div></td><td><div class="skeleton" style="height:6px;width:120px;border-radius:99px;"></div></td></tr>
+            <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:70px;"></div></td><td><div class="skeleton" style="height:13px;width:80px;"></div></td><td><div class="skeleton" style="height:13px;width:70px;"></div></td><td><div class="skeleton" style="height:13px;width:30px;"></div></td><td><div class="skeleton" style="height:13px;width:50px;"></div></td><td><div class="skeleton" style="height:6px;width:120px;border-radius:99px;"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!-- SECTION: Rast                                       -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div class="sec-title">
+      <i class="bi bi-trending-up text-info"></i>Rast
+    </div>
+    <div class="row g-3 mb-4">
+      <div class="col-lg-6">
+        <div class="an-card h-100">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-semibold small"><i class="bi bi-buildings me-2 text-success"></i>Rast klubova</span>
+            <div class="d-flex gap-1">
+              <button class="btn btn-outline-secondary btn-export" onclick="exportChartCSV('clubsGrowth')"><i class="bi bi-filetype-csv me-1"></i>CSV</button>
+              <button class="btn btn-outline-secondary btn-export" onclick="exportChartPNG('clubsChart')"><i class="bi bi-image me-1"></i>PNG</button>
+            </div>
+          </div>
+          <div class="card-body pb-2"><canvas id="clubsChart"></canvas></div>
+        </div>
+      </div>
+      <div class="col-lg-6">
+        <div class="an-card h-100">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-semibold small"><i class="bi bi-people me-2 text-primary"></i>Rast broja članova</span>
+            <div class="d-flex gap-1">
+              <button class="btn btn-outline-secondary btn-export" onclick="exportChartCSV('membersGrowth')"><i class="bi bi-filetype-csv me-1"></i>CSV</button>
+              <button class="btn btn-outline-secondary btn-export" onclick="exportChartPNG('membersChart')"><i class="bi bi-image me-1"></i>PNG</button>
+            </div>
+          </div>
+          <div class="card-body pb-2"><canvas id="membersChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!-- SECTION: Pretplate                                  -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div class="sec-title">
+      <i class="bi bi-credit-card text-warning"></i>Pretplate
+    </div>
+    <div class="row g-3 mb-4">
+      <div class="col-lg-4">
+        <div class="an-card h-100">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-semibold small"><i class="bi bi-pie-chart me-2 text-warning"></i>Raspored po planu</span>
+            <button class="btn btn-outline-secondary btn-export" onclick="exportChartCSV('subscriptions')"><i class="bi bi-filetype-csv me-1"></i>CSV</button>
+          </div>
+          <div class="card-body d-flex flex-column align-items-center pb-2">
+            <canvas id="subChart" style="max-height:180px;"></canvas>
+            <div id="subLegend" class="mt-2 w-100"></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="an-card h-100">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-semibold small"><i class="bi bi-arrow-repeat me-2 text-primary"></i>Tip naplate</span>
+            <button class="btn btn-outline-secondary btn-export" onclick="exportChartCSV('subCycle')"><i class="bi bi-filetype-csv me-1"></i>CSV</button>
+          </div>
+          <div class="card-body d-flex align-items-center justify-content-center pb-2">
+            <canvas id="cycleChart" style="max-height:190px;max-width:230px;"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="an-card h-100">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span class="fw-semibold small"><i class="bi bi-bar-chart me-2 text-danger"></i>Status pretplata</span>
+            <button class="btn btn-outline-secondary btn-export" onclick="exportChartCSV('subStatus')"><i class="bi bi-filetype-csv me-1"></i>CSV</button>
+          </div>
+          <div class="card-body pb-2"><canvas id="subStatusChart"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════ -->
+    <!-- SECTION: Top klubovi                                -->
+    <!-- ════════════════════════════════════════════════════ -->
+    <div class="sec-title">
+      <i class="bi bi-trophy text-warning"></i>Top klubovi
+    </div>
+    <div class="an-card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div class="d-flex align-items-center gap-2">
+          <select class="form-select form-select-sm" id="topSort" onchange="loadTopClubs()" style="width:165px">
+            <option value="members">Po broju članova</option>
+            <option value="revenue">Po prihodima</option>
+          </select>
+          <select class="form-select form-select-sm" id="topLimit" onchange="loadTopClubs()" style="width:90px">
+            <option value="5">Top 5</option>
+            <option value="10" selected>Top 10</option>
+            <option value="20">Top 20</option>
+          </select>
+        </div>
+        <div class="d-flex gap-1">
+          <button class="btn btn-outline-secondary btn-export" onclick="exportChartCSV('topClubs')"><i class="bi bi-filetype-csv me-1"></i>CSV</button>
+          <button class="btn btn-outline-secondary btn-export" onclick="exportChartPNG('topChart')"><i class="bi bi-image me-1"></i>PNG</button>
+        </div>
+      </div>
+      <div class="card-body pb-2"><canvas id="topChart" style="max-height:260px;"></canvas></div>
+      <div class="table-responsive">
+        <table class="table an-table mb-0">
+          <thead><tr>
+            <th style="width:38px">#</th><th>Klub</th><th>Plan</th><th>Status</th>
+            <th class="text-center">Članovi</th><th class="text-center">Treneri</th>
+            <th>Prihod (period)</th><th>Udio</th>
+          </tr></thead>
+          <tbody id="topBody">
+            <tr class="sk-row"><td></td><td><div class="skeleton" style="height:13px;width:120px;"></div></td><td><div class="skeleton" style="height:18px;width:55px;border-radius:99px;"></div></td><td><div class="skeleton" style="height:18px;width:65px;border-radius:99px;"></div></td><td><div class="skeleton" style="height:13px;width:25px;"></div></td><td><div class="skeleton" style="height:13px;width:20px;"></div></td><td><div class="skeleton" style="height:13px;width:70px;"></div></td><td><div class="skeleton" style="height:6px;width:80px;border-radius:99px;"></div></td></tr>
+            <tr class="sk-row"><td></td><td><div class="skeleton" style="height:13px;width:100px;"></div></td><td><div class="skeleton" style="height:18px;width:60px;border-radius:99px;"></div></td><td><div class="skeleton" style="height:18px;width:60px;border-radius:99px;"></div></td><td><div class="skeleton" style="height:13px;width:25px;"></div></td><td><div class="skeleton" style="height:13px;width:20px;"></div></td><td><div class="skeleton" style="height:13px;width:60px;"></div></td><td><div class="skeleton" style="height:6px;width:80px;border-radius:99px;"></div></td></tr>
+            <tr class="sk-row"><td></td><td><div class="skeleton" style="height:13px;width:130px;"></div></td><td><div class="skeleton" style="height:18px;width:50px;border-radius:99px;"></div></td><td><div class="skeleton" style="height:18px;width:70px;border-radius:99px;"></div></td><td><div class="skeleton" style="height:13px;width:25px;"></div></td><td><div class="skeleton" style="height:13px;width:20px;"></div></td><td><div class="skeleton" style="height:13px;width:65px;"></div></td><td><div class="skeleton" style="height:6px;width:80px;border-radius:99px;"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+const user = requireRole('super_admin');
+setUserInfo(user); buildSidebar();
+
+/* ── State ──────────────────────────────────────────────── */
+let currentFrom = '', currentTo = '', cache = {}, charts = {};
+
+/* ── Colours ─────────────────────────────────────────────── */
+const C = {
+  green:  '#22c55e', greenBg:  'rgba(34,197,94,.12)',
+  red:    '#ef4444', redBg:    'rgba(239,68,68,.12)',
+  blue:   '#3b82f6', blueBg:   'rgba(59,130,246,.12)',
+  indigo: '#6366f1', indigoBg: 'rgba(99,102,241,.12)',
+  amber:  '#f59e0b', amberBg:  'rgba(245,158,11,.12)',
+  cyan:   '#06b6d4', cyanBg:   'rgba(6,182,212,.12)',
+  purple: '#8b5cf6', purpleBg: 'rgba(139,92,246,.12)',
+  slate:  '#94a3b8',
+};
+const PALETTE = [C.indigo, C.green, C.amber, C.red, C.cyan, C.purple, '#f97316', '#ec4899', '#14b8a6', '#84cc16'];
+
+/* ── Month names (bs) ───────────────────────────────────── */
+const MONTHS = ['Januar','Februar','Mart','April','Maj','Juni','Juli','August','Septembar','Oktobar','Novembar','Decembar'];
+function monthLabel(ym) {
+  const [y, m] = ym.split('-');
+  return MONTHS[+m - 1] + ' \'' + y.slice(2);
+}
+
+/* ── Format helpers ─────────────────────────────────────── */
+function fmtMoney(v, short = false) {
+  const n = parseFloat(v || 0);
+  if (short && n >= 1000) return (n / 1000).toFixed(1) + 'k KM';
+  return new Intl.NumberFormat('bs-BA', { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n) + ' KM';
+}
+function fmtPct(v) { return (+(v || 0)).toFixed(1) + '%'; }
+function fmtNum(v) { return new Intl.NumberFormat('bs-BA').format(+v || 0); }
+
+/* ── Date / range ───────────────────────────────────────── */
+function computeRange(preset) {
+  const now = new Date();
+  const to  = now.toISOString().slice(0, 10);
+  const map = { '7d': 7, '30d': 30, '6m': 180, '1y': 365, '2y': 730 };
+  const d = new Date(now);
+  d.setDate(d.getDate() - (map[preset] || 180));
+  return { from: d.toISOString().slice(0, 10), to };
+}
+function rangeParams() { return `from=${currentFrom}&to=${currentTo}`; }
+
+function setPreset(p) {
+  const r = computeRange(p);
+  currentFrom = r.from; currentTo = r.to;
+  document.querySelectorAll('.period-pill').forEach(b => b.classList.toggle('active', b.dataset.preset === p));
+  document.getElementById('customFrom').value = '';
+  document.getElementById('customTo').value   = '';
+  updatePeriodLabel();
+  loadAll();
+}
+function applyCustomRange() {
+  const f = document.getElementById('customFrom').value;
+  const t = document.getElementById('customTo').value;
+  if (!f || !t || f > t) { showToast('Odaberite ispravan period', 'warning'); return; }
+  currentFrom = f; currentTo = t;
+  document.querySelectorAll('.period-pill').forEach(b => b.classList.remove('active'));
+  updatePeriodLabel();
+  loadAll();
+}
+function updatePeriodLabel() {
+  const fmt = d => new Date(d).toLocaleDateString('bs-BA');
+  document.getElementById('periodLabel').textContent = `Period: ${fmt(currentFrom)} — ${fmt(currentTo)}`;
+}
+
+/* ── Chart factory ───────────────────────────────────────── */
+const gridOpts = { color: 'rgba(0,0,0,.04)', drawBorder: false };
+const tickFont  = { size: 11, family: 'inherit' };
+const legendOpts = { position: 'bottom', labels: { font: tickFont, boxWidth: 10, padding: 14 } };
+
+function destroyChart(id) { if (charts[id]) { charts[id].destroy(); delete charts[id]; } }
+
+function mkBar(id, labels, datasets, stacked = false) {
+  destroyChart(id);
+  charts[id] = new Chart(document.getElementById(id), {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: legendOpts, tooltip: { callbacks: {
+        label: ctx => ` ${ctx.dataset.label}: ${fmtMoney(ctx.raw)}`
+      }}},
+      scales: {
+        x: { stacked, grid: { display: false }, ticks: { font: tickFont } },
+        y: { stacked, beginAtZero: true, grid: gridOpts, ticks: { font: tickFont, callback: v => fmtMoney(v, true) } }
+      }
+    }
+  });
+}
+
+function mkBarCount(id, labels, datasets) {
+  destroyChart(id);
+  charts[id] = new Chart(document.getElementById(id), {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: legendOpts },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: tickFont } },
+        y: { beginAtZero: true, grid: gridOpts, ticks: { font: tickFont, stepSize: 1 } }
+      }
+    }
+  });
+}
+
+function mkLine(id, labels, datasets) {
+  destroyChart(id);
+  charts[id] = new Chart(document.getElementById(id), {
+    type: 'line',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      plugins: { legend: legendOpts },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: tickFont } },
+        y: { beginAtZero: true, grid: gridOpts, ticks: { font: tickFont, stepSize: 1 } }
+      }
+    }
+  });
+}
+
+function mkDoughnut(id, labels, data, colors) {
+  destroyChart(id);
+  charts[id] = new Chart(document.getElementById(id), {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data, backgroundColor: colors || PALETTE, borderWidth: 2, hoverOffset: 6 }] },
+    options: {
+      responsive: true, maintainAspectRatio: true, cutout: '62%',
+      plugins: { legend: legendOpts }
+    }
+  });
+}
+
+function mkHorizBar(id, labels, data, colors) {
+  destroyChart(id);
+  charts[id] = new Chart(document.getElementById(id), {
+    type: 'bar',
+    data: { labels, datasets: [{ data, backgroundColor: colors || PALETTE.slice(0, labels.length), borderRadius: 6, borderSkipped: false }] },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: true,
+      plugins: { legend: { display: false }, tooltip: { callbacks: {
+        label: ctx => ` ${fmtMoney(ctx.raw)}`
+      }}},
+      scales: {
+        x: { beginAtZero: true, grid: gridOpts, ticks: { font: tickFont, callback: v => fmtMoney(v, true) } },
+        y: { grid: { display: false }, ticks: { font: tickFont } }
+      }
+    }
+  });
+}
+
+/* ── Platform health (all-time) ─────────────────────────── */
+async function loadPlatformHealth() {
+  try {
+    const d = await apiGet('/analytics/platform-health');
+    cache.health = d;
+
+    document.getElementById('hActiveClubs').textContent = fmtNum(d.clubs.active);
+    document.getElementById('hTotalClubs').textContent  = `od ukupno ${fmtNum(d.clubs.total)} klubova`;
+    document.getElementById('hMRR').textContent         = fmtMoney(d.subscriptions.mrr);
+    document.getElementById('hActiveSubs').textContent  = `${fmtNum(d.subscriptions.active)} aktivnih pretplata`;
+    document.getElementById('hMembers').textContent     = fmtNum(d.members);
+    document.getElementById('hCoaches').textContent     = `${fmtNum(d.coaches)} trenera`;
+    document.getElementById('hARR').textContent         = fmtMoney(d.subscriptions.mrr * 12, true);
+
+    // Sub health bar
+    const h = d.subscriptions.health;
+    const total = +h.total || 1;
+    const pActive    = (+h.active    / total * 100).toFixed(1);
+    const pOverdue   = (+h.overdue   / total * 100).toFixed(1);
+    const pCancelled = (+h.cancelled / total * 100).toFixed(1);
+
+    document.getElementById('subHealthBar').innerHTML = `
+      <div class="sub-health-seg" style="width:${pActive}%;background:#22c55e;" title="Aktivne: ${h.active}"></div>
+      <div class="sub-health-seg" style="width:${pOverdue}%;background:#f59e0b;" title="Zakašnjelo: ${h.overdue}"></div>
+      <div class="sub-health-seg" style="width:${pCancelled}%;background:#ef4444;" title="Otkazano: ${h.cancelled}"></div>`;
+
+    document.getElementById('subHealthLegend').innerHTML = `
+      <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;margin-right:4px;"></span>Aktivne ${pActive}%</span>
+      <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f59e0b;margin-right:4px;"></span>Zakašnjelo ${pOverdue}%</span>
+      <span><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#ef4444;margin-right:4px;"></span>Otkazano ${pCancelled}%</span>`;
+
+    document.getElementById('subHealthNote').textContent  = `${h.total} ukupno pretplata`;
+    document.getElementById('subHealthRate').textContent  = `${pActive}% zdravlje`;
+  } catch(e) { console.error('health', e); }
+}
+
+/* ── Summary (period) ───────────────────────────────────── */
+async function loadSummary() {
+  try {
+    const d = await apiGet(`/analytics/summary?${rangeParams()}`);
+    cache.summary = d;
+    const rate = d.revenue.total_invoices > 0
+      ? (d.revenue.paid_invoices / d.revenue.total_invoices * 100) : 0;
+    const rateColor = rate >= 80 ? C.green : rate >= 50 ? C.amber : C.red;
+
+    document.getElementById('kPaid').textContent     = fmtMoney(d.revenue.total_paid);
+    document.getElementById('kPaidSub').textContent  = `${d.revenue.paid_invoices} faktura plaćeno`;
+    document.getElementById('kUnpaid').textContent   = fmtMoney(d.revenue.total_unpaid);
+    document.getElementById('kRate').textContent     = fmtPct(rate);
+    document.getElementById('kRateSub').textContent  = `${d.revenue.paid_invoices} od ${d.revenue.total_invoices} faktura`;
+    document.getElementById('kRateBar').style.background = rateColor;
+    document.getElementById('kInvoices').textContent = fmtNum(d.revenue.total_invoices);
+    document.getElementById('kAvgSub').textContent   = `prosj. ${fmtMoney(d.revenue.avg_invoice)}`;
+    document.getElementById('kAvg').textContent      = fmtMoney(d.revenue.avg_invoice);
+    document.getElementById('kNewClubs').textContent    = fmtNum(d.clubs.total);
+    document.getElementById('kActiveClubs').textContent = fmtNum(d.clubs.active);
+    document.getElementById('kActiveClubsSub').textContent = `${d.clubs.inactive} neaktivnih`;
+    document.getElementById('kNewMembers').textContent  = fmtNum(d.new_members);
+  } catch(e) { showToast('Greška KPI', 'error'); }
+}
+
+/* ── Revenue chart + table ───────────────────────────────── */
+async function loadRevenue() {
+  try {
+    const d = await apiGet(`/analytics/revenue?${rangeParams()}`);
+    cache.revenue = d;
+    const labels = d.map(r => monthLabel(r.month));
+    mkBar('revenueChart', labels, [
+      { label: 'Plaćeno (KM)', data: d.map(r => parseFloat(r.paid || 0)),   backgroundColor: C.green,  borderRadius: 5 },
+      { label: 'Neplaćeno (KM)', data: d.map(r => parseFloat(r.unpaid || 0)), backgroundColor: C.redBg, borderColor: C.red, borderWidth: 1.5, borderRadius: 5 }
+    ]);
+
+    const maxPaid = Math.max(...d.map(r => parseFloat(r.paid || 0) + parseFloat(r.unpaid || 0)), 1);
+    document.getElementById('revTableBody').innerHTML = d.length
+      ? d.map(r => {
+          const paid   = parseFloat(r.paid   || 0);
+          const unpaid = parseFloat(r.unpaid || 0);
+          const total  = paid + unpaid;
+          const rate   = total > 0 ? paid / total * 100 : 0;
+          const rBg    = rate >= 80 ? '#dcfce7' : rate >= 50 ? '#fef9c3' : '#fee2e2';
+          const rFg    = rate >= 80 ? '#16a34a' : rate >= 50 ? '#ca8a04' : '#dc2626';
+          const barW   = Math.round(total / maxPaid * 100);
+          return `<tr>
+            <td class="fw-semibold">${monthLabel(r.month)}</td>
+            <td class="text-success fw-semibold">${fmtMoney(paid)}</td>
+            <td class="text-danger">${fmtMoney(unpaid)}</td>
+            <td class="text-center">${r.invoice_count}</td>
+            <td><span class="badge" style="background:${rBg};color:${rFg}">${fmtPct(rate)}</span></td>
+            <td style="min-width:120px;">
+              <div class="mini-bar"><div class="mini-bar-fill" style="width:${barW}%;background:${C.green};"></div></div>
+            </td>
+          </tr>`;
+        }).join('')
+      : `<tr><td colspan="6" class="text-center text-muted py-3">Nema podataka za odabrani period</td></tr>`;
+  } catch(e) { showToast('Greška prihodi', 'error'); }
+}
+
+/* ── Clubs + Members growth ─────────────────────────────── */
+async function loadClubsGrowth() {
+  try {
+    const d = await apiGet(`/analytics/clubs-growth?${rangeParams()}`);
+    cache.clubsGrowth = d;
+    mkBarCount('clubsChart', d.map(r => monthLabel(r.month)), [
+      { label: 'Novi klubovi', data: d.map(r => +r.new_clubs || 0), backgroundColor: C.cyan, borderRadius: 6 }
+    ]);
+  } catch(e) { showToast('Greška rast klubova', 'error'); }
+}
+
+async function loadMembersGrowth() {
+  try {
+    const d = await apiGet(`/analytics/members-growth?${rangeParams()}`);
+    cache.membersGrowth = d;
+    mkLine('membersChart', d.map(r => monthLabel(r.month)), [
+      { label: 'Novi članovi', data: d.map(r => +r.new_members || 0),
+        borderColor: C.indigo, backgroundColor: C.indigoBg,
+        tension: .4, fill: true, pointRadius: 4, pointBackgroundColor: C.indigo }
+    ]);
+  } catch(e) { showToast('Greška rast članova', 'error'); }
+}
+
+/* ── Subscriptions ───────────────────────────────────────── */
+async function loadSubscriptions() {
+  try {
+    const d = await apiGet('/analytics/subscriptions');
+    cache.subscriptions = d;
+    cache.subStatus = d.byStatus || [];
+    cache.subCycle  = d.byCycle  || [];
+
+    // By plan doughnut
+    const planMap = {};
+    (d.byPlan || []).forEach(r => { planMap[r.plan] = (planMap[r.plan] || 0) + +r.count; });
+    const planL = Object.keys(planMap);
+    const planV = planL.map(k => planMap[k]);
+    mkDoughnut('subChart',
+      planL.length ? planL : ['Nema podataka'],
+      planL.length ? planV : [1],
+      planL.length ? undefined : ['#e5e7eb']
+    );
+    document.getElementById('subLegend').innerHTML = planL.map((l, i) => `
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <span class="small"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${PALETTE[i]};margin-right:5px;"></span>${l || '-'}</span>
+        <span class="small fw-semibold">${planV[i]}</span>
+      </div>`).join('');
+
+    // Billing cycle doughnut
+    const cyc = d.byCycle || [];
+    mkDoughnut('cycleChart',
+      cyc.map(r => r.billing_cycle === 'monthly' ? 'Mjesečno' : r.billing_cycle === 'yearly' ? 'Godišnje' : r.billing_cycle || '-'),
+      cyc.map(r => +r.count),
+      [C.indigo, C.cyan, C.amber]
+    );
+
+    // Status bar chart
+    const st = d.byStatus || [];
+    const STATUS_L = { active: 'Aktivne', overdue: 'Zakašnjelo', cancelled: 'Otkazano' };
+    const STATUS_C = { active: C.green, overdue: C.amber, cancelled: C.red };
+    mkBarCount('subStatusChart',
+      st.map(r => STATUS_L[r.status] || r.status),
+      [{ label: 'Pretplate', data: st.map(r => +r.count), backgroundColor: st.map(r => STATUS_C[r.status] || C.slate), borderRadius: 6 }]
+    );
+  } catch(e) { showToast('Greška pretplate', 'error'); }
+}
+
+/* ── Top clubs ───────────────────────────────────────────── */
+async function loadTopClubs() {
+  const sort  = document.getElementById('topSort').value;
+  const limit = document.getElementById('topLimit').value;
+  try {
+    const d = await apiGet(`/analytics/top-clubs?${rangeParams()}&sort_by=${sort}&limit=${limit}`);
+    cache.topClubs = d;
+
+    const labels = d.map(r => r.name);
+    const values = d.map(r => sort === 'revenue' ? parseFloat(r.club_revenue || 0) : +r.member_count || 0);
+    if (sort === 'revenue') {
+      mkHorizBar('topChart', labels, values, PALETTE.slice(0, labels.length));
+    } else {
+      mkHorizBar('topChart', labels, values, PALETTE.slice(0, labels.length));
+    }
+
+    const maxVal = Math.max(...values, 1);
+    const PLAN_STYLE  = { starter: '#e9ecef;color:#495057', pro: '#d1fae5;color:#065f46', klub: '#ede9fe;color:#4c1d95' };
+    const STATUS_STYLE = { active: '#dcfce7;color:#16a34a', overdue: '#fef9c3;color:#ca8a04', cancelled: '#fee2e2;color:#dc2626' };
+    const rankColors = ['#f59e0b', '#94a3b8', '#cd7f32'];
+
+    document.getElementById('topBody').innerHTML = d.map((r, i) => {
+      const barW  = Math.round(values[i] / maxVal * 100);
+      const rc    = rankColors[i] || '#e2e8f0';
+      return `<tr>
+        <td><span class="rank-dot" style="background:${rc};color:#fff">${i + 1}</span></td>
+        <td class="fw-semibold">${esc(r.name)}</td>
+        <td><span class="badge" style="background:${PLAN_STYLE[r.plan] || '#e9ecef;color:#495057'};font-size:.68rem">${r.plan || '-'}</span></td>
+        <td><span class="badge" style="background:${STATUS_STYLE[r.sub_status] || '#e9ecef;color:#495057'};font-size:.68rem">${r.sub_status || '-'}</span></td>
+        <td class="text-center">${r.member_count || 0}</td>
+        <td class="text-center">${r.coach_count  || 0}</td>
+        <td class="fw-semibold text-success">${fmtMoney(r.club_revenue)}</td>
+        <td style="min-width:80px;">
+          <div class="mini-bar"><div class="mini-bar-fill" style="width:${barW}%;background:${PALETTE[i % PALETTE.length]};"></div></div>
+        </td>
+      </tr>`;
+    }).join('') || `<tr><td colspan="8" class="text-center text-muted py-3">Nema podataka</td></tr>`;
+  } catch(e) { showToast('Greška top klubovi', 'error'); }
+}
+
+/* ── Load all ────────────────────────────────────────────── */
+async function loadAll() {
+  cache = {};
+  await Promise.all([
+    loadPlatformHealth(),
+    loadSummary(),
+    loadRevenue(),
+    loadClubsGrowth(),
+    loadMembersGrowth(),
+    loadSubscriptions(),
+    loadTopClubs()
+  ]);
+}
+
+/* ── CSV / PNG export ────────────────────────────────────── */
+function toCSV(headers, rows) {
+  return [headers.join(','), ...rows.map(r => r.map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','))].join('\r\n');
+}
+function dlCSV(filename, csv) {
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = filename; a.click();
+}
+function exportChartPNG(id) {
+  if (!charts[id]) return;
+  const a = document.createElement('a');
+  a.href = charts[id].toBase64Image('image/png', 1);
+  a.download = id + '_' + currentFrom + '_' + currentTo + '.png';
+  a.click();
+}
+function exportChartCSV(key) {
+  if (key === 'revenue' && cache.revenue)
+    return dlCSV('prihodi.csv', toCSV(['Mjesec','Plaćeno','Neplaćeno','Br. faktura'],
+      cache.revenue.map(r => [r.month, r.paid || 0, r.unpaid || 0, r.invoice_count])));
+  if (key === 'clubsGrowth' && cache.clubsGrowth)
+    return dlCSV('rast_klubova.csv', toCSV(['Mjesec','Novi klubovi'],
+      cache.clubsGrowth.map(r => [r.month, r.new_clubs || 0])));
+  if (key === 'membersGrowth' && cache.membersGrowth)
+    return dlCSV('rast_clanova.csv', toCSV(['Mjesec','Novi članovi'],
+      cache.membersGrowth.map(r => [r.month, r.new_members || 0])));
+  if (key === 'subscriptions' && cache.subscriptions)
+    return dlCSV('pretplate.csv', toCSV(['Plan','Status','Broj','Cijena'],
+      (cache.subscriptions.byPlan || []).map(r => [r.plan, r.status, r.count, r.total_price || 0])));
+  if (key === 'subStatus' && cache.subStatus)
+    return dlCSV('pretplate_status.csv', toCSV(['Status','Broj','Cijena'],
+      cache.subStatus.map(r => [r.status, r.count, r.total_price || 0])));
+  if (key === 'subCycle' && cache.subCycle)
+    return dlCSV('tip_naplate.csv', toCSV(['Tip naplate','Broj','Cijena'],
+      cache.subCycle.map(r => [r.billing_cycle, r.count, r.total_price || 0])));
+  if (key === 'topClubs' && cache.topClubs)
+    return dlCSV('top_klubovi.csv', toCSV(['Klub','Plan','Status','Članovi','Treneri','Prihod (KM)'],
+      cache.topClubs.map(r => [r.name, r.plan, r.sub_status, r.member_count, r.coach_count, r.club_revenue])));
+  showToast('Podaci još nisu učitani', 'warning');
+}
+function exportAllCSV() {
+  ['revenue','clubsGrowth','membersGrowth','subscriptions','subStatus','subCycle','topClubs']
+    .forEach(k => { if (cache[k]) exportChartCSV(k); });
+  showToast('Export pokrenut', 'success');
+}
+
+function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+/* ── Boot ─────────────────────────────────────────────────── */
+setPreset('6m');
+</script>
+</body>
+</html>

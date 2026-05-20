@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sponzori | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+  <style>
+    .sponsor-card {
+      border: none;
+      border-radius: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      transition: transform 0.15s, box-shadow 0.15s;
+      overflow: hidden;
+    }
+    .sponsor-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
+    .sponsor-card.inactive { opacity: 0.55; }
+    .sponsor-logo-wrap {
+      width: 72px; height: 72px;
+      border-radius: 14px;
+      background: #f1f5f9;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden; flex-shrink: 0;
+      border: 1px solid #e2e8f0;
+    }
+    .sponsor-logo-wrap img { width: 100%; height: 100%; object-fit: contain; }
+    .sponsor-logo-wrap i   { font-size: 2rem; color: #94a3b8; }
+    .sponsor-name { font-size: 1.1rem; font-weight: 700; color: #1e293b; line-height: 1.2; }
+    .sponsor-meta { font-size: 0.82rem; color: #64748b; }
+    .sponsor-amount { font-size: 0.9rem; font-weight: 600; color: #1e293b; }
+    .inactive-section-header {
+      font-size: 0.75rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.09em; color: #94a3b8; margin: 1.5rem 0 0.5rem;
+      cursor: pointer; user-select: none;
+      display: flex; align-items: center; gap: 0.4rem;
+    }
+    .inactive-section-header:hover { color: #64748b; }
+/* Toggle switch inline */
+    .form-check.form-switch { margin: 0; }
+
+    @media (max-width: 576px) {
+      .sponsor-name { font-size: 1rem; }
+      .sponsor-logo-wrap { width: 56px; height: 56px; border-radius: 10px; }
+    }
+  </style>
+</head>
+<body>
+<div class="sidebar"></div>
+
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Sponzori</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-primary" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+
+  <div class="page-body">
+    <!-- Page header -->
+    <div class="page-header d-flex justify-content-between align-items-center">
+      <div>
+        <h4>Sponzori</h4>
+        <p class="text-muted mb-0">Upravljanje sponzorima kluba</p>
+      </div>
+      <button class="btn btn-primary" onclick="openModal()">
+        <i class="bi bi-plus-lg me-1"></i> Dodaj sponzora
+      </button>
+    </div>
+
+    <!-- Loading state -->
+    <div id="loadingState" class="text-center py-5 text-muted">
+      <span class="spinner-border spinner-border-sm me-2"></span>Učitavanje sponzora...
+    </div>
+
+    <!-- Active sponsors grid -->
+    <div id="activeSection" style="display:none;">
+      <div class="row g-3" id="activeGrid"></div>
+    </div>
+
+    <!-- No active sponsors -->
+    <div id="emptyActive" class="empty-state" style="display:none;">
+      <i class="bi bi-briefcase empty-state-icon"></i>
+      <p class="mb-0 fw-semibold">Nema aktivnih sponzora</p>
+      <p class="small mt-1">Dodajte prvog sponzora kluba.</p>
+    </div>
+
+    <!-- Inactive sponsors collapsible -->
+    <div id="inactiveSection" style="display:none;">
+      <div class="inactive-section-header" onclick="toggleInactive(this)">
+        <i class="bi bi-chevron-right" id="inactiveChevron"></i>
+        Neaktivni sponzori
+        <span class="badge bg-secondary ms-1" id="inactiveCnt">0</span>
+      </div>
+      <div id="inactiveCollapse" style="overflow:hidden; max-height:0; transition:max-height 0.25s ease;">
+        <div class="row g-3 mt-1" id="inactiveGrid"></div>
+      </div>
+    </div>
+
+  </div><!-- /page-body -->
+</div><!-- /main-content -->
+
+<!-- Add/Edit Modal -->
+<div class="modal fade" id="sponsorModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalTitle"><i class="bi bi-briefcase me-2"></i>Dodaj sponzora</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editId">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Naziv <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="fName" placeholder="Naziv sponzora">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Vrsta sponzorstva</label>
+            <select class="form-select" id="fType">
+              <option value="main">Glavni</option>
+              <option value="secondary">Sekundarni</option>
+              <option value="technical">Tehnički</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Logo (URL)</label>
+            <input type="url" class="form-control" id="fLogo" placeholder="https://...">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Web stranica</label>
+            <input type="url" class="form-control" id="fWebsite" placeholder="https://...">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Kontakt osoba</label>
+            <input type="text" class="form-control" id="fContactName" placeholder="Ime i prezime">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Kontakt e-mail</label>
+            <input type="email" class="form-control" id="fContactEmail" placeholder="kontakt@firma.ba">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Iznos (KM / godišnje)</label>
+            <div class="input-group">
+              <input type="number" class="form-control" id="fAmount" min="0" step="0.01" placeholder="0.00">
+              <span class="input-group-text">KM/god</span>
+            </div>
+          </div>
+          <div class="col-md-6 d-flex align-items-center">
+            <div class="form-check form-switch mt-3">
+              <input class="form-check-input" type="checkbox" id="fActive" checked>
+              <label class="form-check-label" for="fActive">Aktivan sponzor</label>
+            </div>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Napomena</label>
+            <textarea class="form-control" id="fNotes" rows="2" placeholder="Opcionalna napomena..."></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
+        <button type="button" class="btn btn-primary" id="saveBtn" onclick="saveSponsor()">
+          <span class="spinner-border spinner-border-sm d-none me-1" id="saveSpinner"></span>
+          Spremi
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+  const user = requireRole('admin', 'super_admin');
+  setUserInfo(user); buildSidebar();
+
+  let allSponsors = [];
+
+  /* ── Boot ─────────────────────────────────────────────────────────── */
+  async function init() {
+    try {
+      allSponsors = await apiGet('/sponsors');
+      render();
+    } catch(e) {
+      showToast('Greška pri učitavanju: ' + e.message, 'error');
+    } finally {
+      document.getElementById('loadingState').style.display = 'none';
+    }
+  }
+
+  /* ── Type badge ─────────────────────────────────────────────────── */
+  const typeMap = {
+    main:      { label: 'Glavni',      cls: 'bg-warning text-dark' },
+    secondary: { label: 'Sekundarni',  cls: 'bg-primary'           },
+    technical: { label: 'Tehnički',    cls: 'bg-success'           }
+  };
+
+  function typeBadge(t) {
+    const m = typeMap[t] || { label: t, cls: 'bg-secondary' };
+    return `<span class="badge ${m.cls}">${m.label}</span>`;
+  }
+
+  /* ── Render all ─────────────────────────────────────────────────── */
+  function render() {
+    const active   = allSponsors.filter(s => s.active);
+    const inactive = allSponsors.filter(s => !s.active);
+
+    // Active
+    if (active.length === 0) {
+      document.getElementById('activeSection').style.display = 'none';
+      document.getElementById('emptyActive').style.display   = '';
+    } else {
+      document.getElementById('activeSection').style.display = '';
+      document.getElementById('emptyActive').style.display   = 'none';
+      document.getElementById('activeGrid').innerHTML = active.map(s => sponsorCardHtml(s)).join('');
+    }
+
+    // Inactive
+    if (inactive.length === 0) {
+      document.getElementById('inactiveSection').style.display = 'none';
+    } else {
+      document.getElementById('inactiveSection').style.display = '';
+      document.getElementById('inactiveCnt').textContent = inactive.length;
+      document.getElementById('inactiveGrid').innerHTML = inactive.map(s => sponsorCardHtml(s)).join('');
+    }
+  }
+
+  function sponsorCardHtml(s) {
+    const logoHtml = s.logo_url
+      ? `<img src="${escHtml(s.logo_url)}" alt="${escHtml(s.name)}" onerror="this.parentElement.innerHTML='<i class=\\'bi bi-briefcase\\'></i>'">`
+      : '<i class="bi bi-briefcase"></i>';
+
+    const website = s.website
+      ? `<a href="${escHtml(s.website)}" target="_blank" class="text-decoration-none small text-primary"><i class="bi bi-globe me-1"></i>${escHtml(s.website.replace(/^https?:\/\//,''))}</a>`
+      : '';
+
+    const amount = s.amount != null
+      ? `<span class="sponsor-amount"><i class="bi bi-cash-stack me-1 text-success"></i>${formatKM(s.amount)} KM/god</span>`
+      : '';
+
+    const contactHtml = s.contact_name
+      ? `<span class="sponsor-meta"><i class="bi bi-person me-1"></i>${escHtml(s.contact_name)}</span>`
+      : '';
+
+    return `
+      <div class="col-12 col-md-6 col-xl-4">
+        <div class="card sponsor-card ${s.active ? '' : 'inactive'}" id="sc-${s.id}">
+          <div class="card-body">
+            <!-- Top row: logo + name + badge -->
+            <div class="d-flex align-items-start gap-3 mb-3">
+              <div class="sponsor-logo-wrap">${logoHtml}</div>
+              <div class="flex-grow-1 min-w-0">
+                <div class="sponsor-name text-truncate">${escHtml(s.name)}</div>
+                <div class="mt-1">${typeBadge(s.type)}</div>
+              </div>
+            </div>
+
+            <!-- Details -->
+            <div class="d-flex flex-column gap-1 mb-3">
+              ${amount}
+              ${contactHtml}
+              ${website}
+              ${s.notes ? `<span class="sponsor-meta text-truncate" title="${escHtml(s.notes)}"><i class="bi bi-chat-text me-1"></i>${escHtml(s.notes)}</span>` : ''}
+            </div>
+
+            <!-- Actions -->
+            <div class="d-flex align-items-center gap-2 pt-2 border-top">
+              <div class="form-check form-switch flex-grow-1 mb-0">
+                <input class="form-check-input" type="checkbox" id="active-${s.id}"
+                  ${s.active ? 'checked' : ''} onchange="toggleActive(${s.id}, this.checked)">
+                <label class="form-check-label small" for="active-${s.id}">
+                  ${s.active ? 'Aktivan' : 'Neaktivan'}
+                </label>
+              </div>
+              <button class="btn btn-sm btn-outline-primary" onclick="openModal(${s.id})" title="Uredi">
+                <i class="bi bi-pencil"></i>
+              </button>
+              <button class="btn btn-sm btn-outline-danger" onclick="deleteSponsor(${s.id})" title="Obriši">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  /* ── Toggle active ──────────────────────────────────────────────── */
+  async function toggleActive(id, active) {
+    const s = allSponsors.find(x => x.id === id);
+    if (!s) return;
+    try {
+      await apiPut('/sponsors/' + id, { ...s, active: active ? 1 : 0 });
+      s.active = active;
+      // Update label inline
+      const lbl = document.querySelector(`label[for="active-${id}"]`);
+      if (lbl) lbl.textContent = active ? 'Aktivan' : 'Neaktivan';
+      const card = document.getElementById('sc-' + id);
+      if (card) {
+        if (active) card.classList.remove('inactive');
+        else card.classList.add('inactive');
+      }
+      // Re-render to move between sections
+      render();
+      showToast(active ? 'Sponzor aktiviran' : 'Sponzor deaktiviran', 'success');
+    } catch(e) {
+      showToast('Greška: ' + e.message, 'error');
+    }
+  }
+
+  /* ── Inactive toggle ─────────────────────────────────────────────── */
+  function toggleInactive(header) {
+    const collapse = document.getElementById('inactiveCollapse');
+    const chevron  = document.getElementById('inactiveChevron');
+    const isOpen   = collapse.style.maxHeight && collapse.style.maxHeight !== '0px';
+    if (isOpen) {
+      collapse.style.maxHeight = '0';
+      chevron.className = 'bi bi-chevron-right';
+    } else {
+      collapse.style.maxHeight = collapse.scrollHeight + 'px';
+      chevron.className = 'bi bi-chevron-down';
+    }
+  }
+
+  /* ── Modal ───────────────────────────────────────────────────────── */
+  function openModal(id) {
+    document.getElementById('editId').value          = id || '';
+    document.getElementById('fName').value           = '';
+    document.getElementById('fType').value           = 'main';
+    document.getElementById('fLogo').value           = '';
+    document.getElementById('fWebsite').value        = '';
+    document.getElementById('fContactName').value    = '';
+    document.getElementById('fContactEmail').value   = '';
+    document.getElementById('fAmount').value         = '';
+    document.getElementById('fActive').checked       = true;
+    document.getElementById('fNotes').value          = '';
+    document.getElementById('modalTitle').innerHTML  = id
+      ? '<i class="bi bi-pencil me-2"></i>Uredi sponzora'
+      : '<i class="bi bi-briefcase me-2"></i>Dodaj sponzora';
+
+    if (id) {
+      const s = allSponsors.find(x => x.id === id);
+      if (s) {
+        document.getElementById('fName').value         = s.name || '';
+        document.getElementById('fType').value         = s.type || 'main';
+        document.getElementById('fLogo').value         = s.logo_url || '';
+        document.getElementById('fWebsite').value      = s.website || '';
+        document.getElementById('fContactName').value  = s.contact_name || '';
+        document.getElementById('fContactEmail').value = s.contact_email || '';
+        document.getElementById('fAmount').value       = s.amount != null ? s.amount : '';
+        document.getElementById('fActive').checked     = !!s.active;
+        document.getElementById('fNotes').value        = s.notes || '';
+      }
+    }
+    new bootstrap.Modal(document.getElementById('sponsorModal')).show();
+  }
+
+  /* ── Save ────────────────────────────────────────────────────────── */
+  async function saveSponsor() {
+    const id   = document.getElementById('editId').value;
+    const name = document.getElementById('fName').value.trim();
+    if (!name) { showToast('Naziv je obavezan', 'error'); return; }
+
+    const amt = document.getElementById('fAmount').value;
+    const payload = {
+      name,
+      type:          document.getElementById('fType').value,
+      logo_url:      document.getElementById('fLogo').value.trim() || null,
+      website:       document.getElementById('fWebsite').value.trim() || null,
+      contact_name:  document.getElementById('fContactName').value.trim() || null,
+      contact_email: document.getElementById('fContactEmail').value.trim() || null,
+      amount:        amt !== '' ? parseFloat(amt) : null,
+      active:        document.getElementById('fActive').checked ? 1 : 0,
+      notes:         document.getElementById('fNotes').value.trim() || null
+    };
+
+    const spinner = document.getElementById('saveSpinner');
+    const btn     = document.getElementById('saveBtn');
+    spinner.classList.remove('d-none'); btn.disabled = true;
+
+    try {
+      if (id) {
+        await apiPut('/sponsors/' + id, payload);
+        showToast('Sponzor ažuriran', 'success');
+      } else {
+        await apiPost('/sponsors', payload);
+        showToast('Sponzor dodan', 'success');
+      }
+      bootstrap.Modal.getInstance(document.getElementById('sponsorModal')).hide();
+      allSponsors = await apiGet('/sponsors');
+      render();
+    } catch(e) {
+      showToast('Greška: ' + e.message, 'error');
+    } finally {
+      spinner.classList.add('d-none'); btn.disabled = false;
+    }
+  }
+
+  /* ── Delete ──────────────────────────────────────────────────────── */
+  function deleteSponsor(id) {
+    confirmDelete(async () => {
+      try {
+        await apiDelete('/sponsors/' + id);
+        showToast('Sponzor obrisan', 'success');
+        allSponsors = allSponsors.filter(s => s.id !== id);
+        render();
+      } catch(e) {
+        showToast('Greška: ' + e.message, 'error');
+      }
+    });
+  }
+
+  /* ── Helpers ─────────────────────────────────────────────────────── */
+  function formatKM(n) {
+    return Number(n).toLocaleString('bs-BA', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+  function escHtml(s) {
+    if (!s) return '';
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  init();
+</script>
+</body>
+</html>

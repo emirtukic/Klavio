@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Raspored treninga | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+  <style>
+    /* RSVP buttons */
+    .rsvp-group { display: flex; gap: 3px; }
+    .rsvp-btn {
+      padding: 3px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 600;
+      cursor: pointer; border: 1.5px solid; line-height: 1.4; transition: all 0.12s;
+      white-space: nowrap;
+    }
+    .rsvp-yes  { background:#f0fdf4; border-color:#86efac; color:#166534; }
+    .rsvp-yes.active, .rsvp-yes:hover  { background:#16a34a; border-color:#16a34a; color:#fff; }
+    .rsvp-maybe{ background:#fefce8; border-color:#fde68a; color:#854d0e; }
+    .rsvp-maybe.active, .rsvp-maybe:hover { background:#d97706; border-color:#d97706; color:#fff; }
+    .rsvp-no   { background:#fef2f2; border-color:#fca5a5; color:#991b1b; }
+    .rsvp-no.active, .rsvp-no:hover   { background:#dc2626; border-color:#dc2626; color:#fff; }
+
+    /* Attendance badge */
+    .att-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      padding: 3px 9px; border-radius: 20px; font-size: 0.72rem; font-weight: 700;
+      background: #f0fdf4; border: 1.5px solid #86efac; color: #166534; cursor: pointer;
+      transition: all 0.12s;
+    }
+    .att-badge:hover { background: #dcfce7; }
+    [data-theme="dark"] .att-badge { background: #064e3b; border-color: #065f46; color: #6ee7b7; }
+
+    /* Attendance modal members */
+    .att-member-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 0; border-bottom: 1px solid #f1f5f9;
+    }
+    [data-theme="dark"] .att-member-row { border-color: #334155; }
+    .att-member-row:last-child { border-bottom: none; }
+    .att-status-btns { display: flex; gap: 3px; margin-left: auto; }
+    .att-btn {
+      width: 32px; height: 28px; border-radius: 6px; cursor: pointer;
+      border: 1.5px solid; display: flex; align-items: center; justify-content: center;
+      font-size: 0.8rem; transition: all 0.1s;
+    }
+    .att-btn-p { background: #f0fdf4; border-color: #86efac; color: #166534; }
+    .att-btn-p.active { background: #16a34a; border-color: #16a34a; color: #fff; }
+    .att-btn-e { background: #fefce8; border-color: #fde68a; color: #854d0e; }
+    .att-btn-e.active { background: #d97706; border-color: #d97706; color: #fff; }
+    .att-btn-a { background: #fef2f2; border-color: #fca5a5; color: #991b1b; }
+    .att-btn-a.active { background: #dc2626; border-color: #dc2626; color: #fff; }
+
+    .att-summary { display: flex; gap: 8px; flex-wrap: wrap; }
+    .att-sum-badge {
+      padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700;
+    }
+
+    .rsvp-summary { font-size: 0.72rem; color: #64748b; white-space: nowrap; }
+    [data-theme="dark"] .rsvp-summary { color: #94a3b8; }
+  </style>
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Raspored treninga</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-primary" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+  <div class="page-body">
+
+    <div class="page-header d-flex justify-content-between align-items-center">
+      <div><h4>Treninzi</h4><p class="text-muted mb-0">Pregled i upravljanje rasporedom treninga</p></div>
+      <a href="add.html" class="btn btn-primary" id="addBtn"><i class="bi bi-plus-lg me-1"></i>Dodaj trening</a>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-bar mb-3">
+      <div class="row g-2 align-items-end">
+        <div class="col-sm-6 col-lg-3">
+          <input type="text" class="form-control form-control-sm" id="fSearch"
+            placeholder="Pretraži naziv, lokaciju, trenera..."
+            oninput="renderTable()"
+            autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly')">
+        </div>
+        <div class="col-auto">
+          <select class="form-select form-select-sm" id="fStatus" onchange="renderTable()">
+            <option value="">Svi statusi</option>
+            <option value="scheduled">Zakazano</option>
+            <option value="completed">Završeno</option>
+            <option value="cancelled">Otkazano</option>
+          </select>
+        </div>
+        <div class="col-auto">
+          <input type="date" class="form-control form-control-sm" id="fFrom" onchange="renderTable()" title="Od datuma">
+        </div>
+        <div class="col-auto">
+          <input type="date" class="form-control form-control-sm" id="fTo" onchange="renderTable()" title="Do datuma">
+        </div>
+        <div class="col-auto">
+          <button class="btn btn-outline-secondary btn-sm" onclick="resetFilters()" title="Resetuj filtere">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card table-card">
+      <div class="card-header d-flex justify-content-between align-items-center py-2">
+        <span class="fw-semibold small"><i class="bi bi-calendar3 me-2 text-primary"></i>Treninzi</span>
+        <span class="text-muted small" id="trainingCount"></span>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0 table-mobile-cards">
+          <thead>
+            <tr>
+              <th>Naziv</th>
+              <th>Trener</th>
+              <th>Datum</th>
+              <th>Vrijeme</th>
+              <th>Lokacija</th>
+              <th>Prisustvo / RSVP</th>
+              <th>Status</th>
+              <th>Akcije</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr><td colspan="8" class="p-2"><span class="skeleton sk-row"></span></td></tr>
+            <tr><td colspan="8" class="p-2"><span class="skeleton sk-row"></span></td></tr>
+            <tr><td colspan="8" class="p-2"><span class="skeleton sk-row"></span></td></tr>
+            <tr><td colspan="8" class="p-2"><span class="skeleton sk-row" style="width:70%"></span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Attendance Modal -->
+<div class="modal fade" id="attendanceModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header" style="background:linear-gradient(135deg,#0f766e,#0d9488);color:#fff;border:none">
+        <div>
+          <h5 class="modal-title fw-bold mb-0" id="attModalTitle">Prisustvo na treningu</h5>
+          <div class="small opacity-75 mt-1" id="attModalSub"></div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-0">
+        <!-- Summary bar -->
+        <div class="p-3 border-bottom d-flex align-items-center justify-content-between flex-wrap gap-2" id="attSummaryBar">
+          <div class="att-summary" id="attSummary"></div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-sm btn-outline-success" onclick="markAll('present')">
+              <i class="bi bi-check-all me-1"></i>Svi prisutni
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="markAll('absent')">
+              <i class="bi bi-x-lg me-1"></i>Svi odsutni
+            </button>
+          </div>
+        </div>
+        <!-- Members list -->
+        <div class="px-3 py-2" id="attMembersList">
+          <div class="text-center py-4 text-muted">
+            <div class="spinner-border spinner-border-sm me-2"></div>Učitavanje...
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Zatvori</button>
+        <button type="button" class="btn btn-primary" onclick="saveAttendance()" id="attSaveBtn">
+          <span class="spinner-border spinner-border-sm d-none me-1" id="attSpinner"></span>
+          <i class="bi bi-floppy me-1"></i>Sačuvaj prisustvo
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+const user = requireAuth();
+setUserInfo(user); buildSidebar();
+
+const canManage = ['super_admin','admin','coach'].includes(user.role);
+const isMember  = user.role === 'member';
+
+if (!canManage) document.getElementById('addBtn').classList.add('d-none');
+
+let allSessions = [];
+let myRsvpMap   = {};   // session_id -> 'yes'|'no'|'maybe'
+let attSessionId = null;
+let attMembers   = [];  // { id, name, status } for current modal
+
+/* ── Boot ── */
+async function load() {
+  try {
+    const endpoint = (user.role === 'coach' || isMember) ? '/training/my-schedule' : '/training';
+    const [sessions, myRsvp] = await Promise.all([
+      apiGet(endpoint),
+      isMember ? apiGet('/availability/my').catch(() => []) : Promise.resolve([])
+    ]);
+    allSessions = sessions;
+
+    // Build RSVP map from my availability records
+    myRsvp.filter(r => r.event_type === 'training').forEach(r => {
+      myRsvpMap[r.event_id] = r.status;
+    });
+
+    renderTable();
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+/* ── Filter ── */
+function filtered() {
+  const q  = (document.getElementById('fSearch').value || '').toLowerCase();
+  const st = document.getElementById('fStatus').value;
+  const fr = document.getElementById('fFrom').value;
+  const to = document.getElementById('fTo').value;
+  return allSessions.filter(s => {
+    const ds = (s.session_date || '').slice(0,10);
+    return (
+      (!q  || (s.title||'').toLowerCase().includes(q)
+           || (s.location||'').toLowerCase().includes(q)
+           || (s.coach_name||'').toLowerCase().includes(q)) &&
+      (!st || s.status === st) &&
+      (!fr || ds >= fr) &&
+      (!to || ds <= to)
+    );
+  });
+}
+
+/* ── Render ── */
+function renderTable() {
+  const rows = filtered();
+  document.getElementById('trainingCount').textContent = rows.length + ' treninga';
+  document.getElementById('tableBody').innerHTML = rows.length ? rows.map(s => {
+    const isPast = s.status === 'completed' || new Date(s.session_date) < new Date();
+
+    // Attendance / RSVP cell
+    let attendanceCell = '';
+    if (canManage) {
+      if (isPast) {
+        const cnt = parseInt(s.registered_count) || 0;
+        attendanceCell = `
+          <span class="att-badge" onclick="openAttendance(${s.id})" title="Upravljaj prisustvom">
+            <i class="bi bi-clipboard-check"></i>
+            ${cnt} prisutnih
+          </span>`;
+      } else {
+        // Show RSVP count for upcoming sessions
+        attendanceCell = `
+          <span class="rsvp-summary">
+            <i class="bi bi-people me-1"></i>${s.registered_count || 0} potvrđeno
+          </span>`;
+      }
+    } else if (isMember) {
+      const myStatus = myRsvpMap[s.id] || null;
+      attendanceCell = `
+        <div class="rsvp-group">
+          <button class="rsvp-btn rsvp-yes ${myStatus === 'yes' ? 'active' : ''}"
+            onclick="setRsvp(${s.id},'yes',this)" title="Idem">
+            <i class="bi bi-check2"></i> Idem
+          </button>
+          <button class="rsvp-btn rsvp-maybe ${myStatus === 'maybe' ? 'active' : ''}"
+            onclick="setRsvp(${s.id},'maybe',this)" title="Možda">
+            <i class="bi bi-question"></i>
+          </button>
+          <button class="rsvp-btn rsvp-no ${myStatus === 'no' ? 'active' : ''}"
+            onclick="setRsvp(${s.id},'no',this)" title="Ne idem">
+            <i class="bi bi-x-lg"></i> Ne
+          </button>
+        </div>`;
+    }
+
+    return `<tr>
+      <td data-label="Naziv" class="fw-semibold">${esc(s.title)}</td>
+      <td data-label="Trener" class="text-muted small">${esc(s.coach_name || '-')}</td>
+      <td data-label="Datum">${formatDate(s.session_date)}</td>
+      <td data-label="Vrijeme" class="small">${s.start_time} - ${s.end_time}</td>
+      <td data-label="Lokacija" class="small text-muted">${esc(s.location || '-')}</td>
+      <td data-label="Prisustvo / RSVP">${attendanceCell}</td>
+      <td data-label="Status">${statusBadge(s.status)}</td>
+      <td>
+        ${canManage ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteSession(${s.id})" title="Obriši"><i class="bi bi-trash"></i></button>` : ''}
+      </td>
+    </tr>`;
+  }).join('') :
+    `<tr><td colspan="8" class="text-center py-5 text-muted"><i class="bi bi-inbox fs-2 d-block mb-2"></i>Nema pronađenih treninga</td></tr>`;
+}
+
+function resetFilters() {
+  ['fSearch','fFrom','fTo'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('fStatus').value = '';
+  renderTable();
+}
+
+/* ── Delete ── */
+async function deleteSession(id) {
+  confirmDelete(async () => {
+    try { await apiDelete('/training/' + id); showToast('Trening obrisan'); load(); }
+    catch(e) { showToast(e.message, 'error'); }
+  });
+}
+
+/* ── RSVP (member) ── */
+async function setRsvp(sessionId, status, btnEl) {
+  try {
+    await apiPost(`/availability/training/${sessionId}`, { status });
+    myRsvpMap[sessionId] = status;
+    // Update just this row's buttons without full re-render
+    const group = btnEl.closest('.rsvp-group');
+    group.querySelectorAll('.rsvp-btn').forEach(b => b.classList.remove('active'));
+    btnEl.classList.add('active');
+    showToast(status === 'yes' ? 'Potvrđeno - ideš!' : status === 'no' ? 'Označeno - ne ideš' : 'Označeno - možda', 'success');
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+/* ── Attendance Modal ── */
+async function openAttendance(sessionId) {
+  attSessionId = sessionId;
+  const s = allSessions.find(x => x.id === sessionId);
+  document.getElementById('attModalTitle').textContent = 'Prisustvo - ' + (s?.title || '');
+  document.getElementById('attModalSub').textContent   = formatDate(s?.session_date) + ' · ' + (s?.start_time || '') + ' - ' + (s?.end_time || '');
+  document.getElementById('attMembersList').innerHTML  = '<div class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Učitavanje...</div>';
+
+  const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('attendanceModal'));
+  modal.show();
+
+  try {
+    const [members, sessionDetail] = await Promise.all([
+      apiGet('/members'),
+      apiGet('/training/' + sessionId)
+    ]);
+
+    // Build a map of existing attendance
+    const attMap = {};
+    (sessionDetail.attendance || []).forEach(a => { attMap[a.member_id] = a.status; });
+
+    // Merge: every member gets a status (default: absent if not marked)
+    attMembers = members.map(m => ({
+      id: m.id,
+      name: m.name,
+      jersey_number: m.jersey_number,
+      position: m.position,
+      status: attMap[m.id] || null   // null = not yet marked
+    }));
+
+    renderAttendanceList();
+  } catch(e) {
+    document.getElementById('attMembersList').innerHTML =
+      `<div class="text-center text-danger py-4 small">${esc(e.message)}</div>`;
+  }
+}
+
+function renderAttendanceList() {
+  const present  = attMembers.filter(m => m.status === 'present').length;
+  const excused  = attMembers.filter(m => m.status === 'excused').length;
+  const absent   = attMembers.filter(m => m.status === 'absent').length;
+  const unmarked = attMembers.filter(m => !m.status).length;
+
+  document.getElementById('attSummary').innerHTML = `
+    <span class="att-sum-badge" style="background:#dcfce7;color:#166534">${present} prisutnih</span>
+    <span class="att-sum-badge" style="background:#fef9c3;color:#854d0e">${excused} opravdanih</span>
+    <span class="att-sum-badge" style="background:#fee2e2;color:#991b1b">${absent} odsutnih</span>
+    ${unmarked ? `<span class="att-sum-badge" style="background:#f1f5f9;color:#64748b">${unmarked} neoznačenih</span>` : ''}
+  `;
+
+  document.getElementById('attMembersList').innerHTML = attMembers.map((m, i) => `
+    <div class="att-member-row">
+      <div class="fw-semibold" style="min-width:150px">
+        ${esc(m.name)}
+        ${m.jersey_number != null ? `<span class="text-muted small ms-1">#${m.jersey_number}</span>` : ''}
+      </div>
+      <span class="text-muted small">${esc(m.position || '-')}</span>
+      <div class="att-status-btns">
+        <button class="att-btn att-btn-p ${m.status === 'present' ? 'active' : ''}"
+          onclick="setAttStatus(${i},'present',this)" title="Prisutan/na">
+          <i class="bi bi-check2"></i>
+        </button>
+        <button class="att-btn att-btn-e ${m.status === 'excused' ? 'active' : ''}"
+          onclick="setAttStatus(${i},'excused',this)" title="Opravdano">
+          <i class="bi bi-dash-lg"></i>
+        </button>
+        <button class="att-btn att-btn-a ${m.status === 'absent' ? 'active' : ''}"
+          onclick="setAttStatus(${i},'absent',this)" title="Odsutan/na">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+    </div>`).join('');
+}
+
+function setAttStatus(idx, status, btnEl) {
+  attMembers[idx].status = attMembers[idx].status === status ? null : status;
+  renderAttendanceList();
+}
+
+function markAll(status) {
+  attMembers.forEach(m => m.status = status);
+  renderAttendanceList();
+}
+
+async function saveAttendance() {
+  const spinner = document.getElementById('attSpinner');
+  const btn     = document.getElementById('attSaveBtn');
+  spinner.classList.remove('d-none');
+  btn.disabled = true;
+  try {
+    const toSave = attMembers.filter(m => m.status);
+    await Promise.all(toSave.map(m =>
+      apiPost(`/training/${attSessionId}/attendance`, { member_id: m.id, status: m.status })
+    ));
+    showToast('Prisustvo sačuvano', 'success');
+    bootstrap.Modal.getInstance(document.getElementById('attendanceModal')).hide();
+    load();
+  } catch(e) {
+    showToast(e.message, 'error');
+  } finally {
+    spinner.classList.add('d-none');
+    btn.disabled = false;
+  }
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+load();
+</script>
+</body>
+</html>

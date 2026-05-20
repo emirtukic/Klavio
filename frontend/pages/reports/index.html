@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Izvještaji | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+  <style>
+    .rep-tab-nav .nav-link {
+      font-weight: 600; font-size: 0.9rem; color: #64748b;
+      border: none; border-bottom: 3px solid transparent; border-radius: 0;
+      padding: 0.75rem 1.25rem; transition: color .15s, border-color .15s;
+    }
+    .rep-tab-nav .nav-link:hover { color: #1e293b; border-bottom-color: #cbd5e1; }
+    .rep-tab-nav .nav-link.active { color: var(--club-accent,#3b82f6); border-bottom-color: var(--club-accent,#3b82f6); background: transparent; }
+    .rep-tab-nav { border-bottom: 2px solid #e2e8f0; margin-bottom: 1.5rem; }
+
+    .kpi-accent { border-left: 4px solid; padding-left: .75rem; }
+    .kpi-green  { border-color: #22c55e; }
+    .kpi-red    { border-color: #ef4444; }
+    .kpi-blue   { border-color: #3b82f6; }
+    .kpi-yellow { border-color: #f59e0b; }
+
+    .rep-chart-card { border: none; border-radius: 14px; box-shadow: 0 1px 4px rgba(0,0,0,.07); }
+    .rep-chart-card .card-header { background: #fff; border-bottom: 1px solid #e2e8f0; padding: 1rem 1.25rem; }
+
+    .crate-bar { height: 10px; border-radius: 8px; background: #e2e8f0; overflow: hidden; }
+    .crate-bar-fill { height: 100%; border-radius: 8px; background: linear-gradient(90deg,#22c55e,#16a34a); transition: width .6s; }
+
+    .period-btn.active { background: var(--club-accent,#3b82f6); color: #fff; border-color: var(--club-accent,#3b82f6); }
+
+    [data-theme="dark"] .rep-tab-nav { border-bottom-color: #334155; }
+    [data-theme="dark"] .rep-tab-nav .nav-link { color: #94a3b8; }
+    [data-theme="dark"] .rep-tab-nav .nav-link:hover { color: #e2e8f0; border-bottom-color: #475569; }
+    [data-theme="dark"] .rep-chart-card { background: #1e293b !important; }
+    [data-theme="dark"] .rep-chart-card .card-header { background: #1e293b !important; border-bottom-color: #334155 !important; color: #e2e8f0 !important; }
+    [data-theme="dark"] .crate-bar { background: #334155; }
+    [data-theme="dark"] .card { background: #1e293b !important; border-color: #334155 !important; color: #e2e8f0; }
+    [data-theme="dark"] .card-body { color: #e2e8f0; }
+    [data-theme="dark"] .text-muted { color: #64748b !important; }
+    [data-theme="dark"] table { color: #e2e8f0; }
+    [data-theme="dark"] th { background: #0f172a !important; color: #94a3b8 !important; }
+    [data-theme="dark"] td { border-color: #334155 !important; color: #e2e8f0; }
+
+    @media print {
+      .sidebar,.topbar,.page-header .btn,#exportBtns,.btn,#repTabNav { display:none !important; }
+      .main-content { margin-left:0 !important; padding:0 !important; }
+      .page-body { padding:0 !important; }
+      .card { box-shadow:none !important; border:1px solid #dee2e6 !important; }
+      .tab-pane-r { display:block !important; }
+      canvas { max-height:220px !important; }
+    }
+  </style>
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Izvještaji</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-primary" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+
+  <div class="page-body">
+
+    <!-- Header -->
+    <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-3">
+      <div>
+        <h4>Izvještaji i analitika</h4>
+        <p class="text-muted mb-0">Finansije, članovi i treninzi kluba</p>
+      </div>
+      <div id="exportBtns" class="d-flex gap-2 flex-wrap">
+        <button class="btn btn-sm btn-success" onclick="exportExcel()"><i class="bi bi-file-earmark-excel me-1"></i>Excel</button>
+        <button class="btn btn-sm btn-secondary" onclick="exportCSV()"><i class="bi bi-file-earmark-text me-1"></i>CSV</button>
+        <button class="btn btn-sm btn-danger" onclick="window.print()"><i class="bi bi-file-earmark-pdf me-1"></i>PDF</button>
+      </div>
+    </div>
+
+    <!-- Top KPI row -->
+    <div class="row g-3 mb-4" id="topKpiRow">
+      <div class="col-6 col-xl-3">
+        <div class="card stat-card h-100"><div class="card-body d-flex align-items-center gap-3">
+          <div class="stat-icon bg-success bg-opacity-10 flex-shrink-0"><i class="bi bi-cash text-success fs-5"></i></div>
+          <div><div class="stat-kpi-label">Naplaćeno</div><div class="stat-kpi-value" id="rCollected">-</div></div>
+        </div></div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="card stat-card h-100"><div class="card-body d-flex align-items-center gap-3">
+          <div class="stat-icon bg-danger bg-opacity-10 flex-shrink-0"><i class="bi bi-exclamation-circle text-danger fs-5"></i></div>
+          <div><div class="stat-kpi-label">Zakašnjelo / neplaćeno</div><div class="stat-kpi-value" id="rOverdue">-</div></div>
+        </div></div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="card stat-card h-100"><div class="card-body d-flex align-items-center gap-3">
+          <div class="stat-icon bg-primary bg-opacity-10 flex-shrink-0"><i class="bi bi-people text-primary fs-5"></i></div>
+          <div><div class="stat-kpi-label">Aktivni članovi</div><div class="stat-kpi-value" id="rActive">-</div></div>
+        </div></div>
+      </div>
+      <div class="col-6 col-xl-3">
+        <div class="card stat-card h-100"><div class="card-body d-flex align-items-center gap-3">
+          <div class="stat-icon bg-info bg-opacity-10 flex-shrink-0"><i class="bi bi-percent text-info fs-5"></i></div>
+          <div><div class="stat-kpi-label">Stopa naplate</div><div class="stat-kpi-value" id="rCollectRate">-</div></div>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- Tab nav -->
+    <ul class="nav rep-tab-nav" id="repTabNav">
+      <li class="nav-item">
+        <button class="nav-link active" onclick="switchRepTab('financial', this)">
+          <i class="bi bi-cash-coin me-1"></i>Finansije
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" onclick="switchRepTab('members', this)">
+          <i class="bi bi-people me-1"></i>Članovi
+        </button>
+      </li>
+      <li class="nav-item">
+        <button class="nav-link" onclick="switchRepTab('training', this)">
+          <i class="bi bi-calendar-check me-1"></i>Treninzi
+        </button>
+      </li>
+    </ul>
+
+    <!-- ═══ TAB: Finansije ═══ -->
+    <div id="tab-financial" class="tab-pane-r">
+
+      <div class="row g-3 mb-4">
+        <!-- Monthly revenue chart -->
+        <div class="col-lg-8">
+          <div class="card rep-chart-card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <span class="fw-semibold"><i class="bi bi-bar-chart-line me-2 text-primary"></i>Prihodi po mjesecima</span>
+            </div>
+            <div class="card-body">
+              <div style="position:relative;height:260px;"><canvas id="revenueChart"></canvas></div>
+            </div>
+          </div>
+        </div>
+        <!-- Collection rate card -->
+        <div class="col-lg-4">
+          <div class="card rep-chart-card h-100">
+            <div class="card-header">
+              <span class="fw-semibold"><i class="bi bi-pie-chart me-2 text-success"></i>Naplata</span>
+            </div>
+            <div class="card-body d-flex flex-column gap-3 justify-content-center">
+              <div class="text-center">
+                <div class="fw-bold" style="font-size:2.4rem;line-height:1;" id="crPct">-</div>
+                <div class="text-muted small mt-1">stopa naplate</div>
+              </div>
+              <div class="crate-bar"><div class="crate-bar-fill" id="crBar" style="width:0%"></div></div>
+              <div class="row g-2 text-center">
+                <div class="col-6">
+                  <div class="p-2 rounded-3 bg-success bg-opacity-10">
+                    <div class="fw-bold text-success" id="crPaid">-</div>
+                    <div class="text-muted" style="font-size:.72rem;">Naplaćeno</div>
+                  </div>
+                </div>
+                <div class="col-6">
+                  <div class="p-2 rounded-3 bg-danger bg-opacity-10">
+                    <div class="fw-bold text-danger" id="crUnpaid">-</div>
+                    <div class="text-muted" style="font-size:.72rem;">Neplaćeno</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Monthly table -->
+      <div class="card table-card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <span class="fw-semibold">Mjesečni pregled (12 mjeseci)</span>
+          <span class="text-muted small" id="monthlyCount"></span>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead><tr><th>Mjesec</th><th>Naplaćeno</th><th>Neplaćeno</th><th>Ukupno faktura</th><th>Udio</th></tr></thead>
+            <tbody id="monthlyTable">
+              <tr class="sk-row"><td colspan="5"><div class="skeleton" style="height:13px;"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Top debtors -->
+      <div class="card table-card">
+        <div class="card-header d-flex align-items-center gap-2">
+          <i class="bi bi-exclamation-triangle text-danger"></i>
+          <span class="fw-semibold">Top 10 dužnika</span>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead><tr><th>#</th><th>Član</th><th>Selekcija</th><th>Br. faktura</th><th>Ukupan dug</th></tr></thead>
+            <tbody id="debtorsTable">
+              <tr class="sk-row"><td colspan="5"><div class="skeleton" style="height:13px;"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB: Članovi ═══ -->
+    <div id="tab-members" class="tab-pane-r d-none">
+
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-sm-3">
+          <div class="card stat-card h-100"><div class="card-body">
+            <div class="stat-kpi-label">Ukupno</div>
+            <div class="stat-kpi-value" id="mTotal">-</div>
+          </div></div>
+        </div>
+        <div class="col-6 col-sm-3">
+          <div class="card stat-card h-100"><div class="card-body">
+            <div class="stat-kpi-label">Aktivni</div>
+            <div class="stat-kpi-value text-success" id="mActive">-</div>
+          </div></div>
+        </div>
+        <div class="col-6 col-sm-3">
+          <div class="card stat-card h-100"><div class="card-body">
+            <div class="stat-kpi-label">Neaktivni</div>
+            <div class="stat-kpi-value text-secondary" id="mInactive">-</div>
+          </div></div>
+        </div>
+        <div class="col-6 col-sm-3">
+          <div class="card stat-card h-100"><div class="card-body">
+            <div class="stat-kpi-label">Suspendirani</div>
+            <div class="stat-kpi-value text-danger" id="mSuspended">-</div>
+          </div></div>
+        </div>
+      </div>
+
+      <div class="row g-3 mb-4">
+        <!-- Status doughnut -->
+        <div class="col-lg-5">
+          <div class="card rep-chart-card h-100">
+            <div class="card-header">
+              <span class="fw-semibold"><i class="bi bi-pie-chart me-2 text-primary"></i>Status članova</span>
+            </div>
+            <div class="card-body">
+              <div style="position:relative;height:240px;"><canvas id="memberStatusChart"></canvas></div>
+            </div>
+          </div>
+        </div>
+        <!-- Growth bar -->
+        <div class="col-lg-7">
+          <div class="card rep-chart-card h-100">
+            <div class="card-header">
+              <span class="fw-semibold"><i class="bi bi-graph-up me-2 text-success"></i>Novi članovi (12 mj.)</span>
+            </div>
+            <div class="card-body">
+              <div style="position:relative;height:240px;"><canvas id="membersGrowthChart"></canvas></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Per-selection breakdown -->
+      <div class="card table-card mb-4">
+        <div class="card-header">
+          <span class="fw-semibold"><i class="bi bi-diagram-3 me-2 text-primary"></i>Pregled po selekcijama</span>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead><tr><th>Selekcija</th><th>Broj članova</th><th>Naplaćeno</th><th>Neplaćeno</th><th>Stopa naplate</th></tr></thead>
+            <tbody id="selectionTable">
+              <tr class="sk-row"><td colspan="5"><div class="skeleton" style="height:13px;"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Recent joins -->
+      <div class="card table-card">
+        <div class="card-header">
+          <span class="fw-semibold"><i class="bi bi-person-plus me-2 text-success"></i>Nedavni upisi (posljednjih 10)</span>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead><tr><th>Član</th><th>Br. člana</th><th>Učlanjen</th><th>Status</th></tr></thead>
+            <tbody id="joinsTable">
+              <tr class="sk-row"><td colspan="4"><div class="skeleton" style="height:13px;"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ TAB: Treninzi ═══ -->
+    <div id="tab-training" class="tab-pane-r d-none">
+
+      <div class="row g-3 mb-4">
+        <div class="col-6 col-sm-3">
+          <div class="card stat-card h-100"><div class="card-body">
+            <div class="stat-kpi-label">Ukupno sesija</div>
+            <div class="stat-kpi-value" id="tTotal">-</div>
+          </div></div>
+        </div>
+        <div class="col-6 col-sm-3">
+          <div class="card stat-card h-100"><div class="card-body">
+            <div class="stat-kpi-label">Prosj. prisutnih</div>
+            <div class="stat-kpi-value text-success" id="tAvgPresent">-</div>
+          </div></div>
+        </div>
+        <div class="col-6 col-sm-3">
+          <div class="card stat-card h-100"><div class="card-body">
+            <div class="stat-kpi-label">Najveća prisutnost</div>
+            <div class="stat-kpi-value text-primary" id="tMaxPresent">-</div>
+          </div></div>
+        </div>
+        <div class="col-6 col-sm-3">
+          <div class="card stat-card h-100"><div class="card-body">
+            <div class="stat-kpi-label">Najmanja prisutnost</div>
+            <div class="stat-kpi-value text-warning" id="tMinPresent">-</div>
+          </div></div>
+        </div>
+      </div>
+
+      <!-- Sessions table -->
+      <div class="card table-card">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <span class="fw-semibold"><i class="bi bi-calendar3 me-2 text-primary"></i>Sesije treninga (posljednjih 20)</span>
+          <span class="text-muted small" id="tCount"></span>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead><tr><th>Datum</th><th>Naziv</th><th>Prisutni</th><th>Odsutni</th><th>Opravdano</th><th>% Prisustva</th></tr></thead>
+            <tbody id="trainingTable">
+              <tr class="sk-row"><td colspan="6"><div class="skeleton" style="height:13px;"></div></td></tr>
+              <tr class="sk-row"><td colspan="6"><div class="skeleton" style="height:13px;"></div></td></tr>
+              <tr class="sk-row"><td colspan="6"><div class="skeleton" style="height:13px;"></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /page-body -->
+</div><!-- /main-content -->
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+  const user = requireRole('super_admin', 'admin');
+  setUserInfo(user); buildSidebar();
+
+  const MONTHS_BS = ['Januar','Februar','Mart','April','Maj','Juni','Juli','August','Septembar','Oktobar','Novembar','Decembar'];
+  function monthLabel(ym) {
+    const [y, m] = ym.split('-');
+    return MONTHS_BS[+m - 1] + ' \'' + y.slice(2);
+  }
+  function fmt(n) { return Number(n || 0).toFixed(2) + ' KM'; }
+
+  let revenueChart = null;
+  let memberStatusChart = null;
+  let membersGrowthChart = null;
+
+  function chartTheme() {
+    const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+    return { isDark: dark, grid: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', label: dark ? '#94a3b8' : '#64748b', tbg: dark ? 'rgba(15,23,42,.95)' : 'rgba(15,23,42,.88)' };
+  }
+
+  /* ── Tab switching ── */
+  function switchRepTab(name, btn) {
+    document.querySelectorAll('.tab-pane-r').forEach(p => p.classList.add('d-none'));
+    document.querySelectorAll('#repTabNav .nav-link').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.remove('d-none');
+    btn.classList.add('active');
+    if (name === 'training' && !trainingLoaded) loadTraining();
+  }
+
+  /* ── Financial ── */
+  async function loadFinancial() {
+    const [financial, debtors] = await Promise.all([
+      apiGet('/reports/financial'),
+      apiGet('/reports/top-debtors').catch(() => [])
+    ]);
+
+    const collected = parseFloat(financial.summary.total_collected || 0);
+    const overdue   = parseFloat(financial.summary.total_overdue   || 0);
+    const total     = collected + overdue;
+    const rate      = total > 0 ? Math.round(collected / total * 100) : 0;
+
+    document.getElementById('rCollected').textContent    = fmt(collected);
+    document.getElementById('rOverdue').textContent      = fmt(overdue);
+    document.getElementById('rCollectRate').textContent  = rate + '%';
+    document.getElementById('crPct').textContent         = rate + '%';
+    document.getElementById('crBar').style.width         = rate + '%';
+    document.getElementById('crPaid').textContent        = fmt(collected);
+    document.getElementById('crUnpaid').textContent      = fmt(overdue);
+
+    const months = financial.monthly || [];
+    document.getElementById('monthlyCount').textContent = months.length + ' mjeseci';
+
+    const maxCollected = Math.max(1, ...months.map(m => parseFloat(m.collected)));
+    document.getElementById('monthlyTable').innerHTML = months.length ? months.map(m => {
+      const c = parseFloat(m.collected);
+      const o = parseFloat(m.outstanding);
+      const tot = c + o;
+      const pct = tot > 0 ? Math.round(c / tot * 100) : 0;
+      return `<tr>
+        <td class="fw-semibold">${monthLabel(m.month)}</td>
+        <td class="text-success fw-semibold">${fmt(c)}</td>
+        <td class="text-danger">${fmt(o)}</td>
+        <td>${m.total_fees}</td>
+        <td style="min-width:100px;">
+          <div class="d-flex align-items-center gap-2">
+            <div class="progress flex-grow-1" style="height:6px;border-radius:4px;">
+              <div class="progress-bar bg-success" style="width:${pct}%"></div>
+            </div>
+            <span class="small" style="min-width:34px;">${pct}%</span>
+          </div>
+        </td>
+      </tr>`;
+    }).join('') : '<tr><td colspan="5" class="text-center text-muted py-3">Nema podataka</td></tr>';
+
+    renderRevenueChart(months);
+
+    document.getElementById('debtorsTable').innerHTML = debtors.length ? debtors.map((d, i) => `
+      <tr>
+        <td><span class="badge bg-danger bg-opacity-15 text-danger fw-bold" style="min-width:24px;">${i+1}</span></td>
+        <td class="fw-semibold">${d.name}</td>
+        <td><span class="badge bg-secondary bg-opacity-10 text-secondary">${d.selection_name || '—'}</span></td>
+        <td>${d.fee_count}</td>
+        <td class="fw-bold text-danger">${fmt(d.total_owed)}</td>
+      </tr>
+    `).join('') : '<tr><td colspan="5" class="text-center text-muted py-3"><i class="bi bi-check-circle text-success me-2"></i>Nema dužnika</td></tr>';
+  }
+
+  function renderRevenueChart(months) {
+    const t = chartTheme();
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    if (revenueChart) revenueChart.destroy();
+    if (!months.length) return;
+    const labels   = months.map(m => monthLabel(m.month));
+    const paid     = months.map(m => parseFloat(m.collected));
+    const unpaid   = months.map(m => parseFloat(m.outstanding));
+    revenueChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          { label: 'Naplaćeno', data: paid,   backgroundColor: 'rgba(34,197,94,.8)',  hoverBackgroundColor: 'rgba(34,197,94,1)',  borderRadius: 4, borderSkipped: false },
+          { label: 'Neplaćeno', data: unpaid, backgroundColor: 'rgba(239,68,68,.65)', hoverBackgroundColor: 'rgba(239,68,68,.9)', borderRadius: 4, borderSkipped: false }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { labels: { color: t.label, font: { size: 12 }, usePointStyle: true, pointStyle: 'rectRounded', padding: 14 } },
+          tooltip: { backgroundColor: t.tbg, titleColor: '#f1f5f9', bodyColor: '#cbd5e1', padding: 10, cornerRadius: 8,
+            callbacks: { label: c => ' ' + c.dataset.label + ': ' + c.parsed.y.toFixed(2) + ' KM' }
+          }
+        },
+        scales: {
+          x: { stacked: false, ticks: { color: t.label, font: { size: 11 } }, grid: { color: t.grid } },
+          y: { beginAtZero: true, ticks: { color: t.label, font: { size: 11 }, callback: v => v + ' KM' }, grid: { color: t.grid } }
+        }
+      }
+    });
+  }
+
+  /* ── Members ── */
+  let membersLoaded = false;
+  async function loadMembers() {
+    if (membersLoaded) return;
+    membersLoaded = true;
+    const [members, selStats, growth] = await Promise.all([
+      apiGet('/reports/members'),
+      apiGet('/reports/selection-stats').catch(() => []),
+      apiGet('/reports/members-growth').catch(() => [])
+    ]);
+
+    const s = members.stats;
+    const active    = parseInt(s.active    || 0);
+    const inactive  = parseInt(s.inactive  || 0);
+    const suspended = parseInt(s.suspended || 0);
+    const total     = parseInt(s.total_members || 0);
+
+    document.getElementById('rActive').textContent    = active;
+    document.getElementById('mTotal').textContent     = total;
+    document.getElementById('mActive').textContent    = active;
+    document.getElementById('mInactive').textContent  = inactive;
+    document.getElementById('mSuspended').textContent = suspended;
+
+    renderMemberStatusChart(active, inactive, suspended);
+    renderMembersGrowthChart(growth);
+
+    document.getElementById('selectionTable').innerHTML = selStats.length ? selStats.map(sel => {
+      const c   = parseFloat(sel.collected   || 0);
+      const o   = parseFloat(sel.outstanding || 0);
+      const tot = c + o;
+      const r   = tot > 0 ? Math.round(c / tot * 100) : 0;
+      return `<tr>
+        <td class="fw-semibold">${sel.name}</td>
+        <td><span class="badge bg-primary bg-opacity-15 text-primary fw-bold">${sel.member_count}</span></td>
+        <td class="text-success">${fmt(c)}</td>
+        <td class="text-danger">${fmt(o)}</td>
+        <td style="min-width:100px;">
+          <div class="d-flex align-items-center gap-2">
+            <div class="progress flex-grow-1" style="height:6px;border-radius:4px;">
+              <div class="progress-bar bg-success" style="width:${r}%"></div>
+            </div>
+            <span class="small" style="min-width:34px;">${r}%</span>
+          </div>
+        </td>
+      </tr>`;
+    }).join('') : '<tr><td colspan="5" class="text-center text-muted py-3">Nema selekcija</td></tr>';
+
+    document.getElementById('joinsTable').innerHTML = members.recentJoins.length ? members.recentJoins.map(m => `
+      <tr>
+        <td class="fw-semibold">${m.name}</td>
+        <td><span class="text-muted small">${m.membership_number || '—'}</span></td>
+        <td>${formatDate(m.join_date)}</td>
+        <td>${statusBadge(m.status)}</td>
+      </tr>
+    `).join('') : '<tr><td colspan="4" class="text-center text-muted py-3">Nema podataka</td></tr>';
+  }
+
+  function renderMemberStatusChart(active, inactive, suspended) {
+    const t = chartTheme();
+    const ctx = document.getElementById('memberStatusChart').getContext('2d');
+    if (memberStatusChart) memberStatusChart.destroy();
+    const total = active + inactive + suspended;
+    const cp = {
+      id: 'cp',
+      afterDraw(chart) {
+        const { ctx: c, width, height } = chart;
+        c.save(); c.textAlign='center'; c.textBaseline='middle';
+        c.font='bold 1.5rem system-ui'; c.fillStyle = t.isDark ? '#e2e8f0' : '#1e293b';
+        c.fillText(total, width/2, height/2 - 8);
+        c.font='0.65rem system-ui'; c.fillStyle = t.label;
+        c.fillText('članova', width/2, height/2 + 12); c.restore();
+      }
+    };
+    memberStatusChart = new Chart(ctx, {
+      type: 'doughnut', plugins: [cp],
+      data: {
+        labels: ['Aktivni', 'Neaktivni', 'Suspendirani'],
+        datasets: [{ data: [active, inactive, suspended], backgroundColor: ['rgba(34,197,94,.85)','rgba(100,116,139,.7)','rgba(239,68,68,.8)'], borderWidth: 0, hoverOffset: 6 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '65%',
+        plugins: {
+          legend: { position: 'bottom', labels: { color: t.label, font: { size: 12 }, padding: 14, usePointStyle: true, pointStyle: 'circle' } },
+          tooltip: { backgroundColor: t.tbg, titleColor: '#f1f5f9', bodyColor: '#cbd5e1', padding: 10, cornerRadius: 8 }
+        }
+      }
+    });
+  }
+
+  function renderMembersGrowthChart(growth) {
+    const t = chartTheme();
+    const ctx = document.getElementById('membersGrowthChart').getContext('2d');
+    if (membersGrowthChart) membersGrowthChart.destroy();
+    if (!growth.length) return;
+    membersGrowthChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: growth.map(g => monthLabel(g.month)),
+        datasets: [{ label: 'Novi članovi', data: growth.map(g => g.new_members), backgroundColor: 'rgba(59,130,246,.8)', hoverBackgroundColor: 'rgba(59,130,246,1)', borderRadius: 6, borderSkipped: false }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { backgroundColor: t.tbg, titleColor: '#f1f5f9', bodyColor: '#cbd5e1', padding: 10, cornerRadius: 8 }
+        },
+        scales: {
+          x: { ticks: { color: t.label, font: { size: 11 } }, grid: { color: t.grid } },
+          y: { beginAtZero: true, ticks: { color: t.label, font: { size: 11 }, stepSize: 1 }, grid: { color: t.grid } }
+        }
+      }
+    });
+  }
+
+  /* ── Training ── */
+  let trainingLoaded = false;
+  async function loadTraining() {
+    trainingLoaded = true;
+    const rows = await apiGet('/reports/attendance').catch(() => []);
+    document.getElementById('tCount').textContent = rows.length + ' sesija';
+
+    if (!rows.length) {
+      document.getElementById('tTotal').textContent = 0;
+      ['tAvgPresent','tMaxPresent','tMinPresent'].forEach(id => document.getElementById(id).textContent = '—');
+      document.getElementById('trainingTable').innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3">Nema podataka</td></tr>';
+      return;
+    }
+
+    const presentArr = rows.map(r => parseInt(r.present || 0));
+    const avg = Math.round(presentArr.reduce((s,v)=>s+v,0) / presentArr.length);
+    document.getElementById('tTotal').textContent      = rows.length;
+    document.getElementById('tAvgPresent').textContent = avg;
+    document.getElementById('tMaxPresent').textContent = Math.max(...presentArr);
+    document.getElementById('tMinPresent').textContent = Math.min(...presentArr);
+
+    document.getElementById('trainingTable').innerHTML = rows.map(r => {
+      const tot = (parseInt(r.present||0) + parseInt(r.absent||0) + parseInt(r.excused||0));
+      const pct = tot > 0 ? Math.round(parseInt(r.present||0) / tot * 100) : 0;
+      const cls = pct >= 80 ? 'bg-success' : pct >= 60 ? 'bg-warning' : 'bg-danger';
+      return `<tr>
+        <td class="text-muted small">${formatDate(r.session_date)}</td>
+        <td class="fw-semibold">${r.title || '—'}</td>
+        <td><span class="text-success fw-semibold">${r.present || 0}</span></td>
+        <td><span class="text-danger">${r.absent || 0}</span></td>
+        <td><span class="text-warning">${r.excused || 0}</span></td>
+        <td style="min-width:110px;">
+          <div class="d-flex align-items-center gap-2">
+            <div class="progress flex-grow-1" style="height:6px;border-radius:4px;">
+              <div class="progress-bar ${cls}" style="width:${pct}%"></div>
+            </div>
+            <span class="small fw-semibold" style="min-width:32px;">${pct}%</span>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  /* ── Init ── */
+  async function init() {
+    try {
+      await loadFinancial();
+    } catch(e) { showToast(e.message, 'error'); }
+
+    document.querySelectorAll('#repTabNav .nav-link').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.textContent.trim();
+        if (tab.includes('Član') && !membersLoaded) loadMembers().catch(() => {});
+      });
+    });
+  }
+
+  init();
+
+  /* ── Export helpers ── */
+  function getTableRows(tbodyId) {
+    const rows = [];
+    document.querySelectorAll('#' + tbodyId + ' tr').forEach(tr => {
+      const cells = tr.querySelectorAll('td');
+      if (cells.length) rows.push(Array.from(cells).map(td => td.textContent.trim().replace(/\s+/g,' ')));
+    });
+    return rows;
+  }
+
+  function buildExcelHtml() {
+    const collected = document.getElementById('rCollected').textContent;
+    const overdue   = document.getElementById('rOverdue').textContent;
+    const active    = document.getElementById('rActive').textContent;
+    const rate      = document.getElementById('rCollectRate').textContent;
+    const monthly   = getTableRows('monthlyTable');
+    const joins     = getTableRows('joinsTable');
+    return `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="UTF-8"><style>
+  table{border-collapse:collapse;width:100%;}th,td{border:1px solid #ccc;padding:6px 10px;font-size:11pt;}
+  th{background:#f0f4f8;font-weight:bold;}h2{font-size:13pt;margin-top:18px;}
+</style></head><body>
+<h1 style="font-size:15pt;">Izvještaj — Klavio</h1>
+<p style="font-size:10pt;color:#555;">Generisano: ${new Date().toLocaleDateString('bs-BA')}</p>
+<h2>Sažetak</h2>
+<table>
+  <tr><th>Naplaćeno</th><td>${collected}</td></tr>
+  <tr><th>Zakašnjelo/Neplaćeno</th><td>${overdue}</td></tr>
+  <tr><th>Aktivni članovi</th><td>${active}</td></tr>
+  <tr><th>Stopa naplate</th><td>${rate}</td></tr>
+</table>
+<h2>Mjesečni prihod</h2>
+<table><thead><tr><th>Mjesec</th><th>Naplaćeno</th><th>Neplaćeno</th><th>Ukupno faktura</th><th>Udio</th></tr></thead>
+<tbody>${monthly.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('')||'<tr><td colspan="5">Nema podataka</td></tr>'}</tbody></table>
+<h2>Nedavni upisi</h2>
+<table><thead><tr><th>Član</th><th>Br. člana</th><th>Učlanjen</th><th>Status</th></tr></thead>
+<tbody>${joins.map(r=>'<tr>'+r.map(c=>`<td>${c}</td>`).join('')+'</tr>').join('')||'<tr><td colspan="4">Nema podataka</td></tr>'}</tbody></table>
+</body></html>`;
+  }
+
+  function exportExcel() {
+    const blob = new Blob([buildExcelHtml()], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = `izvjestaj_${new Date().toISOString().slice(0,10)}.xls`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(a.href);
+  }
+
+  function exportCSV() {
+    function esc(v) { v=String(v); return (v.includes(',') || v.includes('"') || v.includes('\n')) ? '"'+v.replace(/"/g,'""')+'"' : v; }
+    const lines = ['IZVJEŠTAJ — KLAVIO', `Datum:,${new Date().toISOString().slice(0,10)}`, '',
+      'SAŽETAK',
+      `Naplaćeno,${document.getElementById('rCollected').textContent}`,
+      `Zakašnjelo,${document.getElementById('rOverdue').textContent}`,
+      `Aktivni članovi,${document.getElementById('rActive').textContent}`,
+      `Stopa naplate,${document.getElementById('rCollectRate').textContent}`,
+      '', 'MJESEČNI PRIHOD', 'Mjesec,Naplaćeno,Neplaćeno,Ukupno faktura,Udio',
+      ...getTableRows('monthlyTable').map(r => r.map(esc).join(',')),
+      '', 'NEDAVNI UPISI', 'Član,Br. člana,Učlanjen,Status',
+      ...getTableRows('joinsTable').map(r => r.map(esc).join(','))
+    ];
+    const blob = new Blob(['﻿' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = `izvjestaj_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(a.href);
+  }
+</script>
+</body>
+</html>

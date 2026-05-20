@@ -1,0 +1,2350 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Obrazci | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+  <style>
+    .doc-card { border:1.5px solid #e2e8f0; border-radius:14px; padding:1.25rem; background:#fff; display:flex; flex-direction:column; gap:.6rem; height:100%; transition:box-shadow .15s,border-color .15s; }
+    .doc-card:hover { box-shadow:0 4px 18px rgba(0,0,0,.1); border-color:#c0cfe0; }
+    .badge-fsks  { background:#2563eb !important; }
+    .badge-nsbih { background:#0ea5e9 !important; }
+    .badge-nsfbih{ background:#7c3aed !important; }
+    .filter-btn { border:1.5px solid #e2e8f0; border-radius:8px; padding:.4rem 1.1rem; font-weight:600; font-size:.875rem; background:#fff; color:#64748b; cursor:pointer; transition:all .15s; }
+    .filter-btn:hover { border-color:var(--club-accent,#3b82f6); color:var(--club-accent,#3b82f6); }
+    .filter-btn.active { background:var(--club-accent,#3b82f6); border-color:var(--club-accent,#3b82f6); color:#fff; }
+    .doc-col.hidden { display:none !important; }
+
+    /* form inside modal */
+    .pf { font-size:10pt; font-family:'Segoe UI',Arial,sans-serif; }
+    .pf table { border-collapse:collapse; width:100%; margin-bottom:6px; }
+    .pf td,.pf th { border:1px solid #94a3b8; padding:3px 6px; font-size:9.5pt; vertical-align:middle; }
+    .pf th { background:#f1f5f9; font-weight:600; font-size:9pt; }
+    .pf input[type=text],.pf input[type=date],.pf textarea {
+      border:none; border-bottom:1px solid #475569; width:100%; font-size:9.5pt;
+      font-family:inherit; padding:1px 2px; background:transparent; outline:none;
+    }
+    .pf input[type=text]:focus,.pf input[type=date]:focus { border-bottom-color:var(--club-accent,#3b82f6); }
+    .pf select { border:none; border-bottom:1px solid #475569; background:transparent; font-size:9.5pt; font-family:inherit; }
+    .pf-hd { text-align:center; font-weight:700; font-size:11pt; text-transform:uppercase; letter-spacing:.03em; }
+    .pf-sub { text-align:center; font-size:9.5pt; color:#475569; margin-bottom:12px; }
+    .pf-sh { font-weight:700; font-size:8.5pt; text-transform:uppercase; letter-spacing:.06em; color:#64748b; border-bottom:1px solid #e2e8f0; padding-bottom:3px; margin:10px 0 6px; }
+    .sig { border-top:1px solid #475569; margin-top:30px; padding-top:4px; text-align:center; font-size:8pt; color:#64748b; }
+    .pdf-box { width:26px; text-align:center; padding:2px 0; font-size:.85rem; border:1px solid #ced4da; border-radius:3px; }
+
+    [data-theme="dark"] .doc-card { background:#1e293b !important; border-color:#334155 !important; color:#e2e8f0; }
+    [data-theme="dark"] .filter-btn { background:#1e293b; border-color:#334155; color:#94a3b8; }
+    [data-theme="dark"] .filter-btn.active { background:var(--club-accent,#3b82f6); color:#fff; }
+    [data-theme="dark"] .modal-content { background:#1e293b; color:#e2e8f0; }
+    [data-theme="dark"] .modal-header,[data-theme="dark"] .modal-footer { border-color:#334155; }
+    [data-theme="dark"] .pf th { background:#0f172a; color:#94a3b8; }
+    [data-theme="dark"] .pf td { border-color:#334155; color:#e2e8f0; }
+    [data-theme="dark"] .pf input,[data-theme="dark"] .pf textarea { border-bottom-color:#475569; color:#e2e8f0; }
+    [data-theme="dark"] .pf-hd,[data-theme="dark"] .pf-sub,[data-theme="dark"] .pf-sh { color:#94a3b8; }
+    [data-theme="dark"] .doc-card .fw-600 { color:#e2e8f0 !important; }
+  </style>
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Obrazci</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-primary" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+
+  <div class="page-body">
+    <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-3">
+      <div>
+        <h4>Zvanični obrazci</h4>
+        <p class="text-muted mb-0">Popunite i odštampajte zvanične dokumente saveza</p>
+      </div>
+    </div>
+
+    <div class="d-flex gap-2 mb-4 flex-wrap">
+      <button class="filter-btn active" data-filter="all">Svi (18)</button>
+      <button class="filter-btn" data-filter="fsks">FSKS (1)</button>
+      <button class="filter-btn" data-filter="nsbih">NS BiH (5)</button>
+      <button class="filter-btn" data-filter="nsfbih">NS FBiH (12)</button>
+    </div>
+
+    <div class="row g-3" id="docGrid">
+
+      <!-- FSKS -->
+      <div class="col-sm-6 col-md-4 col-xl-3 doc-col" data-cat="fsks">
+        <div class="doc-card">
+          <div class="d-flex align-items-start gap-2"><i class="bi bi-file-earmark-person" style="font-size:1.7rem;color:#2563eb;flex-shrink:0"></i><span class="badge badge-fsks">FSKS</span></div>
+          <div class="fw-600" style="font-size:.9rem;color:#1e293b;line-height:1.35">Spisak igrača i službenih osoba</div>
+          <div class="mt-auto"><button class="btn btn-sm btn-primary w-100" onclick="openDoc('m-fsks-1')"><i class="bi bi-pencil-square me-1"></i>Popuni i štampaj</button></div>
+        </div>
+      </div>
+
+      <!-- NS BiH — unavailable (fill+print coming soon), all downloadable -->
+      <div class="col-sm-6 col-md-4 col-xl-3 doc-col" data-cat="nsbih">
+        <div class="doc-card" style="opacity:.7">
+          <div class="d-flex align-items-start gap-2"><i class="bi bi-file-earmark-minus" style="font-size:1.7rem;color:#0ea5e9;flex-shrink:0"></i><span class="badge badge-nsbih">NS BiH</span><span class="badge bg-secondary ms-auto" style="font-size:.7rem">Uskoro</span></div>
+          <div class="fw-600" style="font-size:.9rem;color:#1e293b;line-height:1.35">Ispisnica</div>
+          <div class="mt-auto d-flex flex-column gap-1">
+            <button class="btn btn-sm btn-secondary w-100" disabled><i class="bi bi-pencil-square me-1"></i>Popuni i štampaj — Uskoro</button>
+            <a href="/forms/NSBIH/IZMIJENJENA_ISPISNICA_29.05.pdf" download class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-download me-1"></i>Preuzmi obrazac</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-md-4 col-xl-3 doc-col" data-cat="nsbih">
+        <div class="doc-card" style="opacity:.7">
+          <div class="d-flex align-items-start gap-2"><i class="bi bi-file-earmark-text" style="font-size:1.7rem;color:#0ea5e9;flex-shrink:0"></i><span class="badge badge-nsbih">NS BiH</span><span class="badge bg-secondary ms-auto" style="font-size:.7rem">Uskoro</span></div>
+          <div class="fw-600" style="font-size:.9rem;color:#1e293b;line-height:1.35">Ugovor o registraciji amatera</div>
+          <div class="mt-auto d-flex flex-column gap-1">
+            <button class="btn btn-sm btn-secondary w-100" disabled><i class="bi bi-pencil-square me-1"></i>Popuni i štampaj — Uskoro</button>
+            <a href="/forms/NSBIH/Ugovor_igra%C4%8Da_amatera_avgust_2024.rtf" download class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-download me-1"></i>Preuzmi obrazac</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-md-4 col-xl-3 doc-col" data-cat="nsbih">
+        <div class="doc-card" style="opacity:.7">
+          <div class="d-flex align-items-start gap-2"><i class="bi bi-file-earmark-text" style="font-size:1.7rem;color:#0ea5e9;flex-shrink:0"></i><span class="badge badge-nsbih">NS BiH</span><span class="badge bg-secondary ms-auto" style="font-size:.7rem">Uskoro</span></div>
+          <div class="fw-600" style="font-size:.9rem;color:#1e293b;line-height:1.35">Ugovor o registraciji profesionalca</div>
+          <div class="mt-auto d-flex flex-column gap-1">
+            <button class="btn btn-sm btn-secondary w-100" disabled><i class="bi bi-pencil-square me-1"></i>Popuni i štampaj — Uskoro</button>
+            <a href="/forms/NSBIH/Ugovor_igra%C4%8Da_profesionalca_obrazac_final_SEPTEMBAR_2024.doc" download class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-download me-1"></i>Preuzmi obrazac</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-md-4 col-xl-3 doc-col" data-cat="nsbih">
+        <div class="doc-card" style="opacity:.7">
+          <div class="d-flex align-items-start gap-2"><i class="bi bi-file-earmark-check" style="font-size:1.7rem;color:#0ea5e9;flex-shrink:0"></i><span class="badge badge-nsbih">NS BiH</span><span class="badge bg-secondary ms-auto" style="font-size:.7rem">Uskoro</span></div>
+          <div class="fw-600" style="font-size:.9rem;color:#1e293b;line-height:1.35">Zahtjev za izdavanje licence</div>
+          <div class="mt-auto d-flex flex-column gap-1">
+            <button class="btn btn-sm btn-secondary w-100" disabled><i class="bi bi-pencil-square me-1"></i>Popuni i štampaj — Uskoro</button>
+            <a href="/forms/NSBIH/Zahtjev_za_izdavanje_licence_za_obavljanje_du%C5%BEnosti_na_utakmicama_4.docx" download class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-download me-1"></i>Preuzmi obrazac</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-md-4 col-xl-3 doc-col" data-cat="nsbih">
+        <div class="doc-card" style="opacity:.7">
+          <div class="d-flex align-items-start gap-2"><i class="bi bi-file-earmark-arrow-up" style="font-size:1.7rem;color:#0ea5e9;flex-shrink:0"></i><span class="badge badge-nsbih">NS BiH</span><span class="badge bg-secondary ms-auto" style="font-size:.7rem">Uskoro</span></div>
+          <div class="fw-600" style="font-size:.9rem;color:#1e293b;line-height:1.35">Zahtjev za međunarodni certifikat</div>
+          <div class="mt-auto d-flex flex-column gap-1">
+            <button class="btn btn-sm btn-secondary w-100" disabled><i class="bi bi-pencil-square me-1"></i>Popuni i štampaj — Uskoro</button>
+            <a href="/forms/NSBIH/ZAHTJEV_ZA_POTRA%C5%BDNJU_ME%C4%90UNARODNOG_CERTIFIKATA_O_TRANSFERU_IGRA%C4%8CA_1.docx" download class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-download me-1"></i>Preuzmi obrazac</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- NS FBiH — unavailable (fill+print coming soon), all downloadable -->
+      <div class="col-sm-6 col-md-4 col-xl-3 doc-col" data-cat="nsfbih">
+        <div class="doc-card" style="opacity:.7">
+          <div class="d-flex align-items-start gap-2"><i class="bi bi-arrow-left-right" style="font-size:1.7rem;color:#7c3aed;flex-shrink:0"></i><span class="badge badge-nsfbih">NS FBiH</span><span class="badge bg-secondary ms-auto" style="font-size:.7rem">Uskoro</span></div>
+          <div class="fw-600" style="font-size:.9rem;color:#1e293b;line-height:1.35">Karton izmjene igrača</div>
+          <div class="mt-auto d-flex flex-column gap-1">
+            <button class="btn btn-sm btn-secondary w-100" disabled><i class="bi bi-pencil-square me-1"></i>Popuni i štampaj — Uskoro</button>
+            <a href="/forms/NSFBIH/Karton-Izmjene%20igra%C4%8Da.docx" download class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-download me-1"></i>Preuzmi obrazac</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-md-4 col-xl-3 doc-col" data-cat="nsfbih">
+        <div class="doc-card" style="opacity:.7">
+          <div class="d-flex align-items-start gap-2"><i class="bi bi-file-earmark-minus" style="font-size:1.7rem;color:#7c3aed;flex-shrink:0"></i><span class="badge badge-nsfbih">NS FBiH</span><span class="badge bg-secondary ms-auto" style="font-size:.7rem">Uskoro</span></div>
+          <div class="fw-600" style="font-size:.9rem;color:#1e293b;line-height:1.35">Ispisnica / Istupnica</div>
+          <div class="mt-auto d-flex flex-column gap-1">
+            <button class="btn btn-sm btn-secondary w-100" disabled><i class="bi bi-pencil-square me-1"></i>Popuni i štampaj — Uskoro</button>
+            <a href="/forms/NSFBIH/Obrazac%20ispisnice_istupnice.pdf" download class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-download me-1"></i>Preuzmi obrazac</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-md-4 col-xl-3 doc-col" data-cat="nsfbih">
+        <div class="doc-card" style="opacity:.7">
+          <div class="d-flex align-items-start gap-2"><i class="bi bi-file-earmark-text" style="font-size:1.7rem;color:#7c3aed;flex-shrink:0"></i><span class="badge badge-nsfbih">NS FBiH</span><span class="badge bg-secondary ms-auto" style="font-size:.7rem">Uskoro</span></div>
+          <div class="fw-600" style="font-size:.9rem;color:#1e293b;line-height:1.35">Ugovor o saradnji klubova</div>
+          <div class="mt-auto d-flex flex-column gap-1">
+            <button class="btn btn-sm btn-secondary w-100" disabled><i class="bi bi-pencil-square me-1"></i>Popuni i štampaj — Uskoro</button>
+            <a href="/forms/NSFBIH/Obrazac%20ugovora%20o%20saradnji%20klubova.pdf" download class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-download me-1"></i>Preuzmi obrazac</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-md-4 col-xl-3 doc-col" data-cat="nsfbih">
+        <div class="doc-card" style="opacity:.7">
+          <div class="d-flex align-items-start gap-2"><i class="bi bi-people" style="font-size:1.7rem;color:#7c3aed;flex-shrink:0"></i><span class="badge badge-nsfbih">NS FBiH</span><span class="badge bg-secondary ms-auto" style="font-size:.7rem">Uskoro</span></div>
+          <div class="fw-600" style="font-size:.9rem;color:#1e293b;line-height:1.35">Spisak igrača — Omladinska liga</div>
+          <div class="mt-auto d-flex flex-column gap-1">
+            <button class="btn btn-sm btn-secondary w-100" disabled><i class="bi bi-pencil-square me-1"></i>Popuni i štampaj — Uskoro</button>
+            <a href="/forms/NSFBIH/Obrazac-spisak%20igra%C4%8Da%20i%20slu%C5%BEbenih%20osoba%20kluba%20Omladinske%20lige%20BiH.docx" download class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-download me-1"></i>Preuzmi obrazac</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-md-4 col-xl-3 doc-col" data-cat="nsfbih">
+        <div class="doc-card" style="opacity:.7">
+          <div class="d-flex align-items-start gap-2"><i class="bi bi-people" style="font-size:1.7rem;color:#7c3aed;flex-shrink:0"></i><span class="badge badge-nsfbih">NS FBiH</span><span class="badge bg-secondary ms-auto" style="font-size:.7rem">Uskoro</span></div>
+          <div class="fw-600" style="font-size:.9rem;color:#1e293b;line-height:1.35">Spisak igrača — Druga liga FBiH</div>
+          <div class="mt-auto d-flex flex-column gap-1">
+            <button class="btn btn-sm btn-secondary w-100" disabled><i class="bi bi-pencil-square me-1"></i>Popuni i štampaj — Uskoro</button>
+            <a href="/forms/NSFBIH/Obrazac-spisak%20igra%C4%8Da%20i%20slu%C5%BEbenih%20osoba%20kluba%20WWIN%20Druge%20lige%20FBiH.docx" download class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-download me-1"></i>Preuzmi obrazac</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-md-4 col-xl-3 doc-col" data-cat="nsfbih">
+        <div class="doc-card" style="opacity:.7">
+          <div class="d-flex align-items-start gap-2"><i class="bi bi-people" style="font-size:1.7rem;color:#7c3aed;flex-shrink:0"></i><span class="badge badge-nsfbih">NS FBiH</span><span class="badge bg-secondary ms-auto" style="font-size:.7rem">Uskoro</span></div>
+          <div class="fw-600" style="font-size:.9rem;color:#1e293b;line-height:1.35">Spisak igrača — Prva liga FBiH</div>
+          <div class="mt-auto d-flex flex-column gap-1">
+            <button class="btn btn-sm btn-secondary w-100" disabled><i class="bi bi-pencil-square me-1"></i>Popuni i štampaj — Uskoro</button>
+            <a href="/forms/NSFBIH/Obrazac-spisak%20igra%C4%8Da%20i%20slu%C5%BEbenih%20osoba%20kluba%20WWIN%20Prve%20lige%20FBiH.docx" download class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-download me-1"></i>Preuzmi obrazac</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-md-4 col-xl-3 doc-col" data-cat="nsfbih">
+        <div class="doc-card" style="opacity:.7">
+          <div class="d-flex align-items-start gap-2"><i class="bi bi-file-earmark-text" style="font-size:1.7rem;color:#7c3aed;flex-shrink:0"></i><span class="badge badge-nsfbih">NS FBiH</span><span class="badge bg-secondary ms-auto" style="font-size:.7rem">Uskoro</span></div>
+          <div class="fw-600" style="font-size:.9rem;color:#1e293b;line-height:1.35">Ugovor o registraciji amatera</div>
+          <div class="mt-auto d-flex flex-column gap-1">
+            <button class="btn btn-sm btn-secondary w-100" disabled><i class="bi bi-pencil-square me-1"></i>Popuni i štampaj — Uskoro</button>
+            <a href="/forms/NSFBIH/Ugovor%20igra%C4%8Da%20amatera.doc" download class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-download me-1"></i>Preuzmi obrazac</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-md-4 col-xl-3 doc-col" data-cat="nsfbih">
+        <div class="doc-card" style="opacity:.7">
+          <div class="d-flex align-items-start gap-2"><i class="bi bi-file-earmark-text" style="font-size:1.7rem;color:#7c3aed;flex-shrink:0"></i><span class="badge badge-nsfbih">NS FBiH</span><span class="badge bg-secondary ms-auto" style="font-size:.7rem">Uskoro</span></div>
+          <div class="fw-600" style="font-size:.9rem;color:#1e293b;line-height:1.35">Ugovor o registraciji profesionalca</div>
+          <div class="mt-auto d-flex flex-column gap-1">
+            <button class="btn btn-sm btn-secondary w-100" disabled><i class="bi bi-pencil-square me-1"></i>Popuni i štampaj — Uskoro</button>
+            <a href="/forms/NSFBIH/Ugovor%20igra%C4%8Da%20profesionalca.doc" download class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-download me-1"></i>Preuzmi obrazac</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-md-4 col-xl-3 doc-col" data-cat="nsfbih">
+        <div class="doc-card" style="opacity:.7">
+          <div class="d-flex align-items-start gap-2"><i class="bi bi-card-checklist" style="font-size:1.7rem;color:#7c3aed;flex-shrink:0"></i><span class="badge badge-nsfbih">NS FBiH</span><span class="badge bg-secondary ms-auto" style="font-size:.7rem">Uskoro</span></div>
+          <div class="fw-600" style="font-size:.9rem;color:#1e293b;line-height:1.35">Upitnik za akreditaciju (kalendarska sezona)</div>
+          <div class="mt-auto d-flex flex-column gap-1">
+            <button class="btn btn-sm btn-secondary w-100" disabled><i class="bi bi-pencil-square me-1"></i>Popuni i štampaj — Uskoro</button>
+            <a href="/forms/NSFBIH/Upitnik%20za%20izdavanje%20takmi%C4%8Darske%20akreditacije%20za%20kalendarsku%20godinu.docx" download class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-download me-1"></i>Preuzmi obrazac</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-md-4 col-xl-3 doc-col" data-cat="nsfbih">
+        <div class="doc-card" style="opacity:.7">
+          <div class="d-flex align-items-start gap-2"><i class="bi bi-card-checklist" style="font-size:1.7rem;color:#7c3aed;flex-shrink:0"></i><span class="badge badge-nsfbih">NS FBiH</span><span class="badge bg-secondary ms-auto" style="font-size:.7rem">Uskoro</span></div>
+          <div class="fw-600" style="font-size:.9rem;color:#1e293b;line-height:1.35">Upitnik za akreditaciju (takmičarska sezona)</div>
+          <div class="mt-auto d-flex flex-column gap-1">
+            <button class="btn btn-sm btn-secondary w-100" disabled><i class="bi bi-pencil-square me-1"></i>Popuni i štampaj — Uskoro</button>
+            <a href="/forms/NSFBIH/Upitnik%20za%20izdavanje%20takmi%C4%8Darske%20akreditacije%20za%20takmi%C4%8Darsku%20godinu.docx" download class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-download me-1"></i>Preuzmi obrazac</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-md-4 col-xl-3 doc-col" data-cat="nsfbih">
+        <div class="doc-card" style="opacity:.7">
+          <div class="d-flex align-items-start gap-2"><i class="bi bi-person-badge" style="font-size:1.7rem;color:#7c3aed;flex-shrink:0"></i><span class="badge badge-nsfbih">NS FBiH</span><span class="badge bg-secondary ms-auto" style="font-size:.7rem">Uskoro</span></div>
+          <div class="fw-600" style="font-size:.9rem;color:#1e293b;line-height:1.35">Zahtjev za registraciju trenera (kalendarska sezona)</div>
+          <div class="mt-auto d-flex flex-column gap-1">
+            <button class="btn btn-sm btn-secondary w-100" disabled><i class="bi bi-pencil-square me-1"></i>Popuni i štampaj — Uskoro</button>
+            <a href="/forms/NSFBIH/Zahtjev%20za%20registraciju%20trenera%20za%20kalendarsku%20godinu.docx" download class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-download me-1"></i>Preuzmi obrazac</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-md-4 col-xl-3 doc-col" data-cat="nsfbih">
+        <div class="doc-card" style="opacity:.7">
+          <div class="d-flex align-items-start gap-2"><i class="bi bi-person-badge" style="font-size:1.7rem;color:#7c3aed;flex-shrink:0"></i><span class="badge badge-nsfbih">NS FBiH</span><span class="badge bg-secondary ms-auto" style="font-size:.7rem">Uskoro</span></div>
+          <div class="fw-600" style="font-size:.9rem;color:#1e293b;line-height:1.35">Zahtjev za registraciju trenera (takmičarska sezona)</div>
+          <div class="mt-auto d-flex flex-column gap-1">
+            <button class="btn btn-sm btn-secondary w-100" disabled><i class="bi bi-pencil-square me-1"></i>Popuni i štampaj — Uskoro</button>
+            <a href="/forms/NSFBIH/Zahtjev%20za%20registraciju%20trenera%20za%20takmi%C4%8Darsku%20sezonu.docx" download class="btn btn-sm btn-outline-primary w-100"><i class="bi bi-download me-1"></i>Preuzmi obrazac</a>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /row -->
+
+    <!-- History section -->
+    <div class="mt-5">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 class="mb-0"><i class="bi bi-clock-history me-2 text-muted"></i>Historija popunjenih obrazaca</h5>
+        <button class="btn btn-sm btn-outline-secondary" onclick="loadFormHistory()"><i class="bi bi-arrow-clockwise"></i></button>
+      </div>
+      <div id="formHistoryWrap">
+        <div class="text-muted small">Učitavanje...</div>
+      </div>
+    </div>
+  </div><!-- /page-body -->
+</div><!-- /main-content -->
+
+<!-- ============================= MODALS ============================= -->
+
+<!-- M1: FSKS - Spisak igrača -->
+<div class="modal fade" id="m-fsks-1" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title d-flex align-items-center gap-2"><span class="badge badge-fsks">FSKS</span>Spisak igrača i službenih osoba</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="form-fsks-1">
+          <!-- Clean input form — print generates the original paper layout -->
+          <div class="pf-sh mb-2">Podaci o utakmici</div>
+          <div class="row g-2 mb-2">
+            <div class="col-md-7">
+              <label class="form-label small mb-1 fw-semibold">Vrsta utakmice</label>
+              <input type="text" id="f1-vrsta" class="form-control form-control-sm">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small mb-1 fw-semibold">Kolo</label>
+              <div class="d-flex gap-1">
+                <input type="text" maxlength="1" id="f1-kolo-0" data-group="f1-kolo" class="pdf-box form-control form-control-sm">
+                <input type="text" maxlength="1" id="f1-kolo-1" data-group="f1-kolo" class="pdf-box form-control form-control-sm">
+              </div>
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small mb-1 fw-semibold">Kategorija</label>
+              <input type="text" id="f1-kat" class="form-control form-control-sm">
+            </div>
+          </div>
+          <div class="row g-2 mb-2">
+            <div class="col-md-6">
+              <label class="form-label small mb-1 fw-semibold">Domaćin (između ekipa)</label>
+              <input type="text" id="f1-domacin" class="form-control form-control-sm">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small mb-1 fw-semibold">Gost</label>
+              <input type="text" id="f1-gost" class="form-control form-control-sm">
+            </div>
+          </div>
+          <div class="row g-2 mb-2">
+            <div class="col-12">
+              <label class="form-label small mb-1 fw-semibold">FK/NK: (ime kluba)</label>
+              <input type="text" id="f1-fknk" class="form-control form-control-sm auto-club-name">
+            </div>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-md-3">
+              <label class="form-label small mb-1 fw-semibold">Datum</label>
+              <input type="date" id="f1-datum" class="form-control form-control-sm">
+            </div>
+            <div class="col-md-2">
+              <label class="form-label small mb-1 fw-semibold">Sat (HH:MM)</label>
+              <div class="d-flex align-items-center gap-1">
+                <input type="text" maxlength="1" id="f1-sat-0" data-group="f1-sat" class="pdf-box form-control form-control-sm">
+                <input type="text" maxlength="1" id="f1-sat-1" data-group="f1-sat" class="pdf-box form-control form-control-sm">
+                <span class="small fw-bold">:</span>
+                <input type="text" maxlength="1" id="f1-sat-2" data-group="f1-sat" class="pdf-box form-control form-control-sm">
+                <input type="text" maxlength="1" id="f1-sat-3" data-group="f1-sat" class="pdf-box form-control form-control-sm">
+              </div>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small mb-1 fw-semibold">Mjesto igranja</label>
+              <input type="text" id="f1-mjesto" class="form-control form-control-sm">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small mb-1 fw-semibold">Stadion</label>
+              <input type="text" id="f1-stadion" class="form-control form-control-sm">
+            </div>
+          </div>
+
+          <div class="pf-sh mb-2">Igrači</div>
+          <table class="table table-sm table-bordered mb-1" style="font-size:.82rem">
+            <thead class="table-light">
+              <tr>
+                <th style="width:40px;text-align:center">#</th>
+                <th style="width:68px;text-align:center">Br. dresa</th>
+                <th>Prezime i ime</th>
+                <th style="width:130px;text-align:center">Br. registracije</th>
+              </tr>
+            </thead>
+            <tbody id="f1-players">
+              <tr><td style="text-align:center;color:#94a3b8;font-size:.8rem;white-space:nowrap">1</td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p0-dres-0" data-group="f1-p0-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p0-dres-1" data-group="f1-p0-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"></div></td><td><input type="text" id="f1-p0-ime" class="border-0 w-100 bg-transparent" style="outline:none;font-size:.82rem"></td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p0-reg-0" data-group="f1-p0-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p0-reg-1" data-group="f1-p0-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p0-reg-2" data-group="f1-p0-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p0-reg-3" data-group="f1-p0-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p0-reg-4" data-group="f1-p0-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p0-reg-5" data-group="f1-p0-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p0-reg-6" data-group="f1-p0-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"></div></td></tr>
+              <tr><td style="text-align:center;color:#94a3b8;font-size:.8rem;white-space:nowrap">2</td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p1-dres-0" data-group="f1-p1-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p1-dres-1" data-group="f1-p1-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"></div></td><td><input type="text" id="f1-p1-ime" class="border-0 w-100 bg-transparent" style="outline:none;font-size:.82rem"></td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p1-reg-0" data-group="f1-p1-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p1-reg-1" data-group="f1-p1-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p1-reg-2" data-group="f1-p1-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p1-reg-3" data-group="f1-p1-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p1-reg-4" data-group="f1-p1-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p1-reg-5" data-group="f1-p1-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p1-reg-6" data-group="f1-p1-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"></div></td></tr>
+              <tr><td style="text-align:center;color:#94a3b8;font-size:.8rem;white-space:nowrap">3</td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p2-dres-0" data-group="f1-p2-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p2-dres-1" data-group="f1-p2-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"></div></td><td><input type="text" id="f1-p2-ime" class="border-0 w-100 bg-transparent" style="outline:none;font-size:.82rem"></td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p2-reg-0" data-group="f1-p2-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p2-reg-1" data-group="f1-p2-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p2-reg-2" data-group="f1-p2-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p2-reg-3" data-group="f1-p2-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p2-reg-4" data-group="f1-p2-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p2-reg-5" data-group="f1-p2-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p2-reg-6" data-group="f1-p2-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"></div></td></tr>
+              <tr><td style="text-align:center;color:#94a3b8;font-size:.8rem;white-space:nowrap">4</td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p3-dres-0" data-group="f1-p3-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p3-dres-1" data-group="f1-p3-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"></div></td><td><input type="text" id="f1-p3-ime" class="border-0 w-100 bg-transparent" style="outline:none;font-size:.82rem"></td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p3-reg-0" data-group="f1-p3-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p3-reg-1" data-group="f1-p3-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p3-reg-2" data-group="f1-p3-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p3-reg-3" data-group="f1-p3-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p3-reg-4" data-group="f1-p3-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p3-reg-5" data-group="f1-p3-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p3-reg-6" data-group="f1-p3-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"></div></td></tr>
+              <tr><td style="text-align:center;color:#94a3b8;font-size:.8rem;white-space:nowrap">5</td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p4-dres-0" data-group="f1-p4-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p4-dres-1" data-group="f1-p4-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"></div></td><td><input type="text" id="f1-p4-ime" class="border-0 w-100 bg-transparent" style="outline:none;font-size:.82rem"></td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p4-reg-0" data-group="f1-p4-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p4-reg-1" data-group="f1-p4-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p4-reg-2" data-group="f1-p4-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p4-reg-3" data-group="f1-p4-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p4-reg-4" data-group="f1-p4-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p4-reg-5" data-group="f1-p4-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p4-reg-6" data-group="f1-p4-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"></div></td></tr>
+              <tr><td style="text-align:center;color:#94a3b8;font-size:.8rem;white-space:nowrap">6</td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p5-dres-0" data-group="f1-p5-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p5-dres-1" data-group="f1-p5-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"></div></td><td><input type="text" id="f1-p5-ime" class="border-0 w-100 bg-transparent" style="outline:none;font-size:.82rem"></td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p5-reg-0" data-group="f1-p5-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p5-reg-1" data-group="f1-p5-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p5-reg-2" data-group="f1-p5-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p5-reg-3" data-group="f1-p5-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p5-reg-4" data-group="f1-p5-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p5-reg-5" data-group="f1-p5-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p5-reg-6" data-group="f1-p5-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"></div></td></tr>
+              <tr><td style="text-align:center;color:#94a3b8;font-size:.8rem;white-space:nowrap">7</td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p6-dres-0" data-group="f1-p6-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p6-dres-1" data-group="f1-p6-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"></div></td><td><input type="text" id="f1-p6-ime" class="border-0 w-100 bg-transparent" style="outline:none;font-size:.82rem"></td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p6-reg-0" data-group="f1-p6-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p6-reg-1" data-group="f1-p6-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p6-reg-2" data-group="f1-p6-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p6-reg-3" data-group="f1-p6-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p6-reg-4" data-group="f1-p6-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p6-reg-5" data-group="f1-p6-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p6-reg-6" data-group="f1-p6-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"></div></td></tr>
+              <tr><td style="text-align:center;color:#94a3b8;font-size:.8rem;white-space:nowrap">8</td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p7-dres-0" data-group="f1-p7-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p7-dres-1" data-group="f1-p7-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"></div></td><td><input type="text" id="f1-p7-ime" class="border-0 w-100 bg-transparent" style="outline:none;font-size:.82rem"></td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p7-reg-0" data-group="f1-p7-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p7-reg-1" data-group="f1-p7-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p7-reg-2" data-group="f1-p7-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p7-reg-3" data-group="f1-p7-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p7-reg-4" data-group="f1-p7-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p7-reg-5" data-group="f1-p7-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p7-reg-6" data-group="f1-p7-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"></div></td></tr>
+              <tr><td style="text-align:center;color:#94a3b8;font-size:.8rem;white-space:nowrap">9</td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p8-dres-0" data-group="f1-p8-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p8-dres-1" data-group="f1-p8-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"></div></td><td><input type="text" id="f1-p8-ime" class="border-0 w-100 bg-transparent" style="outline:none;font-size:.82rem"></td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p8-reg-0" data-group="f1-p8-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p8-reg-1" data-group="f1-p8-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p8-reg-2" data-group="f1-p8-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p8-reg-3" data-group="f1-p8-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p8-reg-4" data-group="f1-p8-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p8-reg-5" data-group="f1-p8-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p8-reg-6" data-group="f1-p8-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"></div></td></tr>
+              <tr><td style="text-align:center;color:#94a3b8;font-size:.8rem;white-space:nowrap">10</td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p9-dres-0" data-group="f1-p9-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p9-dres-1" data-group="f1-p9-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"></div></td><td><input type="text" id="f1-p9-ime" class="border-0 w-100 bg-transparent" style="outline:none;font-size:.82rem"></td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p9-reg-0" data-group="f1-p9-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p9-reg-1" data-group="f1-p9-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p9-reg-2" data-group="f1-p9-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p9-reg-3" data-group="f1-p9-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p9-reg-4" data-group="f1-p9-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p9-reg-5" data-group="f1-p9-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p9-reg-6" data-group="f1-p9-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"></div></td></tr>
+              <tr><td style="text-align:center;color:#94a3b8;font-size:.8rem;white-space:nowrap">11</td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p10-dres-0" data-group="f1-p10-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p10-dres-1" data-group="f1-p10-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"></div></td><td><input type="text" id="f1-p10-ime" class="border-0 w-100 bg-transparent" style="outline:none;font-size:.82rem"></td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p10-reg-0" data-group="f1-p10-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p10-reg-1" data-group="f1-p10-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p10-reg-2" data-group="f1-p10-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p10-reg-3" data-group="f1-p10-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p10-reg-4" data-group="f1-p10-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p10-reg-5" data-group="f1-p10-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p10-reg-6" data-group="f1-p10-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"></div></td></tr>
+              <tr><td style="text-align:center;color:#94a3b8;font-size:.8rem;white-space:nowrap">12</td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p11-dres-0" data-group="f1-p11-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p11-dres-1" data-group="f1-p11-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"></div></td><td><input type="text" id="f1-p11-ime" class="border-0 w-100 bg-transparent" style="outline:none;font-size:.82rem"></td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p11-reg-0" data-group="f1-p11-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p11-reg-1" data-group="f1-p11-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p11-reg-2" data-group="f1-p11-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p11-reg-3" data-group="f1-p11-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p11-reg-4" data-group="f1-p11-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p11-reg-5" data-group="f1-p11-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p11-reg-6" data-group="f1-p11-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"></div></td></tr>
+              <tr><td style="text-align:center;color:#94a3b8;font-size:.8rem;white-space:nowrap">13</td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p12-dres-0" data-group="f1-p12-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p12-dres-1" data-group="f1-p12-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"></div></td><td><input type="text" id="f1-p12-ime" class="border-0 w-100 bg-transparent" style="outline:none;font-size:.82rem"></td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p12-reg-0" data-group="f1-p12-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p12-reg-1" data-group="f1-p12-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p12-reg-2" data-group="f1-p12-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p12-reg-3" data-group="f1-p12-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p12-reg-4" data-group="f1-p12-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p12-reg-5" data-group="f1-p12-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p12-reg-6" data-group="f1-p12-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"></div></td></tr>
+              <tr><td style="text-align:center;color:#94a3b8;font-size:.8rem;white-space:nowrap">14</td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p13-dres-0" data-group="f1-p13-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p13-dres-1" data-group="f1-p13-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"></div></td><td><input type="text" id="f1-p13-ime" class="border-0 w-100 bg-transparent" style="outline:none;font-size:.82rem"></td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p13-reg-0" data-group="f1-p13-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p13-reg-1" data-group="f1-p13-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p13-reg-2" data-group="f1-p13-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p13-reg-3" data-group="f1-p13-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p13-reg-4" data-group="f1-p13-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p13-reg-5" data-group="f1-p13-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p13-reg-6" data-group="f1-p13-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"></div></td></tr>
+              <tr><td style="text-align:center;color:#94a3b8;font-size:.8rem;white-space:nowrap">15</td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p14-dres-0" data-group="f1-p14-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p14-dres-1" data-group="f1-p14-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"></div></td><td><input type="text" id="f1-p14-ime" class="border-0 w-100 bg-transparent" style="outline:none;font-size:.82rem"></td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p14-reg-0" data-group="f1-p14-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p14-reg-1" data-group="f1-p14-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p14-reg-2" data-group="f1-p14-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p14-reg-3" data-group="f1-p14-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p14-reg-4" data-group="f1-p14-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p14-reg-5" data-group="f1-p14-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p14-reg-6" data-group="f1-p14-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"></div></td></tr>
+              <tr><td style="text-align:center;color:#94a3b8;font-size:.8rem;white-space:nowrap">16</td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p15-dres-0" data-group="f1-p15-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p15-dres-1" data-group="f1-p15-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"></div></td><td><input type="text" id="f1-p15-ime" class="border-0 w-100 bg-transparent" style="outline:none;font-size:.82rem"></td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p15-reg-0" data-group="f1-p15-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p15-reg-1" data-group="f1-p15-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p15-reg-2" data-group="f1-p15-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p15-reg-3" data-group="f1-p15-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p15-reg-4" data-group="f1-p15-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p15-reg-5" data-group="f1-p15-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p15-reg-6" data-group="f1-p15-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"></div></td></tr>
+              <tr><td style="text-align:center;color:#94a3b8;font-size:.8rem;white-space:nowrap">17</td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p16-dres-0" data-group="f1-p16-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p16-dres-1" data-group="f1-p16-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"></div></td><td><input type="text" id="f1-p16-ime" class="border-0 w-100 bg-transparent" style="outline:none;font-size:.82rem"></td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p16-reg-0" data-group="f1-p16-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p16-reg-1" data-group="f1-p16-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p16-reg-2" data-group="f1-p16-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p16-reg-3" data-group="f1-p16-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p16-reg-4" data-group="f1-p16-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p16-reg-5" data-group="f1-p16-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p16-reg-6" data-group="f1-p16-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"></div></td></tr>
+              <tr><td style="text-align:center;color:#94a3b8;font-size:.8rem;white-space:nowrap">18</td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p17-dres-0" data-group="f1-p17-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p17-dres-1" data-group="f1-p17-dres" class="pdf-box" style="width:20px;font-size:.75rem;border-radius:1px"></div></td><td><input type="text" id="f1-p17-ime" class="border-0 w-100 bg-transparent" style="outline:none;font-size:.82rem"></td><td><div class="d-flex gap-0 justify-content-center"><input type="text" maxlength="1" id="f1-p17-reg-0" data-group="f1-p17-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p17-reg-1" data-group="f1-p17-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p17-reg-2" data-group="f1-p17-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p17-reg-3" data-group="f1-p17-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p17-reg-4" data-group="f1-p17-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p17-reg-5" data-group="f1-p17-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"><input type="text" maxlength="1" id="f1-p17-reg-6" data-group="f1-p17-reg" class="pdf-box" style="width:18px;font-size:.75rem;border-radius:1px"></div></td></tr>
+            </tbody>
+          </table>
+
+          <div class="row g-2 mb-3">
+            <div class="col-auto">
+              <label class="form-label small mb-1 fw-semibold">Kapiten — Br. dresa</label>
+              <div class="d-flex gap-1">
+                <input type="text" maxlength="1" id="f1-kap-dres-0" data-group="f1-kap-dres" class="pdf-box form-control form-control-sm">
+                <input type="text" maxlength="1" id="f1-kap-dres-1" data-group="f1-kap-dres" class="pdf-box form-control form-control-sm">
+              </div>
+            </div>
+            <div class="col">
+              <label class="form-label small mb-1 fw-semibold">Kapiten — Prezime i ime</label>
+              <input type="text" id="f1-kap-ime" class="form-control form-control-sm">
+            </div>
+          </div>
+
+          <div class="pf-sh mb-2">Službene osobe</div>
+          <table class="table table-sm table-bordered mb-3" style="font-size:.82rem">
+            <thead class="table-light">
+              <tr><th style="width:155px">Funkcija</th><th>Prezime i ime</th><th style="width:130px">Broj licence</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Predstavnik kluba</td><td><input type="text" id="f1-o1-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><div class="d-flex gap-1 justify-content-center"><input type="text" maxlength="1" id="f1-o1-lic-0" data-group="f1-o1-lic" class="pdf-box"><input type="text" maxlength="1" id="f1-o1-lic-1" data-group="f1-o1-lic" class="pdf-box"><input type="text" maxlength="1" id="f1-o1-lic-2" data-group="f1-o1-lic" class="pdf-box"><input type="text" maxlength="1" id="f1-o1-lic-3" data-group="f1-o1-lic" class="pdf-box"></div></td></tr>
+              <tr><td>Šef stručnog štaba</td><td><input type="text" id="f1-o2-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><div class="d-flex gap-1 justify-content-center"><input type="text" maxlength="1" id="f1-o2-lic-0" data-group="f1-o2-lic" class="pdf-box"><input type="text" maxlength="1" id="f1-o2-lic-1" data-group="f1-o2-lic" class="pdf-box"><input type="text" maxlength="1" id="f1-o2-lic-2" data-group="f1-o2-lic" class="pdf-box"><input type="text" maxlength="1" id="f1-o2-lic-3" data-group="f1-o2-lic" class="pdf-box"></div></td></tr>
+              <tr><td>Trener</td><td><input type="text" id="f1-o3-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><div class="d-flex gap-1 justify-content-center"><input type="text" maxlength="1" id="f1-o3-lic-0" data-group="f1-o3-lic" class="pdf-box"><input type="text" maxlength="1" id="f1-o3-lic-1" data-group="f1-o3-lic" class="pdf-box"><input type="text" maxlength="1" id="f1-o3-lic-2" data-group="f1-o3-lic" class="pdf-box"><input type="text" maxlength="1" id="f1-o3-lic-3" data-group="f1-o3-lic" class="pdf-box"></div></td></tr>
+              <tr><td>Pomoćni trener</td><td><input type="text" id="f1-o4-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><div class="d-flex gap-1 justify-content-center"><input type="text" maxlength="1" id="f1-o4-lic-0" data-group="f1-o4-lic" class="pdf-box"><input type="text" maxlength="1" id="f1-o4-lic-1" data-group="f1-o4-lic" class="pdf-box"><input type="text" maxlength="1" id="f1-o4-lic-2" data-group="f1-o4-lic" class="pdf-box"><input type="text" maxlength="1" id="f1-o4-lic-3" data-group="f1-o4-lic" class="pdf-box"></div></td></tr>
+              <tr><td>Ljekar</td><td><input type="text" id="f1-o5-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><div class="d-flex gap-1 justify-content-center"><input type="text" maxlength="1" id="f1-o5-lic-0" data-group="f1-o5-lic" class="pdf-box"><input type="text" maxlength="1" id="f1-o5-lic-1" data-group="f1-o5-lic" class="pdf-box"><input type="text" maxlength="1" id="f1-o5-lic-2" data-group="f1-o5-lic" class="pdf-box"><input type="text" maxlength="1" id="f1-o5-lic-3" data-group="f1-o5-lic" class="pdf-box"></div></td></tr>
+              <tr><td>Fizioterapeut</td><td><input type="text" id="f1-o6-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><div class="d-flex gap-1 justify-content-center"><input type="text" maxlength="1" id="f1-o6-lic-0" data-group="f1-o6-lic" class="pdf-box"><input type="text" maxlength="1" id="f1-o6-lic-1" data-group="f1-o6-lic" class="pdf-box"><input type="text" maxlength="1" id="f1-o6-lic-2" data-group="f1-o6-lic" class="pdf-box"><input type="text" maxlength="1" id="f1-o6-lic-3" data-group="f1-o6-lic" class="pdf-box"></div></td></tr>
+            </tbody>
+          </table>
+
+          <div class="row g-2">
+            <div class="col-md-5">
+              <label class="form-label small mb-1 fw-semibold">Potvis ovlaštenog lica</label>
+              <input type="text" id="f1-potpis" class="form-control form-control-sm">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Zatvori</button><button class="btn btn-outline-primary btn-sm" onclick="printFsks1('download')"><i class="bi bi-download me-1"></i>Preuzmi PDF</button><button class="btn btn-primary btn-sm" onclick="printFsks1('print')"><i class="bi bi-printer me-1"></i>Štampaj</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- M2: NS BiH - Ispisnica -->
+<div class="modal fade" id="m-nsbih-1" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title d-flex align-items-center gap-2"><span class="badge badge-nsbih">NS BiH</span>Ispisnica</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="pf-nsbih-1" class="pf">
+          <div class="pf-hd">Nogometni / Fudbalski savez Bosne i Hercegovine</div>
+          <div class="pf-sub" style="font-weight:700;font-size:11pt">ISPISNICA</div>
+          <div class="pf-sh">Klub koji ispisuje</div>
+          <table class="mb-2">
+            <tr><th style="width:180px">Naziv kluba</th><td><input type="text" class="auto-club-name"></td></tr>
+            <tr><th>Broj registracije kluba</th><td><input type="text"></td></tr>
+            <tr><th>Adresa kluba</th><td><input type="text"></td></tr>
+            <tr><th>Savez / kanton</th><td><input type="text"></td></tr>
+          </table>
+          <div class="pf-sh">Podaci o igraču</div>
+          <table class="mb-2">
+            <tr><th style="width:180px">Prezime i ime</th><td><input type="text"></td></tr>
+            <tr><th>Ime oca</th><td><input type="text"></td></tr>
+            <tr><th>Datum rođenja</th><td><input type="date"></td></tr>
+            <tr><th>Mjesto rođenja</th><td><input type="text"></td></tr>
+            <tr><th>Općina / grad</th><td><input type="text"></td></tr>
+            <tr><th>Državljanstvo</th><td><input type="text"></td></tr>
+            <tr><th>JMBG</th><td><input type="text"></td></tr>
+            <tr><th>Broj registracije igrača</th><td><input type="text"></td></tr>
+            <tr><th>Registrovan u klubu od</th><td><input type="date"></td></tr>
+          </table>
+          <div class="pf-sh">Status i ugovor</div>
+          <table class="mb-2">
+            <tr>
+              <th style="width:180px">Status igrača</th>
+              <td>
+                <label><input type="radio" name="status-nsbih1" value="amater"> AMATER</label>
+                &nbsp;&nbsp;
+                <label><input type="radio" name="status-nsbih1" value="neamater"> NEAMATER (profesionalac)</label>
+              </td>
+            </tr>
+            <tr><th>Ugovor važi do</th><td><input type="date"></td></tr>
+            <tr>
+              <th>Postoje kazne / dugovanja</th>
+              <td>
+                <label><input type="radio" name="kazne-nsbih1" value="da"> DA</label>
+                &nbsp;&nbsp;
+                <label><input type="radio" name="kazne-nsbih1" value="ne"> NE</label>
+              </td>
+            </tr>
+            <tr><th>Napomena o kaznama</th><td><textarea rows="2" style="border:none;border-bottom:1px solid #475569;width:100%;resize:none"></textarea></td></tr>
+          </table>
+          <div class="pf-sh">Razlog ispisa</div>
+          <table class="mb-3">
+            <tr><td><textarea rows="2" style="border:none;border-bottom:1px solid #475569;width:100%;resize:none"></textarea></td></tr>
+          </table>
+          <div class="row">
+            <div class="col-4"><div class="pf-sh">Datum</div><input type="date" style="width:100%"></div>
+            <div class="col-4"><div class="sig">Potpis i pečat kluba</div></div>
+            <div class="col-4"><div class="sig">Potpis igrača</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Zatvori</button><button class="btn btn-primary btn-sm" onclick="printNsbih1()"><i class="bi bi-printer me-1"></i>Štampaj</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- M3: NS BiH - Ugovor amatera -->
+<div class="modal fade" id="m-nsbih-2" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title d-flex align-items-center gap-2"><span class="badge badge-nsbih">NS BiH</span>Ugovor o registraciji amatera</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="pf-nsbih-2" class="pf">
+          <div class="pf-hd">Nogometni / Fudbalski savez Bosne i Hercegovine</div>
+          <div class="pf-sub" style="font-weight:700;font-size:11pt">UGOVOR O REGISTRACIJI IGRAČA AMATERA</div>
+          <div class="pf-sh">Klub (ugovorna strana)</div>
+          <table class="mb-2">
+            <tr><th style="width:200px">Naziv kluba</th><td><input type="text" class="auto-club-name"></td></tr>
+            <tr><th>Broj registracije kluba</th><td><input type="text"></td></tr>
+            <tr><th>Adresa sjedišta</th><td><input type="text"></td></tr>
+            <tr><th>Zastupnik kluba</th><td><input type="text"></td></tr>
+            <tr><th>Funkcija zastupnika</th><td><input type="text"></td></tr>
+          </table>
+          <div class="pf-sh">Igrač (ugovorna strana)</div>
+          <table class="mb-2">
+            <tr><th style="width:200px">Prezime i ime</th><td><input type="text"></td></tr>
+            <tr><th>Ime oca</th><td><input type="text"></td></tr>
+            <tr><th>Datum rođenja</th><td><input type="date"></td></tr>
+            <tr><th>Mjesto i općina rođenja</th><td><input type="text"></td></tr>
+            <tr><th>JMBG</th><td><input type="text"></td></tr>
+            <tr><th>Adresa stanovanja</th><td><input type="text"></td></tr>
+            <tr><th>Kontakt telefon</th><td><input type="text"></td></tr>
+            <tr><th>E-mail</th><td><input type="text"></td></tr>
+          </table>
+          <div class="pf-sh">Trajanje ugovora</div>
+          <table class="mb-2">
+            <tr>
+              <td style="width:50%"><small>Datum zaključenja ugovora</small><br><input type="date"></td>
+              <td><small>Ugovor važi do</small><br><input type="date"></td>
+            </tr>
+          </table>
+          <div class="pf-sh">Obaveze igrača</div>
+          <table class="mb-2">
+            <tr><td style="padding:4px 6px">Igrač se obavezuje da će redovno pohađati treninge i utakmice kluba.</td></tr>
+            <tr><td style="padding:4px 6px">Igrač se obavezuje da će poštovati pravila i propise kluba i saveza.</td></tr>
+            <tr><td style="padding:4px 6px">Igrač se obavezuje da neće nastupati za drugi klub za vrijeme trajanja ovog ugovora.</td></tr>
+            <tr><td><input type="text" placeholder="Dodatna obaveza..."></td></tr>
+          </table>
+          <div class="pf-sh">Obaveze kluba</div>
+          <table class="mb-3">
+            <tr><td style="padding:4px 6px">Klub se obavezuje da će registrovati igrača i plaćati registracione naknade.</td></tr>
+            <tr><td style="padding:4px 6px">Klub se obavezuje da će osigurati uslove za trening i takmičenje.</td></tr>
+            <tr><td><input type="text" placeholder="Dodatna obaveza..."></td></tr>
+          </table>
+          <div class="row">
+            <div class="col-4"><div class="pf-sh">Datum i mjesto</div><input type="text" placeholder="Miejsto, datum"></div>
+            <div class="col-4"><div class="sig">Potpis zastupnika kluba</div></div>
+            <div class="col-4"><div class="sig">Potpis igrača</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Zatvori</button><button class="btn btn-primary btn-sm" onclick="printDoc('pf-nsbih-2')"><i class="bi bi-printer me-1"></i>Štampaj</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- M4: NS BiH - Ugovor profesionalca -->
+<div class="modal fade" id="m-nsbih-3" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title d-flex align-items-center gap-2"><span class="badge badge-nsbih">NS BiH</span>Ugovor o registraciji profesionalca</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="pf-nsbih-3" class="pf">
+          <div class="pf-hd">Nogometni / Fudbalski savez Bosne i Hercegovine</div>
+          <div class="pf-sub" style="font-weight:700;font-size:11pt">UGOVOR O REGISTRACIJI IGRAČA PROFESIONALCA</div>
+          <div class="pf-sh">Klub</div>
+          <table class="mb-2">
+            <tr><th style="width:200px">Naziv kluba</th><td><input type="text" class="auto-club-name"></td></tr>
+            <tr><th>Broj registracije kluba</th><td><input type="text"></td></tr>
+            <tr><th>Adresa sjedišta</th><td><input type="text"></td></tr>
+            <tr><th>Zastupnik kluba</th><td><input type="text"></td></tr>
+          </table>
+          <div class="pf-sh">Igrač</div>
+          <table class="mb-2">
+            <tr><th style="width:200px">Prezime i ime</th><td><input type="text"></td></tr>
+            <tr><th>Datum rođenja</th><td><input type="date"></td></tr>
+            <tr><th>JMBG</th><td><input type="text"></td></tr>
+            <tr><th>Adresa stanovanja</th><td><input type="text"></td></tr>
+            <tr><th>Kontakt telefon</th><td><input type="text"></td></tr>
+            <tr><th>E-mail</th><td><input type="text"></td></tr>
+          </table>
+          <div class="pf-sh">Finansijski uslovi</div>
+          <table class="mb-2">
+            <tr><th style="width:200px">Mjesečna naknada (KM)</th><td><input type="text"></td></tr>
+            <tr><th>Bonus za gol (KM)</th><td><input type="text"></td></tr>
+            <tr><th>Bonus za pobjedu (KM)</th><td><input type="text"></td></tr>
+            <tr><th>Ostali bonusi</th><td><input type="text"></td></tr>
+          </table>
+          <div class="pf-sh">Trajanje ugovora</div>
+          <table class="mb-3">
+            <tr>
+              <td style="width:50%"><small>Ugovor zaključen</small><br><input type="date"></td>
+              <td><small>Ugovor važi do</small><br><input type="date"></td>
+            </tr>
+          </table>
+          <div class="row">
+            <div class="col-4"><div class="pf-sh">Datum i mjesto</div><input type="text"></div>
+            <div class="col-4"><div class="sig">Potpis zastupnika kluba</div></div>
+            <div class="col-4"><div class="sig">Potpis igrača</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Zatvori</button><button class="btn btn-primary btn-sm" onclick="printDoc('pf-nsbih-3')"><i class="bi bi-printer me-1"></i>Štampaj</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- M5: NS BiH - Zahtjev za licencu -->
+<div class="modal fade" id="m-nsbih-4" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title d-flex align-items-center gap-2"><span class="badge badge-nsbih">NS BiH</span>Zahtjev za izdavanje licence</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="pf-nsbih-4" class="pf">
+          <div class="pf-hd">Nogometni / Fudbalski savez Bosne i Hercegovine</div>
+          <div class="pf-sub" style="font-weight:700;font-size:11pt">ZAHTJEV ZA IZDAVANJE LICENCE</div>
+          <div class="pf-sh">Vrsta licence (označiti)</div>
+          <table class="mb-2">
+            <tr>
+              <td style="width:50%"><label><input type="checkbox"> Predsjednik / Generalni sekretar</label></td>
+              <td><label><input type="checkbox"> Predstavnik kluba</label></td>
+            </tr>
+            <tr>
+              <td><label><input type="checkbox"> Šef stručnog štaba</label></td>
+              <td><label><input type="checkbox"> Trener</label></td>
+            </tr>
+            <tr>
+              <td><label><input type="checkbox"> Pomoćni trener</label></td>
+              <td><label><input type="checkbox"> Kondicioni trener</label></td>
+            </tr>
+            <tr>
+              <td><label><input type="checkbox"> Ljekar kluba</label></td>
+              <td><label><input type="checkbox"> Fizioterapeut</label></td>
+            </tr>
+            <tr>
+              <td><label><input type="checkbox"> Menadžer / Administrator</label></td>
+              <td><label><input type="checkbox"> Delegat / Inspektor</label></td>
+            </tr>
+          </table>
+          <div class="pf-sh">Kategorija licence</div>
+          <table class="mb-2">
+            <tr>
+              <td><label><input type="checkbox"> A</label></td>
+              <td><label><input type="checkbox"> B</label></td>
+              <td><label><input type="checkbox"> C</label></td>
+              <td><label><input type="checkbox"> D / Grassroots</label></td>
+              <td><label><input type="checkbox"> Pro</label></td>
+            </tr>
+          </table>
+          <div class="pf-sh">Podaci o podnosiocu zahtjeva</div>
+          <table class="mb-2">
+            <tr><th style="width:200px">Prezime i ime</th><td><input type="text"></td></tr>
+            <tr><th>Datum rođenja</th><td><input type="date"></td></tr>
+            <tr><th>JMBG</th><td><input type="text"></td></tr>
+            <tr><th>Adresa stanovanja</th><td><input type="text"></td></tr>
+            <tr><th>Kontakt telefon</th><td><input type="text"></td></tr>
+            <tr><th>E-mail</th><td><input type="text"></td></tr>
+          </table>
+          <div class="pf-sh">Podaci o klubu</div>
+          <table class="mb-2">
+            <tr><th style="width:200px">Naziv kluba</th><td><input type="text" class="auto-club-name"></td></tr>
+            <tr><th>Savez / kanton</th><td><input type="text"></td></tr>
+          </table>
+          <div class="pf-sh">Priložena dokumentacija (označiti)</div>
+          <table class="mb-3">
+            <tr><td><label><input type="checkbox"> Kopija diplome / certifikata</label></td></tr>
+            <tr><td><label><input type="checkbox"> Kopija lične karte / pasoša</label></td></tr>
+            <tr><td><label><input type="checkbox"> Fotografija (passport format)</label></td></tr>
+            <tr><td><label><input type="checkbox"> Potvrda kluba</label></td></tr>
+            <tr><td><label><input type="checkbox"> Dokaz o uplati naknade</label></td></tr>
+          </table>
+          <div class="row">
+            <div class="col-4"><div class="pf-sh">Datum</div><input type="date"></div>
+            <div class="col-4"><div class="sig">Potpis podnosioca</div></div>
+            <div class="col-4"><div class="sig">Potpis i pečat kluba</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Zatvori</button><button class="btn btn-primary btn-sm" onclick="printNsbih4()"><i class="bi bi-printer me-1"></i>Štampaj</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- M6: NS BiH - Zahtjev za međunarodni certifikat -->
+<div class="modal fade" id="m-nsbih-5" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title d-flex align-items-center gap-2"><span class="badge badge-nsbih">NS BiH</span>Zahtjev za međunarodni certifikat</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="pf-nsbih-5" class="pf">
+          <div class="pf-hd">Nogometni / Fudbalski savez Bosne i Hercegovine</div>
+          <div class="pf-sub" style="font-weight:700;font-size:11pt">ZAHTJEV ZA MEĐUNARODNI CERTIFIKAT O TRANSFERU (ITC)</div>
+          <div class="pf-sh">Podaci o igraču</div>
+          <table class="mb-2">
+            <tr><th style="width:200px">Prezime i ime</th><td><input type="text"></td></tr>
+            <tr><th>Datum rođenja</th><td><input type="date"></td></tr>
+            <tr><th>Državljanstvo</th><td><input type="text"></td></tr>
+            <tr><th>Broj pasoša</th><td><input type="text"></td></tr>
+            <tr><th>JMBG / ID broj</th><td><input type="text"></td></tr>
+          </table>
+          <div class="pf-sh">Klub koji šalje (registracioni klub)</div>
+          <table class="mb-2">
+            <tr><th style="width:200px">Naziv kluba</th><td><input type="text" class="auto-club-name"></td></tr>
+            <tr><th>Savez</th><td><input type="text" value="NS/NSBiH"></td></tr>
+            <tr><th>Zemlja</th><td><input type="text" value="Bosna i Hercegovina"></td></tr>
+            <tr><th>Registrovan od</th><td><input type="date"></td></tr>
+            <tr><th>Ugovor istekao / raskinut</th><td><input type="date"></td></tr>
+          </table>
+          <div class="pf-sh">Klub koji prima</div>
+          <table class="mb-2">
+            <tr><th style="width:200px">Naziv kluba</th><td><input type="text"></td></tr>
+            <tr><th>Savez</th><td><input type="text"></td></tr>
+            <tr><th>Zemlja</th><td><input type="text"></td></tr>
+          </table>
+          <div class="pf-sh">Vrsta transfera</div>
+          <table class="mb-3">
+            <tr>
+              <td><label><input type="radio" name="transfer-type"> Trajni transfer</label></td>
+              <td><label><input type="radio" name="transfer-type"> Posudba (rok: <input type="text" style="width:100px">)</label></td>
+            </tr>
+            <tr><th style="width:200px">Datum transfera</th><td><input type="date"></td></tr>
+          </table>
+          <div class="row">
+            <div class="col-6"><div class="sig">Potpis i pečat kluba koji šalje</div></div>
+            <div class="col-6"><div class="sig">Ovjera NS BiH</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Zatvori</button><button class="btn btn-primary btn-sm" onclick="printNsbih5()"><i class="bi bi-printer me-1"></i>Štampaj</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- M7: NS FBiH - Karton izmjene -->
+<div class="modal fade" id="m-nsfbih-1" tabindex="-1">
+  <div class="modal-dialog modal-md modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title d-flex align-items-center gap-2"><span class="badge badge-nsfbih">NS FBiH</span>Karton izmjene igrača</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="pf-nsfbih-1" class="pf">
+          <div class="pf-hd">Nogometni savez Federacije Bosne i Hercegovine</div>
+          <div class="pf-sub" style="font-weight:700;font-size:11pt">KARTON IZMJENE IGRAČA</div>
+          <table class="mb-2">
+            <tr><th style="width:180px">Takmičenje</th><td><input type="text"></td></tr>
+            <tr><th>Kolo / runda</th><td><input type="text"></td></tr>
+            <tr><th>Datum</th><td><input type="date"></td></tr>
+            <tr><th>Domaćin</th><td><input type="text" class="auto-club-name"></td></tr>
+            <tr><th>Gost</th><td><input type="text"></td></tr>
+            <tr><th>Klub koji vrši izmjenu</th><td><input type="text" class="auto-club-name"></td></tr>
+          </table>
+          <div class="pf-sh">Izmjene</div>
+          <table>
+            <thead>
+              <tr>
+                <th style="width:50px;text-align:center">Minuta</th>
+                <th>Igrač izlazi</th>
+                <th style="width:55px;text-align:center">Br. dresa</th>
+                <th>Igrač ulazi</th>
+                <th style="width:55px;text-align:center">Br. dresa</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td></tr>
+              <tr><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td></tr>
+              <tr><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td></tr>
+              <tr><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td></tr>
+              <tr><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td><td><input type="text"></td></tr>
+            </tbody>
+          </table>
+          <div class="row mt-3">
+            <div class="col-6"><div class="sig">Potpis trenera</div></div>
+            <div class="col-6"><div class="sig">Potpis delegata</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Zatvori</button><button class="btn btn-primary btn-sm" onclick="printNsfbih1()"><i class="bi bi-printer me-1"></i>Štampaj</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- M8: NS FBiH - Ispisnica -->
+<div class="modal fade" id="m-nsfbih-2" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title d-flex align-items-center gap-2"><span class="badge badge-nsfbih">NS FBiH</span>Ispisnica / Istupnica</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="pf-nsfbih-2" class="pf">
+          <div class="pf-hd">Nogometni savez Federacije Bosne i Hercegovine</div>
+          <div class="pf-sub" style="font-weight:700;font-size:11pt">ISPISNICA / ISTUPNICA</div>
+          <div class="pf-sh">Klub koji ispisuje</div>
+          <table class="mb-2">
+            <tr><th style="width:180px">Naziv kluba</th><td><input type="text" class="auto-club-name"></td></tr>
+            <tr><th>Broj registracije</th><td><input type="text"></td></tr>
+            <tr><th>Adresa</th><td><input type="text"></td></tr>
+            <tr><th>Savez / NS FBiH kanton</th><td><input type="text"></td></tr>
+          </table>
+          <div class="pf-sh">Podaci o igraču</div>
+          <table class="mb-2">
+            <tr><th style="width:180px">Prezime i ime</th><td><input type="text"></td></tr>
+            <tr><th>Ime oca</th><td><input type="text"></td></tr>
+            <tr><th>Datum rođenja</th><td><input type="date"></td></tr>
+            <tr><th>Mjesto rođenja</th><td><input type="text"></td></tr>
+            <tr><th>Državljanstvo</th><td><input type="text"></td></tr>
+            <tr><th>JMBG</th><td><input type="text"></td></tr>
+            <tr><th>Broj registracije igrača</th><td><input type="text"></td></tr>
+            <tr><th>U klubu od</th><td><input type="date"></td></tr>
+          </table>
+          <div class="pf-sh">Status</div>
+          <table class="mb-2">
+            <tr>
+              <th style="width:180px">Status igrača</th>
+              <td>
+                <label><input type="radio" name="st-nsfbih2"> AMATER</label>&nbsp;&nbsp;
+                <label><input type="radio" name="st-nsfbih2"> NEAMATER</label>
+              </td>
+            </tr>
+            <tr><th>Ugovor važi do</th><td><input type="date"></td></tr>
+            <tr>
+              <th>Postoje dugovanja</th>
+              <td><label><input type="radio" name="dug-nsfbih2"> DA</label>&nbsp;&nbsp;<label><input type="radio" name="dug-nsfbih2"> NE</label></td>
+            </tr>
+          </table>
+          <div class="pf-sh">Razlog ispisa</div>
+          <table class="mb-3"><tr><td><textarea rows="2" style="width:100%;border:none;border-bottom:1px solid #475569;resize:none"></textarea></td></tr></table>
+          <div class="row">
+            <div class="col-4"><div class="pf-sh">Datum</div><input type="date"></div>
+            <div class="col-4"><div class="sig">Potpis i pečat kluba</div></div>
+            <div class="col-4"><div class="sig">Potpis igrača</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Zatvori</button><button class="btn btn-primary btn-sm" onclick="printNsfbih2()"><i class="bi bi-printer me-1"></i>Štampaj</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- M9: NS FBiH - Ugovor o saradnji klubova -->
+<div class="modal fade" id="m-nsfbih-3" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title d-flex align-items-center gap-2"><span class="badge badge-nsfbih">NS FBiH</span>Ugovor o saradnji klubova</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="pf-nsfbih-3" class="pf">
+          <div class="pf-hd">Nogometni savez Federacije Bosne i Hercegovine</div>
+          <div class="pf-sub" style="font-weight:700;font-size:11pt">UGOVOR O SARADNJI IZMEĐU KLUBOVA</div>
+          <div class="pf-sh">Klub A (matični klub)</div>
+          <table class="mb-2">
+            <tr><th style="width:180px">Naziv kluba</th><td><input type="text" class="auto-club-name"></td></tr>
+            <tr><th>Adresa</th><td><input type="text"></td></tr>
+            <tr><th>Zastupnik</th><td><input type="text"></td></tr>
+          </table>
+          <div class="pf-sh">Klub B (partnerski klub)</div>
+          <table class="mb-2">
+            <tr><th style="width:180px">Naziv kluba</th><td><input type="text"></td></tr>
+            <tr><th>Adresa</th><td><input type="text"></td></tr>
+            <tr><th>Zastupnik</th><td><input type="text"></td></tr>
+          </table>
+          <div class="pf-sh">Predmet saradnje — igrač</div>
+          <table class="mb-2">
+            <tr><th style="width:180px">Prezime i ime igrača</th><td><input type="text"></td></tr>
+            <tr><th>Datum rođenja</th><td><input type="date"></td></tr>
+            <tr><th>Broj registracije</th><td><input type="text"></td></tr>
+          </table>
+          <div class="pf-sh">Uslovi saradnje</div>
+          <table class="mb-2">
+            <tr>
+              <th style="width:180px">Vrsta saradnje</th>
+              <td>
+                <label><input type="radio" name="sar-tip"> Posudba</label>&nbsp;&nbsp;
+                <label><input type="radio" name="sar-tip"> Zajednički nastup</label>&nbsp;&nbsp;
+                <label><input type="radio" name="sar-tip"> Ostalo</label>
+              </td>
+            </tr>
+            <tr><td colspan="2"><small>Period saradnje od</small>&nbsp;<input type="date" style="width:160px">&nbsp;do&nbsp;<input type="date" style="width:160px"></td></tr>
+            <tr><th>Finansijski uslovi</th><td><input type="text" placeholder="Naknada / besplatno / ..."></td></tr>
+          </table>
+          <div class="row mt-3">
+            <div class="col-6"><div class="sig">Potpis i pečat kluba A</div></div>
+            <div class="col-6"><div class="sig">Potpis i pečat kluba B</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Zatvori</button><button class="btn btn-primary btn-sm" onclick="printNsfbih3()"><i class="bi bi-printer me-1"></i>Štampaj</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- M10-12: NS FBiH - Spisak igrača (3 variants) — clean input form, print generates original paper -->
+<div class="modal fade" id="m-nsfbih-4" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title d-flex align-items-center gap-2"><span class="badge badge-nsfbih">NS FBiH</span>Spisak igrača — Omladinska liga</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="form-nsfbih-4">
+          <div class="pf-sh mb-2">Podaci o utakmici</div>
+          <div class="row g-2 mb-2">
+            <div class="col-md-7"><label class="form-label small mb-1 fw-semibold">Takmičenje / uzrast</label><input type="text" id="n4-takm" class="form-control form-control-sm"></div>
+            <div class="col-md-2"><label class="form-label small mb-1 fw-semibold">Kolo</label><input type="text" id="n4-kolo" class="form-control form-control-sm"></div>
+          </div>
+          <div class="row g-2 mb-2">
+            <div class="col-md-3"><label class="form-label small mb-1 fw-semibold">Datum</label><input type="date" id="n4-datum" class="form-control form-control-sm"></div>
+            <div class="col-md-2"><label class="form-label small mb-1 fw-semibold">Sat</label><input type="text" id="n4-sat" class="form-control form-control-sm" placeholder="14:00"></div>
+            <div class="col-md-7"><label class="form-label small mb-1 fw-semibold">Stadion</label><input type="text" id="n4-stadion" class="form-control form-control-sm"></div>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-md-6"><label class="form-label small mb-1 fw-semibold">Domaćin</label><input type="text" id="n4-domacin" class="form-control form-control-sm"></div>
+            <div class="col-md-6"><label class="form-label small mb-1 fw-semibold">Gost</label><input type="text" id="n4-gost" class="form-control form-control-sm"></div>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="pf-sh mb-2">Igrači — domaći</div>
+              <table class="table table-sm table-bordered mb-1" style="font-size:.82rem">
+                <thead class="table-light"><tr><th style="width:28px;text-align:center">#</th><th style="width:58px;text-align:center">Dres</th><th>Prezime i ime</th><th style="width:88px;text-align:center">Reg.br.</th></tr></thead>
+                <tbody id="n4-ph"></tbody>
+              </table>
+            </div>
+            <div class="col-md-6">
+              <div class="pf-sh mb-2">Igrači — gost</div>
+              <table class="table table-sm table-bordered mb-1" style="font-size:.82rem">
+                <thead class="table-light"><tr><th style="width:28px;text-align:center">#</th><th style="width:58px;text-align:center">Dres</th><th>Prezime i ime</th><th style="width:88px;text-align:center">Reg.br.</th></tr></thead>
+                <tbody id="n4-pa"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="row g-3 mt-1">
+            <div class="col-md-6">
+              <div class="pf-sh mb-2">Službene osobe — domaći</div>
+              <table class="table table-sm table-bordered" style="font-size:.82rem">
+                <thead class="table-light"><tr><th style="width:120px">Funkcija</th><th>Prezime i ime</th><th style="width:100px">Br. licence</th></tr></thead>
+                <tbody>
+                  <tr><td>Predstavnik</td><td><input type="text" id="n4-ho1-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><input type="text" id="n4-ho1-lic" class="border-0 w-100 bg-transparent" style="outline:none"></td></tr>
+                  <tr><td>Trener</td><td><input type="text" id="n4-ho2-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><input type="text" id="n4-ho2-lic" class="border-0 w-100 bg-transparent" style="outline:none"></td></tr>
+                  <tr><td>Pom. trener</td><td><input type="text" id="n4-ho3-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><input type="text" id="n4-ho3-lic" class="border-0 w-100 bg-transparent" style="outline:none"></td></tr>
+                  <tr><td>Ljekar</td><td><input type="text" id="n4-ho4-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><input type="text" id="n4-ho4-lic" class="border-0 w-100 bg-transparent" style="outline:none"></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="col-md-6">
+              <div class="pf-sh mb-2">Službene osobe — gost</div>
+              <table class="table table-sm table-bordered" style="font-size:.82rem">
+                <thead class="table-light"><tr><th style="width:120px">Funkcija</th><th>Prezime i ime</th><th style="width:100px">Br. licence</th></tr></thead>
+                <tbody>
+                  <tr><td>Predstavnik</td><td><input type="text" id="n4-ao1-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><input type="text" id="n4-ao1-lic" class="border-0 w-100 bg-transparent" style="outline:none"></td></tr>
+                  <tr><td>Trener</td><td><input type="text" id="n4-ao2-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><input type="text" id="n4-ao2-lic" class="border-0 w-100 bg-transparent" style="outline:none"></td></tr>
+                  <tr><td>Pom. trener</td><td><input type="text" id="n4-ao3-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><input type="text" id="n4-ao3-lic" class="border-0 w-100 bg-transparent" style="outline:none"></td></tr>
+                  <tr><td>Ljekar</td><td><input type="text" id="n4-ao4-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><input type="text" id="n4-ao4-lic" class="border-0 w-100 bg-transparent" style="outline:none"></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Zatvori</button><button class="btn btn-primary btn-sm" onclick="printNsfbih4()"><i class="bi bi-printer me-1"></i>Štampaj</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="m-nsfbih-5" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title d-flex align-items-center gap-2"><span class="badge badge-nsfbih">NS FBiH</span>Spisak igrača — Druga liga FBiH</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="form-nsfbih-5">
+          <div class="pf-sh mb-2">Podaci o utakmici</div>
+          <div class="row g-2 mb-2">
+            <div class="col-md-5"><label class="form-label small mb-1 fw-semibold">Grupa</label><input type="text" id="n5-grupa" class="form-control form-control-sm"></div>
+            <div class="col-md-2"><label class="form-label small mb-1 fw-semibold">Kolo</label><input type="text" id="n5-kolo" class="form-control form-control-sm"></div>
+          </div>
+          <div class="row g-2 mb-2">
+            <div class="col-md-3"><label class="form-label small mb-1 fw-semibold">Datum</label><input type="date" id="n5-datum" class="form-control form-control-sm"></div>
+            <div class="col-md-2"><label class="form-label small mb-1 fw-semibold">Sat</label><input type="text" id="n5-sat" class="form-control form-control-sm" placeholder="14:00"></div>
+            <div class="col-md-7"><label class="form-label small mb-1 fw-semibold">Stadion</label><input type="text" id="n5-stadion" class="form-control form-control-sm"></div>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-md-6"><label class="form-label small mb-1 fw-semibold">Domaćin</label><input type="text" id="n5-domacin" class="form-control form-control-sm"></div>
+            <div class="col-md-6"><label class="form-label small mb-1 fw-semibold">Gost</label><input type="text" id="n5-gost" class="form-control form-control-sm"></div>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="pf-sh mb-2">Igrači — domaći</div>
+              <table class="table table-sm table-bordered mb-1" style="font-size:.82rem">
+                <thead class="table-light"><tr><th style="width:28px;text-align:center">#</th><th style="width:58px;text-align:center">Dres</th><th>Prezime i ime</th><th style="width:88px;text-align:center">Reg.br.</th></tr></thead>
+                <tbody id="n5-ph"></tbody>
+              </table>
+            </div>
+            <div class="col-md-6">
+              <div class="pf-sh mb-2">Igrači — gost</div>
+              <table class="table table-sm table-bordered mb-1" style="font-size:.82rem">
+                <thead class="table-light"><tr><th style="width:28px;text-align:center">#</th><th style="width:58px;text-align:center">Dres</th><th>Prezime i ime</th><th style="width:88px;text-align:center">Reg.br.</th></tr></thead>
+                <tbody id="n5-pa"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="row g-3 mt-1">
+            <div class="col-md-6">
+              <div class="pf-sh mb-2">Službene osobe — domaći</div>
+              <table class="table table-sm table-bordered" style="font-size:.82rem">
+                <thead class="table-light"><tr><th style="width:120px">Funkcija</th><th>Prezime i ime</th><th style="width:100px">Br. licence</th></tr></thead>
+                <tbody>
+                  <tr><td>Predstavnik</td><td><input type="text" id="n5-ho1-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><input type="text" id="n5-ho1-lic" class="border-0 w-100 bg-transparent" style="outline:none"></td></tr>
+                  <tr><td>Šef str. štaba</td><td><input type="text" id="n5-ho2-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><input type="text" id="n5-ho2-lic" class="border-0 w-100 bg-transparent" style="outline:none"></td></tr>
+                  <tr><td>Trener</td><td><input type="text" id="n5-ho3-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><input type="text" id="n5-ho3-lic" class="border-0 w-100 bg-transparent" style="outline:none"></td></tr>
+                  <tr><td>Pom. trener</td><td><input type="text" id="n5-ho4-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><input type="text" id="n5-ho4-lic" class="border-0 w-100 bg-transparent" style="outline:none"></td></tr>
+                  <tr><td>Ljekar</td><td><input type="text" id="n5-ho5-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><input type="text" id="n5-ho5-lic" class="border-0 w-100 bg-transparent" style="outline:none"></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="col-md-6">
+              <div class="pf-sh mb-2">Službene osobe — gost</div>
+              <table class="table table-sm table-bordered" style="font-size:.82rem">
+                <thead class="table-light"><tr><th style="width:120px">Funkcija</th><th>Prezime i ime</th><th style="width:100px">Br. licence</th></tr></thead>
+                <tbody>
+                  <tr><td>Predstavnik</td><td><input type="text" id="n5-ao1-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><input type="text" id="n5-ao1-lic" class="border-0 w-100 bg-transparent" style="outline:none"></td></tr>
+                  <tr><td>Šef str. štaba</td><td><input type="text" id="n5-ao2-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><input type="text" id="n5-ao2-lic" class="border-0 w-100 bg-transparent" style="outline:none"></td></tr>
+                  <tr><td>Trener</td><td><input type="text" id="n5-ao3-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><input type="text" id="n5-ao3-lic" class="border-0 w-100 bg-transparent" style="outline:none"></td></tr>
+                  <tr><td>Pom. trener</td><td><input type="text" id="n5-ao4-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><input type="text" id="n5-ao4-lic" class="border-0 w-100 bg-transparent" style="outline:none"></td></tr>
+                  <tr><td>Ljekar</td><td><input type="text" id="n5-ao5-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><input type="text" id="n5-ao5-lic" class="border-0 w-100 bg-transparent" style="outline:none"></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Zatvori</button><button class="btn btn-primary btn-sm" onclick="printNsfbih5()"><i class="bi bi-printer me-1"></i>Štampaj</button></div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="m-nsfbih-6" tabindex="-1">
+  <div class="modal-dialog modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title d-flex align-items-center gap-2"><span class="badge badge-nsfbih">NS FBiH</span>Spisak igrača — Prva liga FBiH</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="form-nsfbih-6">
+          <div class="pf-sh mb-2">Podaci o utakmici</div>
+          <div class="row g-2 mb-2">
+            <div class="col-md-5"><label class="form-label small mb-1 fw-semibold">Sezona</label><input type="text" id="n6-sezona" class="form-control form-control-sm" placeholder="2025/2026"></div>
+            <div class="col-md-2"><label class="form-label small mb-1 fw-semibold">Kolo</label><input type="text" id="n6-kolo" class="form-control form-control-sm"></div>
+          </div>
+          <div class="row g-2 mb-2">
+            <div class="col-md-3"><label class="form-label small mb-1 fw-semibold">Datum</label><input type="date" id="n6-datum" class="form-control form-control-sm"></div>
+            <div class="col-md-2"><label class="form-label small mb-1 fw-semibold">Sat</label><input type="text" id="n6-sat" class="form-control form-control-sm" placeholder="14:00"></div>
+            <div class="col-md-7"><label class="form-label small mb-1 fw-semibold">Stadion</label><input type="text" id="n6-stadion" class="form-control form-control-sm"></div>
+          </div>
+          <div class="row g-2 mb-3">
+            <div class="col-md-6"><label class="form-label small mb-1 fw-semibold">Domaćin</label><input type="text" id="n6-domacin" class="form-control form-control-sm"></div>
+            <div class="col-md-6"><label class="form-label small mb-1 fw-semibold">Gost</label><input type="text" id="n6-gost" class="form-control form-control-sm"></div>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="pf-sh mb-2">Igrači — domaći</div>
+              <table class="table table-sm table-bordered mb-1" style="font-size:.82rem">
+                <thead class="table-light"><tr><th style="width:28px;text-align:center">#</th><th style="width:58px;text-align:center">Dres</th><th>Prezime i ime</th><th style="width:88px;text-align:center">Reg.br.</th></tr></thead>
+                <tbody id="n6-ph"></tbody>
+              </table>
+            </div>
+            <div class="col-md-6">
+              <div class="pf-sh mb-2">Igrači — gost</div>
+              <table class="table table-sm table-bordered mb-1" style="font-size:.82rem">
+                <thead class="table-light"><tr><th style="width:28px;text-align:center">#</th><th style="width:58px;text-align:center">Dres</th><th>Prezime i ime</th><th style="width:88px;text-align:center">Reg.br.</th></tr></thead>
+                <tbody id="n6-pa"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="row g-3 mt-1">
+            <div class="col-md-6">
+              <div class="pf-sh mb-2">Službene osobe — domaći</div>
+              <table class="table table-sm table-bordered" style="font-size:.82rem">
+                <thead class="table-light"><tr><th style="width:120px">Funkcija</th><th>Prezime i ime</th><th style="width:100px">Br. licence</th></tr></thead>
+                <tbody>
+                  <tr><td>Predstavnik</td><td><input type="text" id="n6-ho1-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><input type="text" id="n6-ho1-lic" class="border-0 w-100 bg-transparent" style="outline:none"></td></tr>
+                  <tr><td>Šef str. štaba</td><td><input type="text" id="n6-ho2-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><input type="text" id="n6-ho2-lic" class="border-0 w-100 bg-transparent" style="outline:none"></td></tr>
+                  <tr><td>Trener</td><td><input type="text" id="n6-ho3-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><input type="text" id="n6-ho3-lic" class="border-0 w-100 bg-transparent" style="outline:none"></td></tr>
+                  <tr><td>Pom. trener</td><td><input type="text" id="n6-ho4-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><input type="text" id="n6-ho4-lic" class="border-0 w-100 bg-transparent" style="outline:none"></td></tr>
+                  <tr><td>Ljekar</td><td><input type="text" id="n6-ho5-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><input type="text" id="n6-ho5-lic" class="border-0 w-100 bg-transparent" style="outline:none"></td></tr>
+                  <tr><td>Fizioterapeut</td><td><input type="text" id="n6-ho6-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><input type="text" id="n6-ho6-lic" class="border-0 w-100 bg-transparent" style="outline:none"></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="col-md-6">
+              <div class="pf-sh mb-2">Službene osobe — gost</div>
+              <table class="table table-sm table-bordered" style="font-size:.82rem">
+                <thead class="table-light"><tr><th style="width:120px">Funkcija</th><th>Prezime i ime</th><th style="width:100px">Br. licence</th></tr></thead>
+                <tbody>
+                  <tr><td>Predstavnik</td><td><input type="text" id="n6-ao1-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><input type="text" id="n6-ao1-lic" class="border-0 w-100 bg-transparent" style="outline:none"></td></tr>
+                  <tr><td>Šef str. štaba</td><td><input type="text" id="n6-ao2-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><input type="text" id="n6-ao2-lic" class="border-0 w-100 bg-transparent" style="outline:none"></td></tr>
+                  <tr><td>Trener</td><td><input type="text" id="n6-ao3-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><input type="text" id="n6-ao3-lic" class="border-0 w-100 bg-transparent" style="outline:none"></td></tr>
+                  <tr><td>Pom. trener</td><td><input type="text" id="n6-ao4-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><input type="text" id="n6-ao4-lic" class="border-0 w-100 bg-transparent" style="outline:none"></td></tr>
+                  <tr><td>Ljekar</td><td><input type="text" id="n6-ao5-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><input type="text" id="n6-ao5-lic" class="border-0 w-100 bg-transparent" style="outline:none"></td></tr>
+                  <tr><td>Fizioterapeut</td><td><input type="text" id="n6-ao6-ime" class="border-0 w-100 bg-transparent" style="outline:none"></td><td><input type="text" id="n6-ao6-lic" class="border-0 w-100 bg-transparent" style="outline:none"></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Zatvori</button><button class="btn btn-primary btn-sm" onclick="printNsfbih6()"><i class="bi bi-printer me-1"></i>Štampaj</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- M13: NS FBiH - Ugovor amatera -->
+<div class="modal fade" id="m-nsfbih-7" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title d-flex align-items-center gap-2"><span class="badge badge-nsfbih">NS FBiH</span>Ugovor o registraciji amatera</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="pf-nsfbih-7" class="pf">
+          <div class="pf-hd">Nogometni savez Federacije Bosne i Hercegovine</div>
+          <div class="pf-sub" style="font-weight:700;font-size:11pt">UGOVOR O REGISTRACIJI IGRAČA AMATERA</div>
+          <div class="pf-sh">Klub</div>
+          <table class="mb-2">
+            <tr><th style="width:200px">Naziv kluba</th><td><input type="text" class="auto-club-name"></td></tr>
+            <tr><th>Broj registracije</th><td><input type="text"></td></tr>
+            <tr><th>Adresa</th><td><input type="text"></td></tr>
+            <tr><th>Zastupnik kluba</th><td><input type="text"></td></tr>
+            <tr><th>Funkcija zastupnika</th><td><input type="text"></td></tr>
+          </table>
+          <div class="pf-sh">Igrač</div>
+          <table class="mb-2">
+            <tr><th style="width:200px">Prezime i ime</th><td><input type="text"></td></tr>
+            <tr><th>Ime oca</th><td><input type="text"></td></tr>
+            <tr><th>Datum rođenja</th><td><input type="date"></td></tr>
+            <tr><th>Mjesto i općina rođenja</th><td><input type="text"></td></tr>
+            <tr><th>JMBG</th><td><input type="text"></td></tr>
+            <tr><th>Adresa</th><td><input type="text"></td></tr>
+            <tr><th>Telefon</th><td><input type="text"></td></tr>
+          </table>
+          <div class="pf-sh">Trajanje ugovora</div>
+          <table class="mb-3">
+            <tr>
+              <td style="width:50%"><small>Datum zaključenja</small><br><input type="date"></td>
+              <td><small>Ugovor važi do</small><br><input type="date"></td>
+            </tr>
+          </table>
+          <div class="row">
+            <div class="col-4"><div class="pf-sh">Datum i mjesto</div><input type="text"></div>
+            <div class="col-4"><div class="sig">Potpis zastupnika kluba</div></div>
+            <div class="col-4"><div class="sig">Potpis igrača</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Zatvori</button><button class="btn btn-primary btn-sm" onclick="printDoc('pf-nsfbih-7')"><i class="bi bi-printer me-1"></i>Štampaj</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- M14: NS FBiH - Ugovor profesionalca -->
+<div class="modal fade" id="m-nsfbih-8" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title d-flex align-items-center gap-2"><span class="badge badge-nsfbih">NS FBiH</span>Ugovor o registraciji profesionalca</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="pf-nsfbih-8" class="pf">
+          <div class="pf-hd">Nogometni savez Federacije Bosne i Hercegovine</div>
+          <div class="pf-sub" style="font-weight:700;font-size:11pt">UGOVOR O REGISTRACIJI IGRAČA PROFESIONALCA</div>
+          <div class="pf-sh">Klub</div>
+          <table class="mb-2">
+            <tr><th style="width:200px">Naziv kluba</th><td><input type="text" class="auto-club-name"></td></tr>
+            <tr><th>Broj registracije</th><td><input type="text"></td></tr>
+            <tr><th>Adresa</th><td><input type="text"></td></tr>
+            <tr><th>Zastupnik kluba</th><td><input type="text"></td></tr>
+          </table>
+          <div class="pf-sh">Igrač</div>
+          <table class="mb-2">
+            <tr><th style="width:200px">Prezime i ime</th><td><input type="text"></td></tr>
+            <tr><th>Datum rođenja</th><td><input type="date"></td></tr>
+            <tr><th>JMBG</th><td><input type="text"></td></tr>
+            <tr><th>Adresa</th><td><input type="text"></td></tr>
+            <tr><th>Telefon</th><td><input type="text"></td></tr>
+          </table>
+          <div class="pf-sh">Finansijski uslovi</div>
+          <table class="mb-2">
+            <tr><th style="width:200px">Mjesečna naknada (KM)</th><td><input type="text"></td></tr>
+            <tr><th>Bonus za gol (KM)</th><td><input type="text"></td></tr>
+            <tr><th>Bonus za pobjedu (KM)</th><td><input type="text"></td></tr>
+            <tr><th>Ostale naknade</th><td><input type="text"></td></tr>
+          </table>
+          <div class="pf-sh">Trajanje ugovora</div>
+          <table class="mb-3">
+            <tr>
+              <td style="width:50%"><small>Od</small><br><input type="date"></td>
+              <td><small>Do</small><br><input type="date"></td>
+            </tr>
+          </table>
+          <div class="row">
+            <div class="col-4"><div class="pf-sh">Datum i mjesto</div><input type="text"></div>
+            <div class="col-4"><div class="sig">Potpis zastupnika kluba</div></div>
+            <div class="col-4"><div class="sig">Potpis igrača</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Zatvori</button><button class="btn btn-primary btn-sm" onclick="printDoc('pf-nsfbih-8')"><i class="bi bi-printer me-1"></i>Štampaj</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- M15: NS FBiH - Upitnik akreditacija kalendarska -->
+<div class="modal fade" id="m-nsfbih-9" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title d-flex align-items-center gap-2"><span class="badge badge-nsfbih">NS FBiH</span>Upitnik za akreditaciju (kalendarska sezona)</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="pf-nsfbih-9" class="pf">
+          <div class="pf-hd">Nogometni savez Federacije Bosne i Hercegovine</div>
+          <div class="pf-sub" style="font-weight:700;font-size:11pt">UPITNIK ZA AKREDITACIJU — KALENDARSKA SEZONA</div>
+          <div class="pf-sh">Podaci o klubu</div>
+          <table class="mb-2">
+            <tr><th style="width:200px">Naziv kluba</th><td><input type="text" class="auto-club-name"></td></tr>
+            <tr><th>Takmičenje</th><td><input type="text"></td></tr>
+            <tr><th>Sezona</th><td><input type="text"></td></tr>
+          </table>
+          <div class="pf-sh">Podaci o osobi za akreditaciju</div>
+          <table class="mb-2">
+            <tr><th style="width:200px">Prezime i ime</th><td><input type="text"></td></tr>
+            <tr><th>Datum rođenja</th><td><input type="date"></td></tr>
+            <tr><th>JMBG</th><td><input type="text"></td></tr>
+            <tr><th>Adresa</th><td><input type="text"></td></tr>
+            <tr><th>Telefon</th><td><input type="text"></td></tr>
+            <tr><th>E-mail</th><td><input type="text"></td></tr>
+          </table>
+          <div class="pf-sh">Vrsta akreditacije (označiti)</div>
+          <table class="mb-2">
+            <tr><td><label><input type="checkbox"> Predsjednik / Dopredsjednik kluba</label></td></tr>
+            <tr><td><label><input type="checkbox"> Generalni sekretar</label></td></tr>
+            <tr><td><label><input type="checkbox"> Predstavnik kluba (menadžer)</label></td></tr>
+            <tr><td><label><input type="checkbox"> Šef stručnog štaba</label></td></tr>
+            <tr><td><label><input type="checkbox"> Trener / Pomoćni trener</label></td></tr>
+            <tr><td><label><input type="checkbox"> Kondicioni trener</label></td></tr>
+            <tr><td><label><input type="checkbox"> Ljekar kluba</label></td></tr>
+            <tr><td><label><input type="checkbox"> Fizioterapeut</label></td></tr>
+            <tr><td><label><input type="checkbox"> Analitičar / Scout</label></td></tr>
+          </table>
+          <div class="pf-sh">Priložena dokumentacija</div>
+          <table class="mb-3">
+            <tr><td><label><input type="checkbox"> Kopija lične karte</label></td></tr>
+            <tr><td><label><input type="checkbox"> Fotografija (passport format, 3×4 cm)</label></td></tr>
+            <tr><td><label><input type="checkbox"> Kopija diplome / certifikata / licence</label></td></tr>
+            <tr><td><label><input type="checkbox"> Potvrda o zaposlenju / angažmanu u klubu</label></td></tr>
+            <tr><td><label><input type="checkbox"> Dokaz o uplati akreditacione naknade</label></td></tr>
+          </table>
+          <div class="row">
+            <div class="col-4"><div class="pf-sh">Datum podnošenja</div><input type="date"></div>
+            <div class="col-4"><div class="sig">Potpis podnosioca</div></div>
+            <div class="col-4"><div class="sig">Potpis i pečat kluba</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Zatvori</button><button class="btn btn-primary btn-sm" onclick="printNsfbih9()"><i class="bi bi-printer me-1"></i>Štampaj</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- M16: NS FBiH - Upitnik akreditacija takmičarska -->
+<div class="modal fade" id="m-nsfbih-10" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title d-flex align-items-center gap-2"><span class="badge badge-nsfbih">NS FBiH</span>Upitnik za akreditaciju (takmičarska sezona)</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="pf-nsfbih-10" class="pf">
+          <div class="pf-hd">Nogometni savez Federacije Bosne i Hercegovine</div>
+          <div class="pf-sub" style="font-weight:700;font-size:11pt">UPITNIK ZA AKREDITACIJU — TAKMIČARSKA SEZONA</div>
+          <div class="pf-sh">Podaci o klubu</div>
+          <table class="mb-2">
+            <tr><th style="width:200px">Naziv kluba</th><td><input type="text" class="auto-club-name"></td></tr>
+            <tr><th>Takmičenje</th><td><input type="text"></td></tr>
+            <tr><th>Takmičarska sezona</th><td><input type="text" placeholder="npr. 2025/2026"></td></tr>
+          </table>
+          <div class="pf-sh">Podaci o osobi</div>
+          <table class="mb-2">
+            <tr><th style="width:200px">Prezime i ime</th><td><input type="text"></td></tr>
+            <tr><th>Datum rođenja</th><td><input type="date"></td></tr>
+            <tr><th>JMBG</th><td><input type="text"></td></tr>
+            <tr><th>Adresa</th><td><input type="text"></td></tr>
+            <tr><th>Telefon</th><td><input type="text"></td></tr>
+            <tr><th>E-mail</th><td><input type="text"></td></tr>
+          </table>
+          <div class="pf-sh">Vrsta akreditacije (označiti)</div>
+          <table class="mb-2">
+            <tr><td><label><input type="checkbox"> Predsjednik / Dopredsjednik kluba</label></td></tr>
+            <tr><td><label><input type="checkbox"> Generalni sekretar</label></td></tr>
+            <tr><td><label><input type="checkbox"> Predstavnik kluba</label></td></tr>
+            <tr><td><label><input type="checkbox"> Šef stručnog štaba</label></td></tr>
+            <tr><td><label><input type="checkbox"> Trener / Pomoćni trener</label></td></tr>
+            <tr><td><label><input type="checkbox"> Kondicioni trener</label></td></tr>
+            <tr><td><label><input type="checkbox"> Ljekar kluba</label></td></tr>
+            <tr><td><label><input type="checkbox"> Fizioterapeut</label></td></tr>
+            <tr><td><label><input type="checkbox"> Analitičar / Scout</label></td></tr>
+          </table>
+          <div class="pf-sh">Priložena dokumentacija</div>
+          <table class="mb-3">
+            <tr><td><label><input type="checkbox"> Kopija lične karte</label></td></tr>
+            <tr><td><label><input type="checkbox"> Fotografija (passport format)</label></td></tr>
+            <tr><td><label><input type="checkbox"> Kopija licence / certifikata</label></td></tr>
+            <tr><td><label><input type="checkbox"> Potvrda angažmana u klubu</label></td></tr>
+            <tr><td><label><input type="checkbox"> Dokaz o uplati naknade</label></td></tr>
+          </table>
+          <div class="row">
+            <div class="col-4"><div class="pf-sh">Datum</div><input type="date"></div>
+            <div class="col-4"><div class="sig">Potpis podnosioca</div></div>
+            <div class="col-4"><div class="sig">Potpis i pečat kluba</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Zatvori</button><button class="btn btn-primary btn-sm" onclick="printNsfbih10()"><i class="bi bi-printer me-1"></i>Štampaj</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- M17: NS FBiH - Zahtjev registracija trenera kalendarska -->
+<div class="modal fade" id="m-nsfbih-11" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title d-flex align-items-center gap-2"><span class="badge badge-nsfbih">NS FBiH</span>Zahtjev za registraciju trenera (kalendarska sezona)</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="pf-nsfbih-11" class="pf">
+          <div class="pf-hd">Nogometni savez Federacije Bosne i Hercegovine</div>
+          <div class="pf-sub" style="font-weight:700;font-size:11pt">ZAHTJEV ZA REGISTRACIJU TRENERA — KALENDARSKA SEZONA</div>
+          <div class="pf-sh">Podaci o treneru</div>
+          <table class="mb-2">
+            <tr><th style="width:200px">Prezime i ime</th><td><input type="text"></td></tr>
+            <tr><th>Datum rođenja</th><td><input type="date"></td></tr>
+            <tr><th>JMBG</th><td><input type="text"></td></tr>
+            <tr><th>Adresa stanovanja</th><td><input type="text"></td></tr>
+            <tr><th>Kontakt telefon</th><td><input type="text"></td></tr>
+            <tr><th>E-mail</th><td><input type="text"></td></tr>
+          </table>
+          <div class="pf-sh">Podaci o licenci</div>
+          <table class="mb-2">
+            <tr><th style="width:200px">Vrsta licence</th><td><input type="text" placeholder="A / B / C / D / Pro / Grassroots"></td></tr>
+            <tr><th>Broj licence</th><td><input type="text"></td></tr>
+            <tr><th>Izdao</th><td><input type="text"></td></tr>
+            <tr><th>Datum izdavanja</th><td><input type="date"></td></tr>
+            <tr><th>Važi do</th><td><input type="date"></td></tr>
+          </table>
+          <div class="pf-sh">Podaci o klubu i angažmanu</div>
+          <table class="mb-2">
+            <tr><th style="width:200px">Naziv kluba</th><td><input type="text" class="auto-club-name"></td></tr>
+            <tr><th>Selekcija / kategorija</th><td><input type="text"></td></tr>
+            <tr><th>Takmičenje</th><td><input type="text"></td></tr>
+            <tr><th>Sezona</th><td><input type="text"></td></tr>
+          </table>
+          <div class="pf-sh">Tip angažmana (označiti)</div>
+          <table class="mb-2">
+            <tr>
+              <td><label><input type="radio" name="tip-ang-k"> Šef stručnog štaba</label></td>
+              <td><label><input type="radio" name="tip-ang-k"> Trener</label></td>
+            </tr>
+            <tr>
+              <td><label><input type="radio" name="tip-ang-k"> Pomoćni trener</label></td>
+              <td><label><input type="radio" name="tip-ang-k"> Kondicioni trener</label></td>
+            </tr>
+          </table>
+          <div class="pf-sh">Priložena dokumentacija</div>
+          <table class="mb-3">
+            <tr><td><label><input type="checkbox"> Kopija licence</label></td></tr>
+            <tr><td><label><input type="checkbox"> Kopija lične karte</label></td></tr>
+            <tr><td><label><input type="checkbox"> Fotografija</label></td></tr>
+            <tr><td><label><input type="checkbox"> Potvrda kluba o angažmanu</label></td></tr>
+            <tr><td><label><input type="checkbox"> Dokaz o uplati naknade</label></td></tr>
+          </table>
+          <div class="row">
+            <div class="col-4"><div class="pf-sh">Datum</div><input type="date"></div>
+            <div class="col-4"><div class="sig">Potpis trenera</div></div>
+            <div class="col-4"><div class="sig">Potpis i pečat kluba</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Zatvori</button><button class="btn btn-primary btn-sm" onclick="printNsfbih11()"><i class="bi bi-printer me-1"></i>Štampaj</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- M18: NS FBiH - Zahtjev registracija trenera takmičarska -->
+<div class="modal fade" id="m-nsfbih-12" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header py-2">
+        <h6 class="modal-title d-flex align-items-center gap-2"><span class="badge badge-nsfbih">NS FBiH</span>Zahtjev za registraciju trenera (takmičarska sezona)</h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="pf-nsfbih-12" class="pf">
+          <div class="pf-hd">Nogometni savez Federacije Bosne i Hercegovine</div>
+          <div class="pf-sub" style="font-weight:700;font-size:11pt">ZAHTJEV ZA REGISTRACIJU TRENERA — TAKMIČARSKA SEZONA</div>
+          <div class="pf-sh">Podaci o treneru</div>
+          <table class="mb-2">
+            <tr><th style="width:200px">Prezime i ime</th><td><input type="text"></td></tr>
+            <tr><th>Datum rođenja</th><td><input type="date"></td></tr>
+            <tr><th>JMBG</th><td><input type="text"></td></tr>
+            <tr><th>Adresa stanovanja</th><td><input type="text"></td></tr>
+            <tr><th>Kontakt telefon</th><td><input type="text"></td></tr>
+            <tr><th>E-mail</th><td><input type="text"></td></tr>
+          </table>
+          <div class="pf-sh">Podaci o licenci</div>
+          <table class="mb-2">
+            <tr><th style="width:200px">Vrsta licence</th><td><input type="text" placeholder="A / B / C / D / Pro / Grassroots"></td></tr>
+            <tr><th>Broj licence</th><td><input type="text"></td></tr>
+            <tr><th>Izdao</th><td><input type="text"></td></tr>
+            <tr><th>Datum izdavanja</th><td><input type="date"></td></tr>
+            <tr><th>Važi do</th><td><input type="date"></td></tr>
+          </table>
+          <div class="pf-sh">Podaci o klubu i angažmanu</div>
+          <table class="mb-2">
+            <tr><th style="width:200px">Naziv kluba</th><td><input type="text" class="auto-club-name"></td></tr>
+            <tr><th>Selekcija / kategorija</th><td><input type="text"></td></tr>
+            <tr><th>Takmičenje</th><td><input type="text"></td></tr>
+            <tr><th>Takmičarska sezona</th><td><input type="text" placeholder="npr. 2025/2026"></td></tr>
+          </table>
+          <div class="pf-sh">Tip angažmana (označiti)</div>
+          <table class="mb-2">
+            <tr>
+              <td><label><input type="radio" name="tip-ang-t"> Šef stručnog štaba</label></td>
+              <td><label><input type="radio" name="tip-ang-t"> Trener</label></td>
+            </tr>
+            <tr>
+              <td><label><input type="radio" name="tip-ang-t"> Pomoćni trener</label></td>
+              <td><label><input type="radio" name="tip-ang-t"> Kondicioni trener</label></td>
+            </tr>
+          </table>
+          <div class="pf-sh">Priložena dokumentacija</div>
+          <table class="mb-3">
+            <tr><td><label><input type="checkbox"> Kopija licence</label></td></tr>
+            <tr><td><label><input type="checkbox"> Kopija lične karte</label></td></tr>
+            <tr><td><label><input type="checkbox"> Fotografija</label></td></tr>
+            <tr><td><label><input type="checkbox"> Potvrda kluba o angažmanu</label></td></tr>
+            <tr><td><label><input type="checkbox"> Dokaz o uplati naknade</label></td></tr>
+          </table>
+          <div class="row">
+            <div class="col-4"><div class="pf-sh">Datum</div><input type="date"></div>
+            <div class="col-4"><div class="sig">Potpis trenera</div></div>
+            <div class="col-4"><div class="sig">Potpis i pečat kluba</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Zatvori</button><button class="btn btn-primary btn-sm" onclick="printNsfbih12()"><i class="bi bi-printer me-1"></i>Štampaj</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================= SCRIPTS ============================= -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+  const _user = requireRole('admin');
+  if (_user) {
+    applyBranding();
+    setUserInfo(_user);
+    buildSidebar();
+
+    // Plan gate — obrazci requires Pro or Klub
+    const _club = getClub();
+    const _planLevel = { starter: 1, pro: 2, klub: 3 };
+    const _clubLevel = _planLevel[(_club && _club.plan) || 'starter'] || 1;
+    if (_clubLevel < 2) {
+      document.querySelector('.page-body').innerHTML = `
+        <div class="page-header">
+          <h4>Zvanični obrazci</h4>
+          <p class="text-muted mb-0">Popunjavanje obrazaca za takmičenja i saveze.</p>
+        </div>
+        <div class="card border-0 text-center py-5 mt-3">
+          <div class="card-body">
+            <div style="width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,#6366f1,#4f46e5);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+              <i class="bi bi-file-earmark-lock2" style="font-size:2rem;color:#fff;"></i>
+            </div>
+            <h5 class="fw-bold mb-2">Dostupno u Pro i Klub planu</h5>
+            <p class="text-muted mb-4" style="max-width:420px;margin:0 auto 24px;">
+              Obrazci za FSKS, NS BiH i NS FBiH, popunjavanje direktno u aplikaciji, štampanje i preuzimanje PDF-a — dostupno od Pro plana.
+            </p>
+            <a href="mailto:klavio.app@gmail.com?subject=Nadogradnja plana&body=Zainteresovan sam za nadogradnju na Pro plan." class="btn btn-primary px-4">
+              <i class="bi bi-arrow-up-circle me-2"></i>Nadogradi plan
+            </a>
+          </div>
+        </div>`;
+      return;
+    }
+
+    const club = getClub();
+    if (club && club.name) {
+      document.querySelectorAll('.auto-club-name').forEach(el => { el.value = club.name; });
+    }
+
+    // Auto-open modal if navigated from search (?open=modal-id)
+    const _openParam = new URLSearchParams(window.location.search).get('open');
+    if (_openParam) {
+      window.addEventListener('load', () => {
+        const el = document.getElementById(_openParam);
+        if (el) new bootstrap.Modal(el).show();
+      });
+    }
+  }
+
+  // Filter
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const f = btn.dataset.filter;
+      document.querySelectorAll('.doc-col').forEach(col => {
+        col.classList.toggle('hidden', f !== 'all' && col.dataset.cat !== f);
+      });
+    });
+  });
+
+  function openDoc(id) {
+    new bootstrap.Modal(document.getElementById(id)).show();
+  }
+
+  const FORM_BADGE = {
+    'fsks-1': '<span class="badge badge-fsks">FSKS</span>',
+  };
+
+  async function loadFormHistory() {
+    const wrap = document.getElementById('formHistoryWrap');
+    if (!wrap) return;
+    try {
+      const res = await fetch('/api/forms/history', { headers: { Authorization: 'Bearer ' + getToken() } });
+      if (!res.ok) throw new Error('Greška');
+      const rows = await res.json();
+      if (!rows.length) {
+        wrap.innerHTML = '<p class="text-muted small mb-0">Nema historije popunjenih obrazaca.</p>';
+        return;
+      }
+      wrap.innerHTML = `
+        <div class="table-responsive">
+          <table class="table table-sm table-hover" style="font-size:.875rem">
+            <thead class="table-light">
+              <tr>
+                <th style="width:130px">Datum i vrijeme</th>
+                <th style="width:80px">Obrazac</th>
+                <th>Naziv</th>
+                <th>Detalji</th>
+                <th style="width:120px">Korisnik</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map(r => {
+                const dt = new Date(r.filled_at);
+                const dateStr = dt.toLocaleDateString('bs-BA');
+                const timeStr = dt.toLocaleTimeString('bs-BA', {hour:'2-digit',minute:'2-digit'});
+                const badge = FORM_BADGE[r.form_type] || `<span class="badge bg-secondary">${r.form_type}</span>`;
+                return `<tr>
+                  <td class="text-muted">${dateStr}<br><small>${timeStr}</small></td>
+                  <td>${badge}</td>
+                  <td class="fw-semibold">${r.form_name}</td>
+                  <td class="text-muted">${r.summary || '—'}</td>
+                  <td class="text-muted">${r.user_name || '—'}</td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>`;
+    } catch (err) {
+      console.error('[formHistory]', err);
+      wrap.innerHTML = '<p class="text-muted small mb-0">Historija nije dostupna.</p>';
+    }
+  }
+
+  loadFormHistory();
+
+  // ================================================================
+  // ENGINE 1 — pdf-lib: load original PDF, draw text, open for print
+  // ================================================================
+  // Coordinates are (x, y) in PDF points, origin = bottom-left of page.
+  // A4 portrait = 595 × 842 pt.  y=842 is the very top, y=0 is bottom.
+  // To calibrate: open the PDF in any viewer that shows cursor coordinates
+  // (e.g. Adobe Acrobat > View > Show/Hide > Navigation Panes > Page, or
+  // use the browser PDF viewer with a ruler extension), measure each field,
+  // and update the coordinate map in the printXxx() function below.
+  //
+  var _pdfFontCache = null;
+  async function _loadPdfFont() {
+    if (_pdfFontCache) return _pdfFontCache;
+    // DejaVu Sans covers all Latin Extended chars (š, č, ž, ć, đ)
+    _pdfFontCache = await fetch(
+      'https://cdn.jsdelivr.net/npm/dejavu-fonts-ttf@2.37.3/ttf/DejaVuSans.ttf'
+    ).then(r => r.arrayBuffer());
+    return _pdfFontCache;
+  }
+  // Pre-load font when page opens
+  _loadPdfFont();
+
+  async function fillPdfAndPrint(pdfUrl, fields, covers, lines, mode = 'print', downloadName = null) {
+    try {
+      const [pdfBytes, fontBytes] = await Promise.all([
+        fetch(pdfUrl).then(r => {
+          if (!r.ok) throw new Error('PDF nije pronađen: ' + pdfUrl);
+          return r.arrayBuffer();
+        }),
+        _loadPdfFont(),
+      ]);
+
+      const { PDFDocument, rgb } = PDFLib;
+      const pdfDoc = await PDFDocument.load(pdfBytes);
+      pdfDoc.registerFontkit(fontkit);
+      const font = await pdfDoc.embedFont(fontBytes);
+
+      // Try AcroForm first (fillable PDF)
+      const form = pdfDoc.getForm();
+      const acroFields = form.getFields();
+      if (acroFields.length > 0) {
+        console.log('[pdf-lib] AcroForm fields:', acroFields.map(f => f.getName()));
+        for (const f of fields) {
+          if (f.acroName) {
+            try { form.getTextField(f.acroName).setText(f.text || ''); } catch(_) {}
+          }
+        }
+        form.flatten();
+      }
+
+      const pages = pdfDoc.getPages();
+      const page  = pages[0];
+
+      // Draw white rectangles to erase placeholder text in template
+      if (covers) {
+        for (const c of covers) {
+          page.drawRectangle({ x: c.x, y: c.y, width: c.w, height: c.h, color: rgb(1,1,1), borderWidth: 0 });
+        }
+      }
+
+      // Draw grid lines over white covers, under text
+      if (lines) {
+        for (const l of lines) {
+          page.drawLine({ start:{x:l.x1,y:l.y1}, end:{x:l.x2,y:l.y2}, thickness:l.t||0.5, color:rgb(0,0,0) });
+        }
+      }
+
+      // Draw coordinate-based text
+      for (const f of fields) {
+        const txt = (f.text || '').trim();
+        if (!txt) continue;
+        page.drawText(txt, {
+          x:    f.x,
+          y:    f.y,
+          size: f.size || 9,
+          font,
+          color: rgb(0, 0, 0),
+          maxWidth: f.maxWidth,
+        });
+      }
+
+      const out  = await pdfDoc.save();
+      const blob = new Blob([out], { type: 'application/pdf' });
+      const url  = URL.createObjectURL(blob);
+      if (mode === 'download') {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = downloadName || (pdfUrl.split('/').pop().replace(/\.pdf$/i, '') + '_popunjen.pdf');
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 10000);
+      } else {
+        const win = window.open(url, '_blank');
+        if (win) win.addEventListener('load', () => win.print(), { once: true });
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+      }
+    } catch (err) {
+      console.error('[fillPdfAndPrint]', err);
+      alert('Greška pri generisanju PDF-a:\n' + err.message);
+    }
+  }
+
+  // ================================================================
+  // ENGINE 2 — docxtemplater: backend fills {placeholders}, download
+  // ================================================================
+  // Usage: add {placeholder} tags to the original DOCX file in Word.
+  // The data object keys must match the placeholder names exactly.
+  // Example: {naziv_kluba}, {prezime_ime}, {datum_rodenja} ...
+  //
+  async function fillDocxAndDownload(templateRelPath, data) {
+    const token = typeof getToken === 'function' && getToken();
+    try {
+      const res = await fetch('/api/forms/fill', {
+        method:  'POST',
+        headers: {
+          'Content-Type':  'application/json',
+          'Authorization': 'Bearer ' + (token || ''),
+        },
+        body: JSON.stringify({ template: templateRelPath, data }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || res.statusText);
+      }
+      const blob     = await res.blob();
+      const url      = URL.createObjectURL(blob);
+      const a        = document.createElement('a');
+      a.href         = url;
+      a.download     = templateRelPath.split('/').pop().replace(/\.(docx?|rtf)$/i, '_popunjen.docx');
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+    } catch (err) {
+      console.error('[fillDocxAndDownload]', err);
+      alert('Greška pri preuzimanju obrasca:\n' + err.message);
+    }
+  }
+
+  // Generate player rows for match sheet forms
+  // FSKS: generate named player input rows
+  // FSKS player rows generated lazily inside show.bs.modal handler below
+
+  // NS FBiH player list rows: named IDs (prefix = 'n4h', 'n4a', etc.)
+  function makeNamedRows(tbodyId, prefix, count) {
+    const tb = document.getElementById(tbodyId);
+    if (!tb) return;
+    for (let i = 0; i < count; i++) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td style="text-align:center;color:#94a3b8;font-size:.8rem;white-space:nowrap">${i+1}</td>
+        <td><input type="text" id="${prefix}-p${i}-dres" class="border-0 w-100 bg-transparent text-center" style="outline:none;font-size:.82rem"></td>
+        <td><input type="text" id="${prefix}-p${i}-ime"  class="border-0 w-100 bg-transparent" style="outline:none;font-size:.82rem"></td>
+        <td><input type="text" id="${prefix}-p${i}-reg"  class="border-0 w-100 bg-transparent text-center" style="outline:none;font-size:.82rem"></td>`;
+      tb.appendChild(tr);
+    }
+  }
+  makeNamedRows('n4-ph', 'n4h', 20);
+  makeNamedRows('n4-pa', 'n4a', 20);
+  makeNamedRows('n5-ph', 'n5h', 20);
+  makeNamedRows('n5-pa', 'n5a', 20);
+  makeNamedRows('n6-ph', 'n6h', 23);
+  makeNamedRows('n6-pa', 'n6a', 23);
+
+  // Re-fill club name when modal opens
+  document.querySelectorAll('.modal').forEach(m => {
+    m.addEventListener('show.bs.modal', () => {
+      const c = getClub && getClub();
+      if (c && c.name) {
+        m.querySelectorAll('.auto-club-name').forEach(el => { if (!el.value) el.value = c.name; });
+      }
+    });
+  });
+
+  // Player auto-fill — pre-fetch on page load so data is ready when modal opens
+  let _players = null;
+  async function loadPlayers() {
+    if (_players !== null) return _players;  // cache hit (even for empty array)
+    const token = typeof getToken === 'function' && getToken();
+    if (!token) { _players = []; return _players; }
+    try {
+      const res = await fetch('/api/members', { headers: { 'Authorization': 'Bearer ' + token } });
+      _players = res.ok ? await res.json() : [];
+    } catch(e) { _players = []; }
+    return _players;
+  }
+  loadPlayers(); // kick off immediately so data is cached before user opens a modal
+
+  // Auto-advance for .pdf-box digit inputs within the same data-group
+  document.querySelectorAll('.pdf-box').forEach(el => {
+    el.addEventListener('input', () => {
+      if (el.value.length >= 1) {
+        el.value = el.value.slice(0, 1);
+        const group = el.dataset.group;
+        const all = [...document.querySelectorAll(`.pdf-box[data-group="${group}"]`)];
+        const i = all.indexOf(el);
+        if (i + 1 < all.length) all[i + 1].focus();
+      }
+    });
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Backspace' && !el.value) {
+        const group = el.dataset.group;
+        const all = [...document.querySelectorAll(`.pdf-box[data-group="${group}"]`)];
+        const i = all.indexOf(el);
+        if (i > 0) { all[i - 1].focus(); all[i - 1].select(); }
+      }
+    });
+  });
+
+  // FSKS: fill player data from DB on modal open
+  document.getElementById('m-fsks-1').addEventListener('show.bs.modal', async () => {
+    const c = getClub && getClub();
+    const d = document.getElementById('f1-domacin');
+    if (d && !d.value && c && c.name) d.value = c.name;
+
+    const players = await loadPlayers();
+    for (let i = 0; i < 18; i++) {
+      const p = players[i] || {};
+      const dresStr = ('' + (p.jersey_number || '')).replace(/\D/g, '');
+      for (let d = 0; d < 2; d++) {
+        const dEl = document.getElementById(`f1-p${i}-dres-${d}`);
+        if (dEl && !dEl.value) dEl.value = dresStr[d] || '';
+      }
+      const imeEl  = document.getElementById(`f1-p${i}-ime`);
+      if (imeEl  && !imeEl.value)  imeEl.value  = p.name          || '';
+      // Split membership_number into individual digit boxes
+      const regStr = ((p.membership_number || '') + '').replace(/\D/g, '');
+      for (let j = 0; j < 7; j++) {
+        const rEl = document.getElementById(`f1-p${i}-reg-${j}`);
+        if (rEl && !rEl.value) rEl.value = regStr[j] || '';
+      }
+    }
+  });
+
+  // NS FBiH player lists: fill home team from DB on modal open
+  function attachNsfbihFill(modalId, domId, pfx, count) {
+    document.getElementById(modalId).addEventListener('show.bs.modal', async () => {
+      const c = getClub && getClub();
+      const d = document.getElementById(domId);
+      if (d && !d.value && c && c.name) d.value = c.name;
+      const players = await loadPlayers();
+      for (let i = 0; i < count; i++) {
+        const p = players[i] || {};
+        const dresEl = document.getElementById(`${pfx}-p${i}-dres`);
+        const imeEl  = document.getElementById(`${pfx}-p${i}-ime`);
+        const regEl  = document.getElementById(`${pfx}-p${i}-reg`);
+        if (dresEl) dresEl.value = p.jersey_number      || '';
+        if (imeEl)  imeEl.value  = p.name               || '';
+        if (regEl)  regEl.value  = p.membership_number  || '';
+      }
+    });
+  }
+  attachNsfbihFill('m-nsfbih-4', 'n4-domacin', 'n4h', 20);
+  attachNsfbihFill('m-nsfbih-5', 'n5-domacin', 'n5h', 20);
+  attachNsfbihFill('m-nsfbih-6', 'n6-domacin', 'n6h', 23);
+
+  // ================================================================
+  // PER-FORM FUNCTIONS
+  // ================================================================
+
+  // ---- FSKS 1: Spisak igrača (PDF) ----
+  // Coordinates from PDF content stream. Small boxes (date/time/kolo/lic/kapiten dres)
+  // each hold one digit — we split values and place each digit individually.
+  async function printFsks1(mode = 'print') {
+    const v = id => (document.getElementById(id)?.value || '').trim();
+
+    // --- Parse date → 8 digits [D1 D2 M1 M2 Y1 Y2 Y3 Y4] ---
+    const rawDate = v('f1-datum');
+    let dateDigits = ['','','','','','','',''];
+    if (rawDate) {
+      const dObj = new Date(rawDate + 'T00:00:00');
+      const dStr = String(dObj.getDate()).padStart(2,'0');
+      const mStr = String(dObj.getMonth()+1).padStart(2,'0');
+      const yStr = String(dObj.getFullYear());
+      dateDigits = [...dStr, ...mStr, ...yStr];
+    }
+
+    // --- Sat: read directly from individual box inputs ---
+    const timeDigits = [v('f1-sat-0'), v('f1-sat-1'), v('f1-sat-2'), v('f1-sat-3')];
+
+    // --- Kolo / kapiten dres: read directly from individual box inputs ---
+    const koloChars    = [v('f1-kolo-0'), v('f1-kolo-1')];
+    const kapDresChars = [v('f1-kap-dres-0'), v('f1-kap-dres-1')];
+
+    // --- Cell left-edge x positions (text placed at xl+5 to center single digit) ---
+    // Vrijemе (4 cells, y=658–675): H1 H2 | M1 M2
+    const satXL  = [429, 445, 463, 479];
+    // Datum (8 cells, y=640–657): D1 D2 | M1 M2 | Y1 Y2 Y3 Y4
+    const datXL  = [429, 445, 463, 479, 497, 513, 529, 545];
+    // Kolo (2 cells, y=622–638)
+    const koloXL = [429, 446];
+    // Kapiten dres (2 cells, y=185–201)
+    const kapDresXL = [214, 235];
+    // Broj licence (4 cells per official)
+    const licXL  = [496, 513, 529, 546];
+
+    // --- Exact y-text positions per player row ---
+    const rowY = [523,505,488,470,451,433,416,398,379,362,344,320,302,285,268,248,231,213];
+    const offY = [162, 144, 127, 108, 90, 73];
+
+    // Reg boxes: 3pt gap after cell 3, another 3pt gap after cell 5
+    const regXL = [437, 454, 471, 491, 508, 528, 545];
+
+    // Player fields
+    const playerFields = [];
+    for (let i = 0; i < 18; i++) {
+      const y = rowY[i];
+      playerFields.push(
+        { text: v(`f1-p${i}-dres-0`), x: 75, y, size: 8 },
+        { text: v(`f1-p${i}-dres-1`), x: 97, y, size: 8 },
+        { text: v(`f1-p${i}-ime`),    x: 119, y, size: 8, maxWidth: 310 },
+      );
+      // One digit per reg box
+      regXL.forEach((xl, j) => {
+        playerFields.push({ text: v(`f1-p${i}-reg-${j}`), x: xl+5, y, size: 8 });
+      });
+    }
+
+    // Official name fields
+    const officialNameFields = offY.map((y, i) => (
+      { text: v(`f1-o${i+1}-ime`), x: 119, y, size: 8, maxWidth: 310 }
+    ));
+
+    // Licence: one digit per cell, read directly from individual box inputs
+    const licFields = [];
+    for (let i = 0; i < 6; i++) {
+      licXL.forEach((xl, j) => {
+        licFields.push({ text: v(`f1-o${i+1}-lic-${j}`), x: xl+5, y: offY[i], size: 8 });
+      });
+    }
+
+    // --- White covers (stay inside original cell borders — no border redrawing) ---
+    const covers = [
+      // Wide text fields
+      {x:114, y:642, w:270, h:11},  // Vrsta utakmice
+      {x:114, y:624, w:130, h:11},  // Domaćin
+      {x:254, y:624, w:130, h:11},  // Gost
+      {x:114, y:606, w:117, h:11},  // Mjesto
+      {x:284, y:606, w:100, h:11},  // Stadion
+      {x:433, y:606, w:126, h:11},  // Kategorija
+      // FK/NK: "FK/NK:" label ends around x=178 — cover only the value area after it
+      {x:180, y:566, w:378, h:23},
+      // Vrijemе cells
+      ...satXL.map(xl => ({x:xl+2, y:661, w:12, h:9})),
+      // Datum cells
+      ...datXL.map(xl => ({x:xl+2, y:643, w:12, h:9})),
+      // Kolo cells
+      ...koloXL.map(xl => ({x:xl+2, y:625, w:12, h:9})),
+      // Player rows: interior covers, same h:9 approach as vrijemе/datum/kolo
+      ...rowY.flatMap(y => [
+        {x:72, y:y-1, w:15, h:9},
+        {x:91, y:y-1, w:15, h:9},
+        {x:118, y:y-1, w:311, h:9},
+        ...regXL.map(xl => ({x:xl+2, y:y-1, w:13, h:9})),
+      ]),
+      // Kapiten dres cells + name
+      ...kapDresXL.map(xl => ({x:xl+2, y:187, w:17, h:9})),
+      {x:266, y:187, w:162, h:9},
+      // Officials name + licence cells
+      ...offY.flatMap(y => [
+        {x:118, y:y-1, w:311, h:9},
+        ...licXL.map(xl => ({x:xl+2, y:y-1, w:13, h:9})),
+      ]),
+      // Signature
+      {x:33, y:28, w:149, h:12},
+    ];
+
+    const domacin = v('f1-domacin'), gost = v('f1-gost');
+    const dlDate = rawDate ? (() => { const d = new Date(rawDate + 'T00:00:00'); return String(d.getDate()).padStart(2,'0') + '.' + String(d.getMonth()+1).padStart(2,'0') + '.' + d.getFullYear(); })() : '';
+    const dlName = [...[domacin, gost].filter(Boolean), dlDate].filter(Boolean).join(' – ') || 'Spisak igrača';
+    await fillPdfAndPrint(
+      '/forms/FSKS/Spisak igrača i službenih osoba (1).pdf',
+      [
+        // Wide text fields
+        { text: v('f1-vrsta'),   x: 113, y: 644, size: 8, maxWidth: 272 },
+        { text: domacin,         x: 113, y: 626, size: 8, maxWidth: 132 },
+        { text: gost,            x: 253, y: 626, size: 8, maxWidth: 132 },
+        { text: v('f1-mjesto'),  x: 113, y: 607, size: 8, maxWidth: 119 },
+        { text: v('f1-stadion'), x: 283, y: 607, size: 8, maxWidth: 102 },
+        { text: v('f1-kat'),     x: 432, y: 607, size: 8, maxWidth: 128 },
+        { text: v('f1-fknk') || domacin, x: 182, y: 573, size: 10 },
+        { text: v('f1-kap-ime'), x: 267, y: 188, size: 8, maxWidth: 162 },
+        { text: v('f1-potpis'),  x:  33, y:  30, size: 8 },
+        // Vrijemе — one digit per cell
+        ...satXL.map((xl, i) => ({ text: timeDigits[i]||'', x: xl+5, y: 662, size: 8 })),
+        // Datum — one digit per cell
+        ...datXL.map((xl, i) => ({ text: dateDigits[i]||'', x: xl+5, y: 644, size: 8 })),
+        // Kolo — one digit per cell
+        ...koloXL.map((xl, i) => ({ text: koloChars[i]||'', x: xl+5, y: 626, size: 8 })),
+        // Kapiten dres — one digit per cell
+        ...kapDresXL.map((xl, i) => ({ text: kapDresChars[i]||'', x: xl+5, y: 188, size: 8 })),
+        // Players, officials, licence
+        ...playerFields,
+        ...officialNameFields,
+        ...licFields,
+      ],
+      covers,
+      undefined,
+      mode,
+      dlName + '_popunjen.pdf'
+    );
+
+    // Save to history
+    const datum = v('f1-datum'), kolo = (v('f1-kolo-0')+v('f1-kolo-1')).trim();
+    const summary = [domacin && gost ? `${domacin} – ${gost}` : '', datum ? new Date(datum+'T00:00:00').toLocaleDateString('bs-BA') : '', kolo ? `Kolo ${kolo}` : ''].filter(Boolean).join(', ');
+    saveFormHistory('fsks-1', 'Spisak igrača i službenih osoba (FSKS)', summary);
+  }
+
+  function saveFormHistory(form_type, form_name, summary) {
+    fetch('/api/forms/history', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+      body: JSON.stringify({ form_type, form_name, summary })
+    })
+    .then(async r => {
+      if (!r.ok) {
+        const body = await r.json().catch(() => ({}));
+        console.error('[formHistory save] HTTP', r.status, body);
+      }
+      loadFormHistory();
+    })
+    .catch(err => console.error('[formHistory save]', err));
+  }
+
+  // ---- NS BiH 1: Ispisnica (PDF) ----
+  async function printNsbih1() {
+    const v = id => (document.getElementById(id)?.value || '').trim();
+    await fillPdfAndPrint(
+      '/forms/NSBIH/IZMIJENJENA_ISPISNICA_29.05.pdf',
+      [] // TODO: add coordinate map after viewing the PDF
+    );
+  }
+
+  // ---- NS FBiH 2: Ispisnica/Istupnica (PDF) ----
+  async function printNsfbih2() {
+    const v = id => (document.getElementById(id)?.value || '').trim();
+    await fillPdfAndPrint(
+      '/forms/NSFBIH/Obrazac ispisnice_istupnice.pdf',
+      [] // TODO: add coordinate map after viewing the PDF
+    );
+  }
+
+  // ---- NS FBiH 3: Ugovor o saradnji (PDF) ----
+  async function printNsfbih3() {
+    const v = id => (document.getElementById(id)?.value || '').trim();
+    await fillPdfAndPrint(
+      '/forms/NSFBIH/Obrazac ugovora o saradnji klubova.pdf',
+      [] // TODO: add coordinate map after viewing the PDF
+    );
+  }
+
+  // ---- NS FBiH 4/5/6: Spiskovi igrača — generates two DOCX downloads (home + away) ----
+  // Template placeholders: {datum},{kategorija},{vrsta_utakmice},{domacin},{gost},
+  //   {stadion},{sat},{tim},{#players}{dres}{ime}{reg}{/players},
+  //   {o1_ime/lic}…{o3_ime/lic} (treneri), {o4_ime}…{o7_ime} (ostali)
+  function _fmtDate(raw) { return raw ? new Date(raw).toLocaleDateString('hr-HR') : ''; }
+
+  async function printNsfbih4() {
+    const v = id => (document.getElementById(id)?.value || '').trim();
+    const tpl = 'NSFBIH/Obrazac-spisak igrača i službenih osoba kluba Omladinske lige BiH.docx';
+    const common = {
+      kategorija: v('n4-takm'), vrsta_utakmice: v('n4-kolo'),
+      datum: _fmtDate(v('n4-datum')), sat: v('n4-sat'), stadion: v('n4-stadion'),
+      domacin: v('n4-domacin'), gost: v('n4-gost'), mjesto: '',
+      kapiten_ime: '', kapiten_broj: '',
+    };
+    // home team (officials: ho1=Predstavnik, ho2=Trener, ho3=Pom.trener, ho4=Ljekar)
+    await fillDocxAndDownload(tpl, { ...common, tim: v('n4-domacin'),
+      players: Array.from({length:20}, (_,i) => ({ dres: v(`n4h-p${i}-dres`), ime: v(`n4h-p${i}-ime`), reg: v(`n4h-p${i}-reg`) })),
+      o1_ime: v('n4-ho2-ime'), o1_lic: v('n4-ho2-lic'),
+      o2_ime: v('n4-ho3-ime'), o2_lic: v('n4-ho3-lic'),
+      o3_ime: '', o3_lic: '',
+      o4_ime: v('n4-ho1-ime'), o5_ime: '', o6_ime: v('n4-ho4-ime'), o7_ime: '',
+    });
+    // away team
+    await fillDocxAndDownload(tpl, { ...common, tim: v('n4-gost'),
+      players: Array.from({length:20}, (_,i) => ({ dres: v(`n4a-p${i}-dres`), ime: v(`n4a-p${i}-ime`), reg: v(`n4a-p${i}-reg`) })),
+      o1_ime: v('n4-ao2-ime'), o1_lic: v('n4-ao2-lic'),
+      o2_ime: v('n4-ao3-ime'), o2_lic: v('n4-ao3-lic'),
+      o3_ime: '', o3_lic: '',
+      o4_ime: v('n4-ao1-ime'), o5_ime: '', o6_ime: v('n4-ao4-ime'), o7_ime: '',
+    });
+  }
+
+  async function printNsfbih5() {
+    const v = id => (document.getElementById(id)?.value || '').trim();
+    const tpl = 'NSFBIH/Obrazac-spisak igrača i službenih osoba kluba WWIN Druge lige FBiH.docx';
+    const common = {
+      kategorija: v('n5-grupa'), vrsta_utakmice: v('n5-kolo'),
+      datum: _fmtDate(v('n5-datum')), sat: v('n5-sat'), stadion: v('n5-stadion'),
+      domacin: v('n5-domacin'), gost: v('n5-gost'), mjesto: '',
+      kapiten_ime: '', kapiten_broj: '',
+    };
+    // home (ho1=Predstavnik, ho2=ŠSŠ, ho3=Trener, ho4=Pom.trener, ho5=Ljekar)
+    await fillDocxAndDownload(tpl, { ...common, tim: v('n5-domacin'),
+      players: Array.from({length:20}, (_,i) => ({ dres: v(`n5h-p${i}-dres`), ime: v(`n5h-p${i}-ime`), reg: v(`n5h-p${i}-reg`) })),
+      o1_ime: v('n5-ho3-ime'), o1_lic: v('n5-ho3-lic'),
+      o2_ime: v('n5-ho4-ime'), o2_lic: v('n5-ho4-lic'),
+      o3_ime: '', o3_lic: '',
+      o4_ime: v('n5-ho1-ime'), o5_ime: '', o6_ime: v('n5-ho5-ime'), o7_ime: '',
+    });
+    // away
+    await fillDocxAndDownload(tpl, { ...common, tim: v('n5-gost'),
+      players: Array.from({length:20}, (_,i) => ({ dres: v(`n5a-p${i}-dres`), ime: v(`n5a-p${i}-ime`), reg: v(`n5a-p${i}-reg`) })),
+      o1_ime: v('n5-ao3-ime'), o1_lic: v('n5-ao3-lic'),
+      o2_ime: v('n5-ao4-ime'), o2_lic: v('n5-ao4-lic'),
+      o3_ime: '', o3_lic: '',
+      o4_ime: v('n5-ao1-ime'), o5_ime: '', o6_ime: v('n5-ao5-ime'), o7_ime: '',
+    });
+  }
+
+  async function printNsfbih6() {
+    const v = id => (document.getElementById(id)?.value || '').trim();
+    const tpl = 'NSFBIH/Obrazac-spisak igrača i službenih osoba kluba WWIN Prve lige FBiH.docx';
+    const common = {
+      kategorija: v('n6-sezona'), vrsta_utakmice: v('n6-kolo'),
+      datum: _fmtDate(v('n6-datum')), sat: v('n6-sat'), stadion: v('n6-stadion'),
+      domacin: v('n6-domacin'), gost: v('n6-gost'), mjesto: '',
+      kapiten_ime: '', kapiten_broj: '',
+    };
+    // home (ho1=Predstavnik, ho2=ŠSŠ, ho3=Trener, ho4=Pom.trener, ho5=Ljekar, ho6=Fizioterapeut)
+    await fillDocxAndDownload(tpl, { ...common, tim: v('n6-domacin'),
+      players: Array.from({length:23}, (_,i) => ({ dres: v(`n6h-p${i}-dres`), ime: v(`n6h-p${i}-ime`), reg: v(`n6h-p${i}-reg`) })),
+      o1_ime: v('n6-ho3-ime'), o1_lic: v('n6-ho3-lic'),
+      o2_ime: v('n6-ho4-ime'), o2_lic: v('n6-ho4-lic'),
+      o3_ime: '', o3_lic: '',
+      o4_ime: v('n6-ho1-ime'), o5_ime: v('n6-ho6-ime'), o6_ime: v('n6-ho5-ime'), o7_ime: '',
+    });
+    // away
+    await fillDocxAndDownload(tpl, { ...common, tim: v('n6-gost'),
+      players: Array.from({length:23}, (_,i) => ({ dres: v(`n6a-p${i}-dres`), ime: v(`n6a-p${i}-ime`), reg: v(`n6a-p${i}-reg`) })),
+      o1_ime: v('n6-ao3-ime'), o1_lic: v('n6-ao3-lic'),
+      o2_ime: v('n6-ao4-ime'), o2_lic: v('n6-ao4-lic'),
+      o3_ime: '', o3_lic: '',
+      o4_ime: v('n6-ao1-ime'), o5_ime: v('n6-ao6-ime'), o6_ime: v('n6-ao5-ime'), o7_ime: '',
+    });
+  }
+
+  // ---- DOCX forms: NS BiH ----
+  function printNsbih4() { // Zahtjev za licencu
+    const v = id => (document.getElementById(id)?.value || '').trim();
+    fillDocxAndDownload('NSBIH/Zahtjev_za_izdavanje_licence_za_obavljanje_dužnosti_na_utakmicama_4.docx', {});
+  }
+  function printNsbih5() { // Zahtjev za ITC
+    fillDocxAndDownload('NSBIH/ZAHTJEV_ZA_POTRAŽNJU_MEĐUNARODNOG_CERTIFIKATA_O_TRANSFERU_IGRAČA_1.docx', {});
+  }
+
+  // ---- DOCX forms: NS FBiH ----
+  function printNsfbih1() { // Karton izmjene
+    fillDocxAndDownload('NSFBIH/Karton-Izmjene igrača.docx', {});
+  }
+  function printNsfbih9() {
+    fillDocxAndDownload('NSFBIH/Upitnik za izdavanje takmičarske akreditacije za kalendarsku godinu.docx', {});
+  }
+  function printNsfbih10() {
+    fillDocxAndDownload('NSFBIH/Upitnik za izdavanje takmičarske akreditacije za takmičarsku godinu.docx', {});
+  }
+  function printNsfbih11() {
+    fillDocxAndDownload('NSFBIH/Zahtjev za registraciju trenera za kalendarsku godinu.docx', {});
+  }
+  function printNsfbih12() {
+    fillDocxAndDownload('NSFBIH/Zahtjev za registraciju trenera za takmičarsku sezonu.docx', {});
+  }
+
+  // ---- HTML fallback (DOC/RTF forms without DOCX source) ----
+  // Used for forms that are DOC or RTF until user converts them to DOCX.
+  function _printNsfbihSpisakDoc(cfg) {
+    const v = id => (document.getElementById(id)?.value || '').trim();
+    const { p, league, count, infoLabel, infoField, hoFns, aoFns, extraSig } = cfg;
+
+    const buildPRows = (side) => {
+      let r = '';
+      for (let i = 0; i < count; i++) {
+        r += `<tr style="height:18px">
+          <td style="text-align:center;font-size:8pt;width:22px">${i+1}</td>
+          <td style="text-align:center;font-size:9pt;width:38px">${v(`${side}-p${i}-dres`)}</td>
+          <td style="font-size:9pt">${v(`${side}-p${i}-ime`)}</td>
+          <td style="text-align:center;font-size:8pt;width:68px">${v(`${side}-p${i}-reg`)}</td>
+        </tr>`;
+      }
+      return r;
+    };
+
+    const buildORows = (side, fns) => fns.map((fn, j) =>
+      `<tr style="height:20px">
+        <td style="font-size:8pt">${fn}</td>
+        <td style="font-size:9pt">${v(`${p}-${side}${j+1}-ime`)}</td>
+        <td style="text-align:center;font-size:8.5pt">${v(`${p}-${side}${j+1}-lic`)}</td>
+      </tr>`
+    ).join('');
+
+    const rawDate = v(`${p}-datum`);
+    const datum = rawDate ? new Date(rawDate).toLocaleDateString('hr-HR') : '';
+    const sigExtra = extraSig ? `<div style="flex:1;border-top:1px solid #000;padding-top:4px;text-align:center;font-size:8pt">${extraSig}</div>` : '';
+
+    const html = `<!DOCTYPE html><html lang="bs"><head>
+      <meta charset="UTF-8"><title>NS FBiH — ${league}</title>
+      <style>
+        *{box-sizing:border-box;margin:0;padding:0}
+        body{font-family:Arial,sans-serif;font-size:9pt;color:#000;padding:7mm}
+        @page{size:A4;margin:7mm}
+        table{border-collapse:collapse;width:100%}
+        td,th{border:1px solid #000;padding:2px 3px;vertical-align:middle}
+        th{background:#f0f0f0;font-weight:bold;text-align:center;font-size:8pt}
+        .sh{font-weight:bold;font-size:8pt;text-transform:uppercase;border-bottom:1.5px solid #000;padding-bottom:2px;margin:5px 0 3px}
+        .two{display:flex;gap:6px}
+        .col{flex:1;min-width:0}
+      </style>
+    </head><body>
+
+      <div style="display:flex;align-items:center;margin-bottom:5px">
+        <div style="width:48px;height:48px;border-radius:50%;border:2px solid #555;display:flex;align-items:center;justify-content:center;font-size:6pt;font-weight:bold;text-align:center;line-height:1.2;flex-shrink:0">NS<br>FBiH</div>
+        <div style="flex:1;text-align:center;padding:0 8px">
+          <div style="font-weight:bold;font-size:10pt;text-transform:uppercase">Nogometni savez Federacije Bosne i Hercegovine</div>
+          <div style="font-size:13pt;font-weight:bold;font-style:italic;text-transform:uppercase;letter-spacing:.03em">${league}</div>
+          <div style="font-size:11pt;font-weight:bold">SPISAK IGRAČA I SLUŽBENIH OSOBA</div>
+        </div>
+        <div style="width:48px;height:48px;border-radius:50%;border:2px solid #555;display:flex;align-items:center;justify-content:center;font-size:6pt;font-weight:bold;text-align:center;line-height:1.2;flex-shrink:0">NS<br>FBiH</div>
+      </div>
+
+      <table style="margin-bottom:5px">
+        <tr>
+          <td style="width:36%"><strong>${infoLabel}:</strong> ${v(`${p}-${infoField}`)}</td>
+          <td style="width:14%"><strong>Kolo:</strong> ${v(`${p}-kolo`)}</td>
+          <td style="width:20%"><strong>Datum:</strong> ${datum}</td>
+          <td style="width:13%"><strong>Sat:</strong> ${v(`${p}-sat`)}</td>
+          <td><strong>Stadion:</strong> ${v(`${p}-stadion`)}</td>
+        </tr>
+        <tr>
+          <td colspan="2"><strong>Domaćin:</strong> ${v(`${p}-domacin`)}</td>
+          <td colspan="3"><strong>Gost:</strong> ${v(`${p}-gost`)}</td>
+        </tr>
+      </table>
+
+      <div class="two">
+        <div class="col">
+          <div class="sh">Igrači — domaći</div>
+          <table><thead><tr><th style="width:22px">Br.</th><th style="width:32px">Dres</th><th>Prezime i ime</th><th style="width:65px">Reg.br.</th></tr></thead>
+          <tbody>${buildPRows(p + 'h')}</tbody></table>
+        </div>
+        <div class="col">
+          <div class="sh">Igrači — gost</div>
+          <table><thead><tr><th style="width:22px">Br.</th><th style="width:32px">Dres</th><th>Prezime i ime</th><th style="width:65px">Reg.br.</th></tr></thead>
+          <tbody>${buildPRows(p + 'a')}</tbody></table>
+        </div>
+      </div>
+
+      <div class="two" style="margin-top:5px">
+        <div class="col">
+          <div class="sh">Službene osobe — domaći</div>
+          <table><thead><tr><th>Funkcija</th><th>Ime i prezime</th><th style="width:75px">Br. licence</th></tr></thead>
+          <tbody>${buildORows('ho', hoFns)}</tbody></table>
+        </div>
+        <div class="col">
+          <div class="sh">Službene osobe — gost</div>
+          <table><thead><tr><th>Funkcija</th><th>Ime i prezime</th><th style="width:75px">Br. licence</th></tr></thead>
+          <tbody>${buildORows('ao', aoFns)}</tbody></table>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <div style="flex:1;border-top:1px solid #000;padding-top:4px;text-align:center;font-size:8pt">Potpis i pečat domaćeg kluba</div>
+        <div style="flex:1;border-top:1px solid #000;padding-top:4px;text-align:center;font-size:8pt">Potpis i pečat gostujućeg kluba</div>
+        ${sigExtra}
+      </div>
+
+    </body></html>`;
+
+    const win = window.open('', '_blank', 'width=960,height=750');
+    win.document.write(html);
+    win.document.close();
+    win.onload = () => { win.focus(); win.print(); };
+  }
+
+  // (old duplicate printNsfbih4/5/6 and printFsks1 removed — see the live versions above)
+
+
+  function printDoc(contentId) {
+    const content = document.getElementById(contentId);
+    if (!content) return;
+
+    // Deep-clone and bake live .value / .checked into HTML attributes
+    // (innerHTML only captures the original attribute, not what was typed or filled via JS)
+    const clone = content.cloneNode(true);
+    const srcEls = content.querySelectorAll('input, textarea, select');
+    const clnEls = clone.querySelectorAll('input, textarea, select');
+    srcEls.forEach((src, i) => {
+      const cln = clnEls[i];
+      if (!cln) return;
+      if (src.type === 'checkbox' || src.type === 'radio') {
+        src.checked ? cln.setAttribute('checked', '') : cln.removeAttribute('checked');
+      } else if (src.tagName === 'TEXTAREA') {
+        cln.textContent = src.value;
+      } else {
+        cln.setAttribute('value', src.value);
+      }
+    });
+
+    const win = window.open('', '_blank', 'width=960,height=720');
+    win.document.write(`<!DOCTYPE html><html lang="bs"><head>
+      <meta charset="UTF-8">
+      <title>Obrazac</title>
+      <style>
+        *{box-sizing:border-box}
+        body{font-family:Arial,sans-serif;font-size:10pt;margin:12mm;color:#000;line-height:1.4}
+        .pf-hd{text-align:center;font-weight:700;font-size:11pt;text-transform:uppercase;letter-spacing:.03em}
+        .pf-sub{text-align:center;font-size:10pt;margin-bottom:10px}
+        .pf-sh{font-weight:700;font-size:8pt;text-transform:uppercase;letter-spacing:.05em;border-bottom:1.5px solid #000;padding-bottom:2px;margin:10px 0 5px}
+        table{width:100%;border-collapse:collapse;margin-bottom:6px}
+        td,th{border:1px solid #000;padding:3px 5px;font-size:9pt;vertical-align:middle}
+        th{font-weight:600;background:#f0f0f0}
+        input[type=text],input[type=date]{border:none;border-bottom:1px solid #333;width:100%;font-size:9.5pt;font-family:Arial;background:transparent;padding:1px 0}
+        textarea{border:none;border-bottom:1px solid #333;width:100%;font-size:9.5pt;font-family:Arial;background:transparent;resize:none;padding:0}
+        input[type=checkbox],input[type=radio]{width:13px;height:13px;vertical-align:middle}
+        select{border:none;border-bottom:1px solid #333;background:transparent;font-size:9.5pt;font-family:Arial}
+        .sig{border-top:1px solid #000;margin-top:28px;padding-top:4px;text-align:center;font-size:8pt;color:#444}
+        .row{display:flex;flex-wrap:wrap;gap:8px}
+        .col-4,.col-md-4{flex:1 1 30%}
+        .col-6,.col-md-6{flex:1 1 45%}
+        .col-3,.col-md-3{flex:1 1 20%}
+        small{font-size:7.5pt;color:#555}
+        label{font-weight:normal}
+        .mb-0{margin-bottom:0!important}.mb-1{margin-bottom:3px!important}.mb-2{margin-bottom:6px!important}.mb-3{margin-bottom:10px!important}
+        .mt-0{margin-top:0!important}.mt-1{margin-top:3px!important}.mt-2{margin-top:6px!important}.mt-3{margin-top:10px!important}.mt-4{margin-top:14px!important}
+        @page{margin:10mm}
+      </style>
+    </head><body>${clone.innerHTML}</body></html>`);
+    win.document.close();
+    win.onload = () => { win.focus(); win.print(); };
+  }
+</script>
+</body>
+</html>

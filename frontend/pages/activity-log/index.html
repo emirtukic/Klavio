@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Log aktivnosti | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Log aktivnosti</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-primary" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+  <div class="page-body">
+
+    <div class="page-header">
+      <h4>Log aktivnosti</h4>
+      <p class="text-muted mb-0">Revizijski trag - ko je šta i kada uradio.</p>
+    </div>
+
+    <!-- Filters -->
+    <div class="card mb-3">
+      <div class="card-body py-2">
+        <div class="row g-2 align-items-end">
+          <div class="col-sm-6 col-md-3">
+            <input type="text" class="form-control form-control-sm" id="filterUser"
+              placeholder="Pretraži korisnika ili akciju..."
+              autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly')"
+              oninput="renderTable()">
+          </div>
+          <div class="col-auto">
+            <select class="form-select form-select-sm" id="filterEntity" onchange="renderTable()">
+              <option value="">Svi entiteti</option>
+              <option value="Član">Član</option>
+              <option value="Članarina">Članarina</option>
+              <option value="Trening">Trening</option>
+              <option value="Utakmica">Utakmica</option>
+            </select>
+          </div>
+          <div class="col-auto">
+            <select class="form-select form-select-sm" id="filterAction" onchange="renderTable()">
+              <option value="">Sve akcije</option>
+              <option value="create">Kreiranje</option>
+              <option value="update">Izmjena</option>
+              <option value="delete">Brisanje</option>
+            </select>
+          </div>
+          <div class="col-auto">
+            <input type="date" class="form-control form-control-sm" id="filterFrom" onchange="renderTable()" title="Od datuma">
+          </div>
+          <div class="col-auto">
+            <input type="date" class="form-control form-control-sm" id="filterTo" onchange="renderTable()" title="Do datuma">
+          </div>
+          <div class="col-auto">
+            <button class="btn btn-outline-secondary btn-sm" onclick="resetFilters()">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card table-card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-semibold small"><i class="bi bi-journal-text me-2 text-primary"></i>Zapisi aktivnosti</span>
+        <span class="text-muted small" id="logCount"></span>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover table-sm mb-0">
+          <thead>
+            <tr>
+              <th>Datum i vrijeme</th>
+              <th>Korisnik</th>
+              <th>Akcija</th>
+              <th>Entitet</th>
+              <th>Detalji</th>
+            </tr>
+          </thead>
+          <tbody id="logBody">
+            <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:75%;"></div></td><td><div class="skeleton" style="height:13px;width:65%;"></div></td><td><div class="skeleton" style="height:13px;width:55%;"></div></td><td><div class="skeleton" style="height:13px;width:60%;"></div></td><td><div class="skeleton" style="height:13px;width:70%;"></div></td></tr>
+            <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:70%;"></div></td><td><div class="skeleton" style="height:13px;width:70%;"></div></td><td><div class="skeleton" style="height:13px;width:50%;"></div></td><td><div class="skeleton" style="height:13px;width:65%;"></div></td><td><div class="skeleton" style="height:13px;width:55%;"></div></td></tr>
+            <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:80%;"></div></td><td><div class="skeleton" style="height:13px;width:60%;"></div></td><td><div class="skeleton" style="height:13px;width:45%;"></div></td><td><div class="skeleton" style="height:13px;width:70%;"></div></td><td><div class="skeleton" style="height:13px;width:60%;"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card-footer d-flex justify-content-between align-items-center py-2">
+        <button class="btn btn-sm btn-outline-secondary" id="btnPrev" onclick="changePage(-1)">
+          <i class="bi bi-chevron-left"></i> Prethodna
+        </button>
+        <span class="text-muted small" id="pageInfo"></span>
+        <button class="btn btn-sm btn-outline-secondary" id="btnNext" onclick="changePage(1)">
+          Sljedeća <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+const user = requireRole('admin', 'super_admin');
+setUserInfo(user); buildSidebar();
+
+const PAGE_SIZE = 25;
+let allLogs = [], currentPage = 1;
+
+async function load() {
+  try {
+    allLogs = await apiGet('/activity-log?limit=500');
+    if (!Array.isArray(allLogs)) allLogs = [];
+  } catch(e) {
+    allLogs = [];
+    showToast('Greška pri učitavanju loga', 'error');
+  }
+  currentPage = 1;
+  renderTable();
+}
+
+function filtered() {
+  const q      = (document.getElementById('filterUser').value || '').toLowerCase();
+  const entity = document.getElementById('filterEntity').value;
+  const action = document.getElementById('filterAction').value;
+  const from   = document.getElementById('filterFrom').value;
+  const to     = document.getElementById('filterTo').value;
+
+  return allLogs.filter(r => {
+    const dateStr = (r.created_at || '').slice(0, 10);
+    return (
+      (!q      || (r.user_name||'').toLowerCase().includes(q) || (r.action||'').toLowerCase().includes(q) || (r.details||'').toLowerCase().includes(q)) &&
+      (!entity || r.entity_type === entity) &&
+      (!action || r.action === action) &&
+      (!from   || dateStr >= from) &&
+      (!to     || dateStr <= to)
+    );
+  });
+}
+
+function renderTable() {
+  const rows = filtered();
+  const total = rows.length;
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  if (currentPage > totalPages) currentPage = totalPages;
+
+  const slice = rows.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  document.getElementById('logCount').textContent = `${total} zapisa`;
+  document.getElementById('pageInfo').textContent = `Stranica ${currentPage} / ${totalPages}`;
+  document.getElementById('btnPrev').disabled = currentPage <= 1;
+  document.getElementById('btnNext').disabled = currentPage >= totalPages;
+
+  const ACTION_BADGE = {
+    create: '<span style="background:#dcfce7;color:#15803d;font-size:0.72rem;padding:2px 8px;border-radius:10px;font-weight:600;">Kreiranje</span>',
+    update: '<span style="background:#dbeafe;color:#1d4ed8;font-size:0.72rem;padding:2px 8px;border-radius:10px;font-weight:600;">Izmjena</span>',
+    delete: '<span style="background:#fee2e2;color:#dc2626;font-size:0.72rem;padding:2px 8px;border-radius:10px;font-weight:600;">Brisanje</span>',
+    login:  '<span style="background:#f3e8ff;color:#7c3aed;font-size:0.72rem;padding:2px 8px;border-radius:10px;font-weight:600;">Prijava</span>',
+  };
+  const ENTITY_ICON = { 'Član':'person', 'Članarina':'cash-coin', 'Trening':'calendar3', 'Utakmica':'trophy' };
+
+  document.getElementById('logBody').innerHTML = slice.length ? slice.map(r => {
+    const dt = new Date(r.created_at);
+    const dateStr = dt.toLocaleDateString('bs-BA');
+    const timeStr = dt.toLocaleTimeString('bs-BA', { hour:'2-digit', minute:'2-digit' });
+    const icon = ENTITY_ICON[r.entity_type] || 'file-text';
+    return `
+    <tr>
+      <td class="small">
+        <div class="fw-semibold">${dateStr}</div>
+        <div class="text-muted">${timeStr}</div>
+      </td>
+      <td class="small fw-semibold">${esc(r.user_name || '-')}</td>
+      <td>${ACTION_BADGE[r.action] || `<span class="badge bg-secondary">${esc(r.action||'-')}</span>`}</td>
+      <td class="small text-muted">
+        ${r.entity_type ? `<i class="bi bi-${icon} me-1"></i>${esc(r.entity_type)}${r.entity_id ? ' #'+r.entity_id : ''}` : '-'}
+      </td>
+      <td class="small text-muted" style="max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${esc(r.details||'')}">
+        ${esc(r.details || '-')}
+      </td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="5" class="text-center text-muted py-4"><i class="bi bi-inbox me-2"></i>Nema zapisa</td></tr>`;
+}
+
+function changePage(dir) {
+  currentPage += dir;
+  renderTable();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function resetFilters() {
+  ['filterUser','filterFrom','filterTo'].forEach(id => document.getElementById(id).value = '');
+  ['filterEntity','filterAction'].forEach(id => document.getElementById(id).value = '');
+  currentPage = 1;
+  renderTable();
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+load();
+</script>
+</body>
+</html>

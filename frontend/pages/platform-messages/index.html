@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Poruke | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Poruke klubovima</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-danger" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+  <div class="page-body">
+    <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-2">
+      <div><h4>Poruke</h4><p class="text-muted mb-0">Broadcast svim adminima ili direktna poruka jednom klubu.</p></div>
+      <button class="btn btn-primary" onclick="openCompose()"><i class="bi bi-send me-1"></i>Nova poruka</button>
+    </div>
+
+    <div class="row g-3 mb-4">
+      <div class="col-sm-4">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="stat-icon bg-primary bg-opacity-10 flex-shrink-0"><i class="bi bi-broadcast text-primary fs-5"></i></div>
+            <div class="min-w-0"><div class="stat-kpi-label">Broadcast poruke</div><div class="stat-kpi-value" id="kBroadcast">-</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="stat-icon bg-info bg-opacity-10 flex-shrink-0"><i class="bi bi-chat-dots text-info fs-5"></i></div>
+            <div class="min-w-0"><div class="stat-kpi-label">Direktne poruke</div><div class="stat-kpi-value" id="kDirect">-</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="stat-icon bg-warning bg-opacity-10 flex-shrink-0"><i class="bi bi-reply text-warning fs-5"></i></div>
+            <div class="min-w-0"><div class="stat-kpi-label">Odgovori od admina</div><div class="stat-kpi-value" id="kPending">-</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card table-card">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead><tr><th>Tip</th><th>Naslov</th><th>Klub</th><th>Odgovori</th><th>Posljednja aktivnost</th><th></th></tr></thead>
+          <tbody id="msgTable">
+            <tr class="sk-row"><td><div class="skeleton" style="height:20px;width:70px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:13px;width:65%;"></div></td><td><div class="skeleton" style="height:13px;width:50%;"></div></td><td><div class="skeleton" style="height:13px;width:30px;"></div></td><td><div class="skeleton" style="height:13px;width:100px;"></div></td><td><div class="skeleton" style="height:28px;width:36px;border-radius:6px;"></div></td></tr>
+            <tr class="sk-row"><td><div class="skeleton" style="height:20px;width:70px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:13px;width:55%;"></div></td><td><div class="skeleton" style="height:13px;width:40%;"></div></td><td><div class="skeleton" style="height:13px;width:30px;"></div></td><td><div class="skeleton" style="height:13px;width:100px;"></div></td><td><div class="skeleton" style="height:28px;width:36px;border-radius:6px;"></div></td></tr>
+            <tr class="sk-row"><td><div class="skeleton" style="height:20px;width:70px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:13px;width:70%;"></div></td><td><div class="skeleton" style="height:13px;width:60%;"></div></td><td><div class="skeleton" style="height:13px;width:30px;"></div></td><td><div class="skeleton" style="height:13px;width:100px;"></div></td><td><div class="skeleton" style="height:28px;width:36px;border-radius:6px;"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Compose Modal -->
+<div class="modal fade" id="composeModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Nova poruka</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Tip poruke</label>
+          <div class="d-flex gap-3">
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="msgType" id="typeBroadcast" value="broadcast" checked onchange="toggleClubSelect()">
+              <label class="form-check-label" for="typeBroadcast"><i class="bi bi-broadcast me-1 text-primary"></i>Broadcast - svi admini</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="msgType" id="typeDirect" value="direct" onchange="toggleClubSelect()">
+              <label class="form-check-label" for="typeDirect"><i class="bi bi-chat-dots me-1 text-info"></i>Direktna - jedan klub</label>
+            </div>
+          </div>
+        </div>
+        <div class="mb-3 d-none" id="clubSelectWrap">
+          <label class="form-label">Odaberi klub</label>
+          <select class="form-select" id="msgClub"><option value="">-- Odaberi klub --</option></select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Naslov</label>
+          <input type="text" class="form-control" id="msgSubject" placeholder="npr. Nova funkcija: Razvoj igrača">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Poruka</label>
+          <textarea class="form-control" id="msgBody" rows="5" placeholder="Unesite sadržaj poruke..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
+        <button type="button" class="btn btn-primary" onclick="sendMsg()"><i class="bi bi-send me-1"></i>Pošalji</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Thread Modal -->
+<div class="modal fade" id="threadModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title" id="threadSubject"></h5>
+          <div class="d-flex gap-2 mt-1" id="threadMeta"></div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" style="max-height:420px;overflow-y:auto;" id="threadReplies"></div>
+      <div class="modal-footer flex-column align-items-stretch">
+        <textarea class="form-control mb-2" id="replyBody" rows="3" placeholder="Unesite odgovor..."></textarea>
+        <div class="d-flex justify-content-end">
+          <button class="btn btn-primary" onclick="sendReply()"><i class="bi bi-send me-1"></i>Odgovori</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+const user = requireRole('super_admin');
+setUserInfo(user); buildSidebar();
+
+let allMsgs = [], clubs = [], currentMsgId = null;
+
+async function load() {
+  [allMsgs, clubs] = await Promise.all([apiGet('/platform-messaging'), apiGet('/clubs')]);
+  document.getElementById('kBroadcast').textContent = allMsgs.filter(m => m.type === 'broadcast').length;
+  document.getElementById('kDirect').textContent    = allMsgs.filter(m => m.type === 'direct').length;
+  document.getElementById('kPending').textContent   = allMsgs.filter(m => m.last_reply_role === 'admin').length;
+  renderTable();
+  const sel = document.getElementById('msgClub');
+  sel.innerHTML = '<option value="">-- Odaberi klub --</option>' +
+    clubs.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+}
+
+function renderTable() {
+  document.getElementById('msgTable').innerHTML = allMsgs.map(m => {
+    const hasAdminReply = m.last_reply_role === 'admin';
+    const indicator = hasAdminReply
+      ? '<span class="badge bg-warning text-dark ms-1">Nova</span>'
+      : '';
+    const lastActivity = m.last_reply_at || m.created_at;
+    return `
+    <tr style="cursor:pointer;${hasAdminReply ? 'font-weight:600;' : ''}" onclick="openThread(${m.id})">
+      <td>${m.type === 'broadcast'
+        ? '<span class="badge bg-primary">Broadcast</span>'
+        : '<span class="badge bg-info text-dark">Direktna</span>'}</td>
+      <td>${m.subject}${indicator}</td>
+      <td class="text-muted small">${m.club_name || '<span class="text-muted">Svi klubovi</span>'}</td>
+      <td class="text-center">${m.reply_count || 0}</td>
+      <td class="small text-muted">${new Date(lastActivity).toLocaleString('bs-BA')}</td>
+      <td>
+        <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation();deleteMsg(${m.id})" title="Obriši"><i class="bi bi-trash"></i></button>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6" class="text-center text-muted py-3">Nema poruka</td></tr>';
+}
+
+async function openThread(id) {
+  currentMsgId = id;
+  const { message: msg, replies } = await apiGet('/platform-messaging/' + id + '/replies');
+  document.getElementById('threadSubject').textContent = msg.subject;
+  document.getElementById('threadMeta').innerHTML =
+    `${msg.type === 'broadcast' ? '<span class="badge bg-primary">Broadcast</span>' : '<span class="badge bg-info text-dark">Direktna</span>'}
+     ${msg.club_name ? `<span class="badge bg-secondary">${msg.club_name}</span>` : ''}
+     <span class="text-muted small">${new Date(msg.created_at).toLocaleDateString('bs-BA')}</span>`;
+  document.getElementById('replyBody').value = '';
+
+  // Original message bubble
+  const original = `
+    <div class="d-flex gap-2 mb-3">
+      <div class="flex-shrink-0">
+        <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:36px;height:36px;background:#9b86f2">
+          <i class="bi bi-shield-check text-white"></i>
+        </div>
+      </div>
+      <div class="flex-grow-1">
+        <div class="small fw-semibold mb-1">${msg.sent_by_name} <span class="badge" style="background:#9b86f2">Klavio</span></div>
+        <div class="p-3 rounded-3 text-white" style="background:#9b86f2;white-space:pre-wrap;">${msg.body}</div>
+        <div class="small text-muted mt-1">${new Date(msg.created_at).toLocaleString('bs-BA')}</div>
+      </div>
+    </div>`;
+
+  const replyBubbles = replies.map(r => {
+    const isStaff = r.user_role === 'super_admin';
+    return `
+    <div class="d-flex gap-2 mb-3 ${isStaff ? 'flex-row-reverse' : ''}">
+      <div class="flex-shrink-0">
+        <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:36px;height:36px;background:${isStaff ? '#9b86f2' : '#e2e8f0'}">
+          <i class="bi bi-${isStaff ? 'shield-check text-white' : 'building text-muted'}"></i>
+        </div>
+      </div>
+      <div class="flex-grow-1">
+        <div class="small fw-semibold ${isStaff ? 'text-end' : ''} mb-1">${r.user_name} ${isStaff ? '<span class="badge" style="background:#9b86f2">Klavio</span>' : '<span class="badge bg-secondary">Admin</span>'}</div>
+        <div class="p-3 rounded-3 ${isStaff ? 'text-white' : 'bg-light'}" style="${isStaff ? 'background:#9b86f2' : ''};white-space:pre-wrap;">${r.body}</div>
+        <div class="small text-muted mt-1 ${isStaff ? 'text-end' : ''}">${new Date(r.created_at).toLocaleString('bs-BA')}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  const container = document.getElementById('threadReplies');
+  container.innerHTML = original + (replyBubbles || '<p class="text-muted text-center small">Nema odgovora</p>');
+  container.scrollTop = container.scrollHeight;
+  const _tm = document.getElementById('threadModal');
+  (bootstrap.Modal.getInstance(_tm) || new bootstrap.Modal(_tm)).show();
+}
+
+async function sendReply() {
+  const body = document.getElementById('replyBody').value.trim();
+  if (!body) return;
+  try {
+    await apiPost('/platform-messaging/' + currentMsgId + '/replies', { body });
+    showToast('Odgovor poslan', 'success');
+    openThread(currentMsgId); load();
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+function openCompose() {
+  document.getElementById('msgSubject').value = '';
+  document.getElementById('msgBody').value = '';
+  document.getElementById('typeBroadcast').checked = true;
+  toggleClubSelect();
+  new bootstrap.Modal(document.getElementById('composeModal')).show();
+}
+
+function toggleClubSelect() {
+  document.getElementById('clubSelectWrap').classList.toggle('d-none', !document.getElementById('typeDirect').checked);
+}
+
+async function sendMsg() {
+  const type    = document.querySelector('input[name="msgType"]:checked').value;
+  const subject = document.getElementById('msgSubject').value.trim();
+  const body    = document.getElementById('msgBody').value.trim();
+  const club_id = document.getElementById('msgClub').value || null;
+  if (!subject || !body) return showToast('Unesite naslov i poruku', 'error');
+  if (type === 'direct' && !club_id) return showToast('Odaberite klub', 'error');
+  try {
+    await apiPost('/platform-messaging', { type, subject, body, club_id });
+    bootstrap.Modal.getInstance(document.getElementById('composeModal')).hide();
+    showToast('Poruka poslana', 'success'); load();
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+function deleteMsg(id) {
+  confirmDelete(async () => {
+    try { await apiDelete('/platform-messaging/' + id); showToast('Obrisano', 'success'); load(); }
+    catch(e) { showToast(e.message, 'error'); }
+  }, 'Obrisati poruku i sve odgovore?');
+}
+
+load();
+</script>
+</body>
+</html>

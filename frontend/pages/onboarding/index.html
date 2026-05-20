@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dobrodošli u Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body { background: #0f172a; min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Segoe UI', sans-serif; }
+    .wizard-wrap { width: 100%; max-width: 560px; padding: 1rem; }
+    .wizard-card { background: #fff; border-radius: 20px; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.35); }
+    .wizard-header { background: linear-gradient(135deg, #1e3a5f 0%, #3b82f6 100%); padding: 2rem 2rem 1.5rem; color: #fff; }
+    .wizard-header img { height: 36px; opacity: 0.9; margin-bottom: 1rem; }
+    .wizard-header h2 { font-size: 1.4rem; font-weight: 700; margin: 0; }
+    .wizard-header p  { font-size: 0.85rem; opacity: 0.7; margin: 0.3rem 0 0; }
+
+    .step-dots { display: flex; gap: 6px; margin-top: 1rem; }
+    .step-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.3); transition: all .25s; }
+    .step-dot.active { background: #fff; width: 22px; border-radius: 4px; }
+    .step-dot.done { background: rgba(255,255,255,0.65); }
+
+    .wizard-body { padding: 2rem; }
+    .step-pane { display: none; }
+    .step-pane.active { display: block; animation: fadeIn .25s ease; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:none; } }
+
+    .step-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 1rem; }
+    .step-title { font-size: 1.1rem; font-weight: 700; color: #1e293b; margin-bottom: 0.25rem; }
+    .step-desc  { font-size: 0.85rem; color: #64748b; margin-bottom: 1.5rem; }
+
+    .form-label { font-weight: 600; font-size: 0.85rem; color: #374151; }
+    .form-control { border-radius: 10px; border-color: #e2e8f0; padding: .6rem .9rem; }
+    .form-control:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,.15); }
+
+    .color-row { display: flex; align-items: center; gap: 12px; }
+    .color-preview { width: 36px; height: 36px; border-radius: 8px; border: 2px solid #e2e8f0; cursor: pointer; flex-shrink: 0; }
+    input[type="color"] { width: 0; height: 0; opacity: 0; position: absolute; }
+
+    .wizard-footer { display: flex; gap: 10px; margin-top: 1.75rem; }
+    .btn-wizard-back { flex: 1; }
+    .btn-wizard-next { flex: 2; }
+
+    .success-icon { font-size: 3.5rem; margin-bottom: 1rem; }
+    .checklist li { font-size: 0.9rem; color: #374151; padding: 6px 0; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; gap: 8px; }
+    .checklist li:last-child { border: none; }
+    .checklist li .bi { color: #22c55e; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+<div class="wizard-wrap">
+  <div class="wizard-card">
+    <div class="wizard-header">
+      <img src="/assets/img/klavio-icon.svg" alt="Klavio" onerror="this.style.display='none'">
+      <h2 id="hdrTitle">Postavljanje kluba</h2>
+      <p id="hdrSub">Korak 1 od 3 — Detalji kluba</p>
+      <div class="step-dots">
+        <div class="step-dot active" id="dot0"></div>
+        <div class="step-dot" id="dot1"></div>
+        <div class="step-dot" id="dot2"></div>
+        <div class="step-dot" id="dot3"></div>
+      </div>
+    </div>
+
+    <div class="wizard-body">
+
+      <!-- Step 0: Club details -->
+      <div class="step-pane active" id="step0">
+        <div class="step-icon" style="background:#eff6ff;color:#3b82f6;"><i class="bi bi-building"></i></div>
+        <div class="step-title">Detalji kluba</div>
+        <div class="step-desc">Unesite naziv i boju vašeg kluba. Ovo se prikazuje svim korisnicima.</div>
+        <div class="mb-3">
+          <label class="form-label">Naziv kluba *</label>
+          <input type="text" id="clubName" class="form-control" placeholder="npr. FK Sarajevo">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Primarna boja</label>
+          <div class="color-row">
+            <div class="color-preview" id="colorPreview" style="background:#3b82f6;" onclick="document.getElementById('colorPicker').click()"></div>
+            <input type="color" id="colorPicker" value="#3b82f6" oninput="document.getElementById('colorPreview').style.background=this.value">
+            <span class="text-muted small">Klikom na kvadrat odaberite boju kluba</span>
+          </div>
+        </div>
+        <div id="step0Alert" class="alert alert-danger d-none small py-2"></div>
+        <div class="wizard-footer">
+          <button class="btn btn-primary btn-wizard-next" onclick="step0Next()">
+            Nastavi <i class="bi bi-arrow-right ms-1"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 1: First selection -->
+      <div class="step-pane" id="step1">
+        <div class="step-icon" style="background:#f0fdf4;color:#22c55e;"><i class="bi bi-layers"></i></div>
+        <div class="step-title">Prva selekcija</div>
+        <div class="step-desc">Kreirajte prvu selekciju u vašem klubu (npr. Seniori, U-17, Pioniri).</div>
+        <div class="mb-3">
+          <label class="form-label">Naziv selekcije *</label>
+          <input type="text" id="selName" class="form-control" placeholder="npr. Seniori">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Opis <span class="text-muted">(opciono)</span></label>
+          <input type="text" id="selDesc" class="form-control" placeholder="npr. Seniorska ekipa, liga i kup natjecanja">
+        </div>
+        <div id="step1Alert" class="alert alert-danger d-none small py-2"></div>
+        <div class="wizard-footer">
+          <button class="btn btn-outline-secondary btn-wizard-back" onclick="goStep(0)">
+            <i class="bi bi-arrow-left me-1"></i> Nazad
+          </button>
+          <button class="btn btn-primary btn-wizard-next" onclick="step1Next()">
+            <span id="s1Spinner" class="spinner-border spinner-border-sm d-none me-1"></span>
+            Nastavi <i class="bi bi-arrow-right ms-1"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: Invite coach (optional) -->
+      <div class="step-pane" id="step2">
+        <div class="step-icon" style="background:#fdf4ff;color:#8b5cf6;"><i class="bi bi-person-badge"></i></div>
+        <div class="step-title">Dodaj trenera <span class="badge bg-secondary" style="font-size:0.65rem;vertical-align:middle;">Opciono</span></div>
+        <div class="step-desc">Pozovite prvog trenera u vaš klub. Možete preskočiti ovaj korak i dodati trenere kasnije.</div>
+        <div class="mb-3">
+          <label class="form-label">Ime i prezime trenera</label>
+          <input type="text" id="coachName" class="form-control" placeholder="npr. Mirza Hadžić">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Email adresa</label>
+          <input type="email" id="coachEmail" class="form-control" placeholder="trener@email.com">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Specijalizacija <span class="text-muted">(opciono)</span></label>
+          <input type="text" id="coachSpec" class="form-control" placeholder="npr. Kondicioni trener">
+        </div>
+        <div id="step2Alert" class="alert alert-danger d-none small py-2"></div>
+        <div class="wizard-footer">
+          <button class="btn btn-outline-secondary btn-wizard-back" onclick="goStep(1)">
+            <i class="bi bi-arrow-left me-1"></i> Nazad
+          </button>
+          <button class="btn btn-outline-secondary" onclick="finishOnboarding()" style="flex:1;">
+            Preskoči
+          </button>
+          <button class="btn btn-primary" onclick="step2Next()" style="flex:2;">
+            <span id="s2Spinner" class="spinner-border spinner-border-sm d-none me-1"></span>
+            Dodaj trenera
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 3: Done -->
+      <div class="step-pane" id="step3">
+        <div class="text-center">
+          <div class="success-icon">🎉</div>
+          <div class="step-title" style="font-size:1.3rem;text-align:center;">Sve je postavljeno!</div>
+          <div class="step-desc" style="text-align:center;margin-bottom:1.5rem;">Vaš klub je spreman. Evo šta ste napravili:</div>
+          <ul class="checklist list-unstyled text-start mb-4" id="doneList"></ul>
+          <button class="btn btn-primary w-100" onclick="finishOnboarding()">
+            <i class="bi bi-speedometer2 me-2"></i>Idi na nadzornu ploču
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script>
+  const HEADERS = ['Detalji kluba', 'Prva selekcija', 'Dodaj trenera', 'Gotovo!'];
+  const SUBS    = ['Korak 1 od 3 — Detalji kluba', 'Korak 2 od 3 — Selekcija', 'Korak 3 od 3 — Trener', 'Postavljanje završeno'];
+  let currentStep = 0;
+  let createdSelectionId = null;
+
+  function goStep(n) {
+    document.querySelectorAll('.step-pane').forEach((p, i) => p.classList.toggle('active', i === n));
+    document.querySelectorAll('.step-dot').forEach((d, i) => {
+      d.classList.toggle('active', i === n);
+      d.classList.toggle('done', i < n);
+    });
+    document.getElementById('hdrTitle').textContent = HEADERS[n];
+    document.getElementById('hdrSub').textContent   = SUBS[n];
+    currentStep = n;
+  }
+
+  async function step0Next() {
+    const name  = document.getElementById('clubName').value.trim();
+    const color = document.getElementById('colorPicker').value;
+    const alert = document.getElementById('step0Alert');
+    alert.classList.add('d-none');
+    if (!name) { alert.textContent = 'Unesite naziv kluba.'; alert.classList.remove('d-none'); return; }
+
+    try {
+      const updated = await apiPut('/auth/club-branding', { name, primary_color: color });
+      const stored = getClub() || {};
+      stored.name = updated.name || name;
+      stored.primary_color = updated.primary_color || color;
+      localStorage.setItem('club', JSON.stringify({ ...stored, ...updated }));
+    } catch (_) {}
+    goStep(1);
+  }
+
+  async function step1Next() {
+    const name = document.getElementById('selName').value.trim();
+    const desc = document.getElementById('selDesc').value.trim();
+    const alert = document.getElementById('step1Alert');
+    alert.classList.add('d-none');
+    if (!name) { alert.textContent = 'Unesite naziv selekcije.'; alert.classList.remove('d-none'); return; }
+
+    const btn = document.querySelector('#step1 .btn-primary');
+    const sp  = document.getElementById('s1Spinner');
+    btn.disabled = true; sp.classList.remove('d-none');
+    try {
+      const sel = await apiPost('/selections', { name, description: desc || undefined });
+      createdSelectionId = sel.id;
+      goStep(2);
+    } catch (err) {
+      alert.textContent = err.message || 'Greška pri kreiranju selekcije.';
+      alert.classList.remove('d-none');
+    } finally { btn.disabled = false; sp.classList.add('d-none'); }
+  }
+
+  async function step2Next() {
+    const name  = document.getElementById('coachName').value.trim();
+    const email = document.getElementById('coachEmail').value.trim();
+    const spec  = document.getElementById('coachSpec').value.trim();
+    const alert = document.getElementById('step2Alert');
+    alert.classList.add('d-none');
+    if (!name || !email) { alert.textContent = 'Unesite ime i email trenera.'; alert.classList.remove('d-none'); return; }
+
+    const btn = document.querySelector('#step2 .btn-primary');
+    const sp  = document.getElementById('s2Spinner');
+    btn.disabled = true; sp.classList.remove('d-none');
+    try {
+      await apiPost('/coaches', { name, email, specialization: spec || undefined, selection_id: createdSelectionId || undefined });
+      showDoneStep(true);
+    } catch (err) {
+      alert.textContent = err.message || 'Greška pri dodavanju trenera.';
+      alert.classList.remove('d-none');
+    } finally { btn.disabled = false; sp.classList.add('d-none'); }
+  }
+
+  function showDoneStep(withCoach = false) {
+    const clubName = document.getElementById('clubName').value.trim() || (getClub() && getClub().name) || 'Klub';
+    const selName  = document.getElementById('selName').value.trim();
+    const coachName = document.getElementById('coachName').value.trim();
+    const items = [
+      { text: `Klub <strong>${clubName}</strong> konfiguriran`, done: true },
+      { text: selName ? `Selekcija <strong>${selName}</strong> kreirana` : 'Selekcija kreirana', done: !!selName },
+      { text: withCoach && coachName ? `Trener <strong>${coachName}</strong> dodan` : 'Trener (preskočeno)', done: withCoach },
+    ];
+    document.getElementById('doneList').innerHTML = items.map(i =>
+      `<li><i class="bi ${i.done ? 'bi-check-circle-fill' : 'bi-dash-circle'}" style="color:${i.done ? '#22c55e' : '#94a3b8'}"></i> ${i.text}</li>`
+    ).join('');
+    goStep(3);
+  }
+
+  function finishOnboarding() {
+    const club = getClub();
+    if (club) localStorage.setItem('onboarding_done_' + club.id, '1');
+    window.location.href = '/pages/dashboard/admin.html';
+  }
+
+  // Init
+  document.addEventListener('DOMContentLoaded', () => {
+    const user = requireRole('admin', 'super_admin');
+    if (!user) return;
+    const club = getClub();
+    if (!club) { window.location.href = '/'; return; }
+    if (localStorage.getItem('onboarding_done_' + club.id)) {
+      window.location.href = '/pages/dashboard/admin.html';
+      return;
+    }
+    document.getElementById('clubName').value = club.name || '';
+    if (club.primary_color) {
+      document.getElementById('colorPicker').value = club.primary_color;
+      document.getElementById('colorPreview').style.background = club.primary_color;
+    }
+  });
+</script>
+</body>
+</html>

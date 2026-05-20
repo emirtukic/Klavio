@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Termini | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Termini</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-primary" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+  <div class="page-body">
+
+    <div class="page-header d-flex justify-content-between align-items-center">
+      <div>
+        <h4>Termini</h4>
+        <p class="text-muted mb-0">Zakazani termini s trenerima</p>
+      </div>
+      <div class="d-flex gap-2">
+        <a href="book.html" class="btn btn-primary" id="bookBtn">
+          <i class="bi bi-plus-lg me-1"></i>Zakaži termin
+        </a>
+        <button class="btn btn-primary d-none" id="addAdminBtn"
+          data-bs-toggle="modal" data-bs-target="#addModal">
+          <i class="bi bi-plus-lg me-1"></i>Dodaj termin
+        </button>
+      </div>
+    </div>
+
+    <div class="card table-card">
+      <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <select class="form-select form-select-sm" id="fStatus" style="width:160px" onchange="render()">
+          <option value="">Svi statusi</option>
+          <option value="pending">Na čekanju</option>
+          <option value="confirmed">Potvrđen</option>
+          <option value="cancelled">Otkazan</option>
+        </select>
+        <span class="text-muted small" id="countLabel"></span>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover mb-0 table-mobile-cards">
+          <thead>
+            <tr>
+              <th>Naziv</th><th>Trener</th><th>Član</th>
+              <th>Datum</th><th>Vrijeme</th><th>Status</th><th>Akcije</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr class="sk-row"><td><div class="skeleton" style="height:14px;width:65%"></div></td><td><div class="skeleton" style="height:14px;width:70%"></div></td><td><div class="skeleton" style="height:14px;width:60%"></div></td><td><div class="skeleton" style="height:14px;width:80px"></div></td><td><div class="skeleton" style="height:14px;width:90px"></div></td><td><div class="skeleton" style="height:20px;width:70px;border-radius:999px"></div></td><td><div class="skeleton" style="height:28px;width:60px;border-radius:6px"></div></td></tr>
+            <tr class="sk-row"><td><div class="skeleton" style="height:14px;width:50%"></div></td><td><div class="skeleton" style="height:14px;width:55%"></div></td><td><div class="skeleton" style="height:14px;width:65%"></div></td><td><div class="skeleton" style="height:14px;width:80px"></div></td><td><div class="skeleton" style="height:14px;width:90px"></div></td><td><div class="skeleton" style="height:20px;width:70px;border-radius:999px"></div></td><td><div class="skeleton" style="height:28px;width:60px;border-radius:6px"></div></td></tr>
+            <tr class="sk-row"><td><div class="skeleton" style="height:14px;width:75%"></div></td><td><div class="skeleton" style="height:14px;width:60%"></div></td><td><div class="skeleton" style="height:14px;width:70%"></div></td><td><div class="skeleton" style="height:14px;width:80px"></div></td><td><div class="skeleton" style="height:14px;width:90px"></div></td><td><div class="skeleton" style="height:20px;width:70px;border-radius:999px"></div></td><td><div class="skeleton" style="height:28px;width:60px;border-radius:6px"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Add Appointment Modal (admin/coach) -->
+<div class="modal fade" id="addModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-calendar-plus me-2"></i>Dodaj termin</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Trener <span class="text-danger">*</span></label>
+          <select class="form-select" id="mCoach"></select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Član <span class="text-danger">*</span></label>
+          <select class="form-select" id="mMember"></select>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Naziv <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="mTitle" placeholder="npr. Individualni trening">
+        </div>
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Datum <span class="text-danger">*</span></label>
+            <input type="date" class="form-control" id="mDate">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Početak <span class="text-danger">*</span></label>
+            <input type="time" class="form-control" id="mStart">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Kraj <span class="text-danger">*</span></label>
+            <input type="time" class="form-control" id="mEnd">
+          </div>
+        </div>
+        <div class="mt-3">
+          <label class="form-label fw-semibold">Napomena</label>
+          <textarea class="form-control" id="mNotes" rows="2"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
+        <button type="button" class="btn btn-primary" id="mSaveBtn" onclick="saveModal()">
+          <span class="spinner-border spinner-border-sm d-none me-1" id="mSpinner"></span>
+          <i class="bi bi-check-lg me-1"></i>Spremi
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+  const user = requireAuth();
+  setUserInfo(user);
+  buildSidebar();
+
+  const isAdmin = ['admin','super_admin'].includes(user.role);
+  const isCoach = user.role === 'coach';
+  const isMember = user.role === 'member';
+
+  // Show correct "add" button per role
+  if (isMember) {
+    document.getElementById('bookBtn').classList.remove('d-none');
+    document.getElementById('addAdminBtn').classList.add('d-none');
+  } else if (isAdmin || isCoach) {
+    document.getElementById('bookBtn').classList.add('d-none');
+    document.getElementById('addAdminBtn').classList.remove('d-none');
+  }
+
+  let allAppts = [];
+
+  async function load() {
+    try {
+      const endpoint = isAdmin ? '/appointments' : '/appointments/my';
+      allAppts = await apiGet(endpoint);
+      render();
+      // Pre-load dropdowns for modal
+      if (isAdmin || isCoach) preloadDropdowns();
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  function render() {
+    const st = document.getElementById('fStatus').value;
+    const list = st ? allAppts.filter(a => a.status === st) : allAppts;
+    document.getElementById('countLabel').textContent = list.length + ' termin(a)';
+
+    if (!list.length) {
+      document.getElementById('tableBody').innerHTML =
+        `<tr><td colspan="7">
+           <div class="empty-state">
+             <i class="bi bi-calendar-x empty-state-icon"></i>
+             <p class="fw-semibold">Nema termina</p>
+             <p class="small">${isMember ? 'Zakažite termin s trenerom.' : 'Još uvijek nema zakazanih termina.'}</p>
+           </div>
+         </td></tr>`;
+      return;
+    }
+
+    document.getElementById('tableBody').innerHTML = list.map(a => `
+      <tr>
+        <td data-label="Naziv" class="fw-semibold">${escHtml(a.title)}</td>
+        <td data-label="Trener">${a.coach_name || '-'}</td>
+        <td data-label="Član">${a.member_name || '-'}</td>
+        <td data-label="Datum">${formatDate(a.appointment_date)}</td>
+        <td data-label="Vrijeme">${a.start_time ? a.start_time.slice(0,5) : '-'} – ${a.end_time ? a.end_time.slice(0,5) : '-'}</td>
+        <td data-label="Status">${apptBadge(a.status)}</td>
+        <td>
+          ${a.status === 'pending' && !isMember
+            ? `<button class="btn btn-sm btn-success me-1" onclick="confirm_(${a.id})" title="Potvrdi"><i class="bi bi-check-lg"></i></button>`
+            : ''}
+          ${a.status !== 'cancelled'
+            ? `<button class="btn btn-sm btn-outline-danger" onclick="cancel_(${a.id})" title="Otkaži"><i class="bi bi-x-lg"></i></button>`
+            : ''}
+        </td>
+      </tr>`).join('');
+  }
+
+  function apptBadge(status) {
+    const map = {
+      pending:   ['bg-warning text-dark', 'Na čekanju'],
+      confirmed: ['bg-success',           'Potvrđen'],
+      cancelled: ['bg-secondary',         'Otkazan'],
+    };
+    const [cls, label] = map[status] || ['bg-secondary','Nepoznato'];
+    return `<span class="badge ${cls}">${label}</span>`;
+  }
+
+  function escHtml(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  async function confirm_(id) {
+    try {
+      await apiPut('/appointments/' + id, { status: 'confirmed' });
+      showToast('Termin potvrđen', 'success');
+      load();
+    } catch(e) { showToast(e.message, 'error'); }
+  }
+
+  async function cancel_(id) {
+    confirmDelete(async () => {
+      try {
+        await apiPut('/appointments/' + id, { status: 'cancelled' });
+        showToast('Termin otkazan', 'success');
+        load();
+      } catch(e) { showToast(e.message, 'error'); }
+    });
+  }
+
+  // ── Modal (admin/coach) ──────────────────────────────────────────────────
+  async function preloadDropdowns() {
+    try {
+      const [coaches, members] = await Promise.all([
+        apiGet('/coaches'),
+        apiGet('/members'),
+      ]);
+      document.getElementById('mCoach').innerHTML =
+        '<option value="">Odaberi trenera...</option>' +
+        coaches.map(c => `<option value="${c.id}">${c.name} – ${c.specialization || 'Opći'}</option>`).join('');
+      document.getElementById('mMember').innerHTML =
+        '<option value="">Odaberi člana...</option>' +
+        members.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+    } catch(e) { /* silently ignore */ }
+  }
+
+  async function saveModal() {
+    const coach_id = document.getElementById('mCoach').value;
+    const member_id = document.getElementById('mMember').value;
+    const title = document.getElementById('mTitle').value.trim();
+    const appointment_date = document.getElementById('mDate').value;
+    const start_time = document.getElementById('mStart').value;
+    const end_time = document.getElementById('mEnd').value;
+    const notes = document.getElementById('mNotes').value.trim();
+
+    if (!coach_id)   { showToast('Odaberite trenera', 'error'); return; }
+    if (!member_id)  { showToast('Odaberite člana', 'error'); return; }
+    if (!title)      { showToast('Unesite naziv termina', 'error'); return; }
+    if (!appointment_date) { showToast('Odaberite datum', 'error'); return; }
+    if (!start_time || !end_time) { showToast('Unesite početak i kraj termina', 'error'); return; }
+
+    const spinner = document.getElementById('mSpinner');
+    const btn = document.getElementById('mSaveBtn');
+    spinner.classList.remove('d-none'); btn.disabled = true;
+    try {
+      await apiPost('/appointments', {
+        coach_id: parseInt(coach_id),
+        member_id: parseInt(member_id),
+        title, appointment_date, start_time, end_time,
+        notes: notes || undefined,
+      });
+      bootstrap.Modal.getInstance(document.getElementById('addModal')).hide();
+      document.getElementById('mTitle').value = '';
+      document.getElementById('mDate').value = '';
+      document.getElementById('mStart').value = '';
+      document.getElementById('mEnd').value = '';
+      document.getElementById('mNotes').value = '';
+      showToast('Termin dodan', 'success');
+      load();
+    } catch(e) { showToast(e.message, 'error'); }
+    finally { spinner.classList.add('d-none'); btn.disabled = false; }
+  }
+
+  load();
+</script>
+</body>
+</html>

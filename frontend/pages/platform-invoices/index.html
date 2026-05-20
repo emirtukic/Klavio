@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fakture | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Fakture i plaćanja</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-danger" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+  <div class="page-body">
+    <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-2">
+      <div><h4>Fakture i plaćanja</h4><p class="text-muted mb-0">Historija svih faktura prema klijent-klubovima.</p></div>
+      <button class="btn btn-primary" onclick="openCreate()"><i class="bi bi-plus me-1"></i>Nova faktura</button>
+    </div>
+
+    <div class="row g-3 mb-4">
+      <div class="col-sm-4">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="stat-icon bg-success bg-opacity-10 flex-shrink-0"><i class="bi bi-check-circle text-success fs-5"></i></div>
+            <div class="min-w-0"><div class="stat-kpi-label">Plaćene</div><div class="stat-kpi-value" id="kPaid">-</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="stat-icon bg-warning bg-opacity-10 flex-shrink-0"><i class="bi bi-clock text-warning fs-5"></i></div>
+            <div class="min-w-0"><div class="stat-kpi-label">Neplaćene</div><div class="stat-kpi-value" id="kUnpaid">-</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="col-sm-4">
+        <div class="card stat-card h-100">
+          <div class="card-body d-flex align-items-center gap-3">
+            <div class="stat-icon bg-danger bg-opacity-10 flex-shrink-0"><i class="bi bi-exclamation-triangle text-danger fs-5"></i></div>
+            <div class="min-w-0"><div class="stat-kpi-label">U kašnjenju</div><div class="stat-kpi-value" id="kOverdue">-</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-body py-2">
+        <div class="row g-2">
+          <div class="col-sm-4">
+            <input type="text" class="form-control form-control-sm" id="filterSearch" placeholder="Pretraži klub..."
+              autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly')" oninput="renderTable()">
+          </div>
+          <div class="col-auto">
+            <select class="form-select form-select-sm" id="filterStatus" onchange="renderTable()">
+              <option value="">Svi statusi</option>
+              <option value="paid">Plaćena</option>
+              <option value="unpaid">Neplaćena</option>
+              <option value="overdue">U kašnjenju</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card table-card">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead><tr><th>Br. fakture</th><th>Klub</th><th>Iznos</th><th>Status</th><th>Rok</th><th>Plaćeno</th><th>Period</th><th></th></tr></thead>
+          <tbody id="invTable">
+            <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:80px;"></div></td><td><div class="skeleton" style="height:13px;width:60%;"></div></td><td><div class="skeleton" style="height:13px;width:60px;"></div></td><td><div class="skeleton" style="height:20px;width:65px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:13px;width:70px;"></div></td><td><div class="skeleton" style="height:13px;width:70px;"></div></td><td><div class="skeleton" style="height:13px;width:80%;"></div></td><td><div class="skeleton" style="height:28px;width:55px;border-radius:6px;"></div></td></tr>
+            <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:80px;"></div></td><td><div class="skeleton" style="height:13px;width:50%;"></div></td><td><div class="skeleton" style="height:13px;width:60px;"></div></td><td><div class="skeleton" style="height:20px;width:65px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:13px;width:70px;"></div></td><td><div class="skeleton" style="height:13px;width:70px;"></div></td><td><div class="skeleton" style="height:13px;width:70%;"></div></td><td><div class="skeleton" style="height:28px;width:55px;border-radius:6px;"></div></td></tr>
+            <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:80px;"></div></td><td><div class="skeleton" style="height:13px;width:70%;"></div></td><td><div class="skeleton" style="height:13px;width:60px;"></div></td><td><div class="skeleton" style="height:20px;width:65px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:13px;width:70px;"></div></td><td><div class="skeleton" style="height:13px;width:70px;"></div></td><td><div class="skeleton" style="height:13px;width:75%;"></div></td><td><div class="skeleton" style="height:28px;width:55px;border-radius:6px;"></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Create Modal -->
+<div class="modal fade" id="createModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalTitle">Nova faktura</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="invId">
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <label class="form-label">Klub</label>
+            <select class="form-select" id="invClub"></select>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label">Broj fakture</label>
+            <input type="text" class="form-control" id="invNumber" placeholder="KLV-2026-001">
+          </div>
+          <div class="col-sm-4">
+            <label class="form-label">Iznos (KM)</label>
+            <input type="number" class="form-control" id="invAmount" step="0.01" min="0">
+          </div>
+          <div class="col-sm-4">
+            <label class="form-label">Status</label>
+            <select class="form-select" id="invStatus">
+              <option value="unpaid">Neplaćena</option>
+              <option value="paid">Plaćena</option>
+              <option value="overdue">U kašnjenju</option>
+            </select>
+          </div>
+          <div class="col-sm-4">
+            <label class="form-label">Rok plaćanja</label>
+            <input type="date" class="form-control" id="invDue">
+          </div>
+          <div class="col-sm-4">
+            <label class="form-label">Datum plaćanja</label>
+            <input type="date" class="form-control" id="invPaid">
+          </div>
+          <div class="col-sm-4">
+            <label class="form-label">Period od</label>
+            <input type="date" class="form-control" id="invPeriodStart">
+          </div>
+          <div class="col-sm-4">
+            <label class="form-label">Period do</label>
+            <input type="date" class="form-control" id="invPeriodEnd">
+          </div>
+          <div class="col-12">
+            <label class="form-label">Napomene</label>
+            <textarea class="form-control" id="invNotes" rows="2"></textarea>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
+        <button type="button" class="btn btn-primary" onclick="saveInv()">Spremi</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+const user = requireRole('super_admin');
+setUserInfo(user); buildSidebar();
+
+let allInv=[], clubs=[];
+const STATUS_BADGE = { paid:'<span class="badge bg-success">Plaćena</span>', unpaid:'<span class="badge bg-warning text-dark">Neplaćena</span>', overdue:'<span class="badge bg-danger">U kašnjenju</span>' };
+const fmt = n => parseFloat(n||0).toFixed(2)+' KM';
+const fmtD = d => d ? new Date(d).toLocaleDateString('bs-BA') : '-';
+
+async function load() {
+  [allInv, clubs] = await Promise.all([apiGet('/invoices'), apiGet('/clubs')]);
+  document.getElementById('kPaid').textContent   = allInv.filter(i=>i.status==='paid').length;
+  document.getElementById('kUnpaid').textContent = allInv.filter(i=>i.status==='unpaid').length;
+  document.getElementById('kOverdue').textContent= allInv.filter(i=>i.status==='overdue').length;
+  document.getElementById('invClub').innerHTML = clubs.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  renderTable();
+}
+
+function renderTable() {
+  const q  = (document.getElementById('filterSearch').value||'').toLowerCase();
+  const st = document.getElementById('filterStatus').value;
+  const rows = allInv.filter(i=>(!q||i.club_name.toLowerCase().includes(q))&&(!st||i.status===st));
+  document.getElementById('invTable').innerHTML = rows.map(i=>`
+    <tr>
+      <td class="fw-semibold small">${i.invoice_number}</td>
+      <td>${i.club_name}</td>
+      <td class="fw-semibold">${fmt(i.amount)}</td>
+      <td>${STATUS_BADGE[i.status]||i.status}</td>
+      <td class="small">${fmtD(i.due_date)}</td>
+      <td class="small">${fmtD(i.paid_date)}</td>
+      <td class="small text-muted">${i.period_start?fmtD(i.period_start)+' – '+fmtD(i.period_end):'-'}</td>
+      <td>
+        <div class="d-flex gap-1">
+          <button class="btn btn-sm btn-outline-secondary" onclick='editInv(${JSON.stringify(i).replace(/'/g,"&apos;")})' title="Uredi"><i class="bi bi-pencil"></i></button>
+          <button class="btn btn-sm btn-outline-danger" onclick="delInv(${i.id})" title="Obriši"><i class="bi bi-trash"></i></button>
+        </div>
+      </td>
+    </tr>`).join('')||'<tr><td colspan="8" class="text-center text-muted py-3">Nema faktura</td></tr>';
+}
+
+function openCreate() {
+  document.getElementById('modalTitle').textContent='Nova faktura';
+  document.getElementById('invId').value='';
+  ['invNumber','invAmount','invDue','invPaid','invPeriodStart','invPeriodEnd','invNotes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('invStatus').value='unpaid';
+  new bootstrap.Modal(document.getElementById('createModal')).show();
+}
+
+function editInv(i) {
+  document.getElementById('modalTitle').textContent='Uredi fakturu';
+  document.getElementById('invId').value=i.id;
+  document.getElementById('invClub').value=i.club_id;
+  document.getElementById('invNumber').value=i.invoice_number;
+  document.getElementById('invAmount').value=i.amount;
+  document.getElementById('invStatus').value=i.status;
+  document.getElementById('invDue').value=i.due_date?i.due_date.slice(0,10):'';
+  document.getElementById('invPaid').value=i.paid_date?i.paid_date.slice(0,10):'';
+  document.getElementById('invPeriodStart').value=i.period_start?i.period_start.slice(0,10):'';
+  document.getElementById('invPeriodEnd').value=i.period_end?i.period_end.slice(0,10):'';
+  document.getElementById('invNotes').value=i.notes||'';
+  new bootstrap.Modal(document.getElementById('createModal')).show();
+}
+
+async function saveInv() {
+  const id=document.getElementById('invId').value;
+  const body={
+    club_id:document.getElementById('invClub').value,
+    invoice_number:document.getElementById('invNumber').value.trim(),
+    amount:parseFloat(document.getElementById('invAmount').value)||0,
+    status:document.getElementById('invStatus').value,
+    due_date:document.getElementById('invDue').value||null,
+    paid_date:document.getElementById('invPaid').value||null,
+    period_start:document.getElementById('invPeriodStart').value||null,
+    period_end:document.getElementById('invPeriodEnd').value||null,
+    notes:document.getElementById('invNotes').value||null
+  };
+  if (!body.invoice_number||!body.due_date) return showToast('Unesite broj fakture i rok','error');
+  try {
+    if (id) await api('/invoices/'+id,{method:'PATCH',body:{status:body.status,paid_date:body.paid_date,notes:body.notes}});
+    else await apiPost('/invoices',body);
+    bootstrap.Modal.getInstance(document.getElementById('createModal')).hide();
+    showToast('Sačuvano','success'); load();
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+function delInv(id) {
+  confirmDelete(async () => {
+    try { await apiDelete('/invoices/'+id); showToast('Obrisano','success'); load(); }
+    catch(e) { showToast(e.message,'error'); }
+  }, 'Obrisati fakturu? Ova radnja je nepovratna.');
+}
+
+load();
+</script>
+</body>
+</html>
