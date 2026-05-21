@@ -17,7 +17,7 @@ function matchEmailHtml(subject, details) {
         ${details}
       </div>
       <div style="padding:12px 24px;background:#f8fafc;font-size:0.78rem;color:#94a3b8;border-top:1px solid #e2e8f0;">
-        Klavio — Platforma za upravljanje sportskim klubom
+        Klavio - Platforma za upravljanje sportskim klubom
       </div>
     </div>`;
 }
@@ -104,7 +104,7 @@ exports.sendDayBeforeReminders = async () => {
       const selName = match.selection_name || 'Selekcija';
 
       const matchEmailBody = (intro) =>
-        matchEmailHtml('Utakmica sutra — podsjetnik',
+        matchEmailHtml('Utakmica sutra - podsjetnik',
           `<p>${intro}</p>
            <p><strong>Protivnik:</strong> ${match.opponent}</p>
            <p><strong>Datum:</strong> ${dtStr}</p>
@@ -137,10 +137,10 @@ exports.sendDayBeforeReminders = async () => {
         );
         for (const u of coaches) {
           await insertNotif(u.id, match.club_id,
-            '⚽ Utakmica sutra — podsjetnik',
+            '⚽ Utakmica sutra - podsjetnik',
             `${selName} igra sutra: vs ${match.opponent} · ${dtStr} · ${loc}`,
             'warning', link);
-          sendEmail(u.email, `⚽ Utakmica sutra — ${selName}`, matchEmailBody(`${selName} igra sutra.`));
+          sendEmail(u.email, `⚽ Utakmica sutra - ${selName}`, matchEmailBody(`${selName} igra sutra.`));
           sent++;
         }
       }
@@ -153,10 +153,10 @@ exports.sendDayBeforeReminders = async () => {
       const adminMsg = `${selName} vs ${match.opponent} · ${dtStr} · ${loc} · ${HOME_AWAY_LABEL[match.home_away] || match.home_away} · ${MATCH_TYPE_LABEL[match.match_type] || match.match_type}`;
       for (const u of admins) {
         await insertNotif(u.id, match.club_id,
-          `⚽ Utakmica sutra — ${selName}`,
+          `⚽ Utakmica sutra - ${selName}`,
           adminMsg,
           'warning', link);
-        sendEmail(u.email, `⚽ Utakmica sutra — ${selName} vs ${match.opponent}`, matchEmailBody(`${selName} igra sutra (vaš klub).`));
+        sendEmail(u.email, `⚽ Utakmica sutra - ${selName} vs ${match.opponent}`, matchEmailBody(`${selName} igra sutra (vaš klub).`));
         sent++;
       }
     }

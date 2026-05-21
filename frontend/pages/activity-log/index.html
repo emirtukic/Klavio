@@ -6,6 +6,36 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
   <link href="../../assets/css/style.css" rel="stylesheet">
+  <style>
+    #logBody tr { cursor: pointer; }
+    #logBody tr:hover td { background: #f8fafc; }
+    .log-detail-row { background: #f8faff !important; cursor: default !important; }
+    .log-detail-row td { border-top: none !important; padding: 0 !important; }
+    .log-detail-inner {
+      padding: 0.75rem 1.25rem 0.85rem;
+      border-left: 3px solid #6366f1;
+      margin: 0;
+    }
+    .log-detail-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 0.5rem 1.5rem;
+    }
+    .log-detail-field label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #94a3b8;
+      display: block;
+      margin-bottom: 1px;
+    }
+    .log-detail-field span {
+      font-size: 0.82rem;
+      color: #1e293b;
+      word-break: break-word;
+    }
+  </style>
 </head>
 <body>
 <div class="sidebar"></div>
@@ -21,7 +51,7 @@
 
     <div class="page-header">
       <h4>Log aktivnosti</h4>
-      <p class="text-muted mb-0">Revizijski trag - ko je šta i kada uradio.</p>
+      <p class="text-muted mb-0">Revizijski trag - ko je šta i kada uradio. Kliknite red za detalje.</p>
     </div>
 
     <!-- Filters -->
@@ -41,6 +71,10 @@
               <option value="Članarina">Članarina</option>
               <option value="Trening">Trening</option>
               <option value="Utakmica">Utakmica</option>
+              <option value="Finansije">Finansije</option>
+              <option value="Selekcija">Selekcija</option>
+              <option value="Trener">Trener</option>
+              <option value="Obavijest">Obavijest</option>
             </select>
           </div>
           <div class="col-auto">
@@ -73,7 +107,7 @@
         <span class="text-muted small" id="logCount"></span>
       </div>
       <div class="table-responsive">
-        <table class="table table-hover table-sm mb-0">
+        <table class="table table-hover table-sm mb-0 table-mobile-cards">
           <thead>
             <tr>
               <th>Datum i vrijeme</th>
@@ -114,6 +148,25 @@ setUserInfo(user); buildSidebar();
 
 const PAGE_SIZE = 25;
 let allLogs = [], currentPage = 1;
+let openRowId = null;
+
+const ACTION_BADGE = {
+  create: '<span style="background:#dcfce7;color:#15803d;font-size:0.72rem;padding:2px 8px;border-radius:10px;font-weight:600;">Kreiranje</span>',
+  update: '<span style="background:#dbeafe;color:#1d4ed8;font-size:0.72rem;padding:2px 8px;border-radius:10px;font-weight:600;">Izmjena</span>',
+  delete: '<span style="background:#fee2e2;color:#dc2626;font-size:0.72rem;padding:2px 8px;border-radius:10px;font-weight:600;">Brisanje</span>',
+  login:  '<span style="background:#f3e8ff;color:#7c3aed;font-size:0.72rem;padding:2px 8px;border-radius:10px;font-weight:600;">Prijava</span>',
+};
+const ENTITY_ICON = {
+  'Član':      'person',
+  'Članarina': 'cash-coin',
+  'Trening':   'calendar3',
+  'Utakmica':  'trophy',
+  'Finansije': 'wallet2',
+  'Selekcija': 'people',
+  'Trener':    'person-badge',
+  'Obavijest': 'megaphone',
+};
+const ACTION_LABEL = { create: 'Kreiranje', update: 'Izmjena', delete: 'Brisanje', login: 'Prijava' };
 
 async function load() {
   try {
@@ -147,6 +200,7 @@ function filtered() {
 }
 
 function renderTable() {
+  openRowId = null;
   const rows = filtered();
   const total = rows.length;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -159,35 +213,87 @@ function renderTable() {
   document.getElementById('btnPrev').disabled = currentPage <= 1;
   document.getElementById('btnNext').disabled = currentPage >= totalPages;
 
-  const ACTION_BADGE = {
-    create: '<span style="background:#dcfce7;color:#15803d;font-size:0.72rem;padding:2px 8px;border-radius:10px;font-weight:600;">Kreiranje</span>',
-    update: '<span style="background:#dbeafe;color:#1d4ed8;font-size:0.72rem;padding:2px 8px;border-radius:10px;font-weight:600;">Izmjena</span>',
-    delete: '<span style="background:#fee2e2;color:#dc2626;font-size:0.72rem;padding:2px 8px;border-radius:10px;font-weight:600;">Brisanje</span>',
-    login:  '<span style="background:#f3e8ff;color:#7c3aed;font-size:0.72rem;padding:2px 8px;border-radius:10px;font-weight:600;">Prijava</span>',
-  };
-  const ENTITY_ICON = { 'Član':'person', 'Članarina':'cash-coin', 'Trening':'calendar3', 'Utakmica':'trophy' };
-
   document.getElementById('logBody').innerHTML = slice.length ? slice.map(r => {
     const dt = new Date(r.created_at);
     const dateStr = dt.toLocaleDateString('bs-BA');
     const timeStr = dt.toLocaleTimeString('bs-BA', { hour:'2-digit', minute:'2-digit' });
     const icon = ENTITY_ICON[r.entity_type] || 'file-text';
     return `
-    <tr>
-      <td class="small">
+    <tr onclick="toggleDetail(${r.id})" data-log-id="${r.id}">
+      <td data-label="Datum" class="small">
         <div class="fw-semibold">${dateStr}</div>
         <div class="text-muted">${timeStr}</div>
       </td>
-      <td class="small fw-semibold">${esc(r.user_name || '-')}</td>
-      <td>${ACTION_BADGE[r.action] || `<span class="badge bg-secondary">${esc(r.action||'-')}</span>`}</td>
-      <td class="small text-muted">
+      <td data-label="Korisnik" class="small fw-semibold">${esc(r.user_name || '-')}</td>
+      <td data-label="Akcija">${ACTION_BADGE[r.action] || `<span class="badge bg-secondary">${esc(r.action||'-')}</span>`}</td>
+      <td data-label="Entitet" class="small text-muted">
         ${r.entity_type ? `<i class="bi bi-${icon} me-1"></i>${esc(r.entity_type)}${r.entity_id ? ' #'+r.entity_id : ''}` : '-'}
       </td>
-      <td class="small text-muted" style="max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${esc(r.details||'')}">
+      <td data-label="Detalji" class="small text-muted" style="max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
         ${esc(r.details || '-')}
+        <i class="bi bi-chevron-down ms-1 text-muted" style="font-size:0.7rem;opacity:0.5;"></i>
       </td>
     </tr>`;
   }).join('') : `<tr><td colspan="5" class="text-center text-muted py-4"><i class="bi bi-inbox me-2"></i>Nema zapisa</td></tr>`;
+}
+
+function toggleDetail(id) {
+  const tbody = document.getElementById('logBody');
+
+  // Close existing detail row if open
+  const existing = tbody.querySelector('.log-detail-row');
+  if (existing) {
+    existing.remove();
+    if (openRowId === id) { openRowId = null; return; }
+  }
+
+  openRowId = id;
+  const r = allLogs.find(x => x.id === id);
+  if (!r) return;
+
+  const dt = new Date(r.created_at);
+  const fullDate = dt.toLocaleDateString('bs-BA', { day:'2-digit', month:'long', year:'numeric' });
+  const fullTime = dt.toLocaleTimeString('bs-BA', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+  const icon = ENTITY_ICON[r.entity_type] || 'file-text';
+
+  const detailRow = document.createElement('tr');
+  detailRow.className = 'log-detail-row';
+  detailRow.innerHTML = `
+    <td colspan="5">
+      <div class="log-detail-inner">
+        <div class="log-detail-grid">
+          <div class="log-detail-field">
+            <label><i class="bi bi-clock me-1"></i>Datum i vrijeme</label>
+            <span>${fullDate}, ${fullTime}</span>
+          </div>
+          <div class="log-detail-field">
+            <label><i class="bi bi-person me-1"></i>Korisnik</label>
+            <span>${esc(r.user_name || '-')}</span>
+          </div>
+          <div class="log-detail-field">
+            <label><i class="bi bi-lightning me-1"></i>Akcija</label>
+            <span>${ACTION_BADGE[r.action] || esc(r.action || '-')}</span>
+          </div>
+          <div class="log-detail-field">
+            <label><i class="bi bi-tag me-1"></i>Tip entiteta</label>
+            <span>${r.entity_type ? `<i class="bi bi-${icon} me-1"></i>${esc(r.entity_type)}` : '-'}</span>
+          </div>
+          ${r.entity_id ? `
+          <div class="log-detail-field">
+            <label><i class="bi bi-hash me-1"></i>ID entiteta</label>
+            <span>${esc(String(r.entity_id))}</span>
+          </div>` : ''}
+          <div class="log-detail-field" style="grid-column: 1 / -1;">
+            <label><i class="bi bi-info-circle me-1"></i>Detalji</label>
+            <span>${esc(r.details || '-')}</span>
+          </div>
+        </div>
+      </div>
+    </td>`;
+
+  // Insert detail row after the clicked row
+  const clickedRow = tbody.querySelector(`tr[data-log-id="${id}"]`);
+  if (clickedRow) clickedRow.after(detailRow);
 }
 
 function changePage(dir) {

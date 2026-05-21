@@ -204,7 +204,7 @@ exports.createUser = async (req, res) => {
     try {
       await sendMail({
         to: email,
-        subject: `Dobrodošli u ${clubName} — Postavite vašu lozinku`,
+        subject: `Dobrodošli u ${clubName} - Postavite vašu lozinku`,
         text: [
           `Pozdrav ${name},`,
           '',
@@ -292,6 +292,78 @@ exports.changePassword = async (req, res) => {
     const hash = await bcrypt.hash(newPassword, 10);
     await db.query('UPDATE users SET password_hash = ? WHERE id = ?', [hash, req.user.id]);
     res.json({ message: 'Lozinka uspješno promijenjena' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+exports.forgotPassword = async (req, res) => {
+  const { email } = req.body;
+  try {
+    const successMsg = { message: 'Ako nalog postoji, poslan je e-mail za resetovanje lozinke.' };
+    if (!email) return res.json(successMsg);
+    const [rows] = await db.query('SELECT id, name FROM users WHERE email = ? AND is_active = 1', [email]);
+    if (!rows.length) return res.json(successMsg);
+    const user = rows[0];
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    await db.query('UPDATE users SET verification_token = ?, verification_expires = ? WHERE id = ?', [token, expires, user.id]);
+    const appUrl = process.env.APP_URL || 'http://localhost:3000';
+    const resetLink = `${appUrl}/reset-password.html?token=${token}`;
+    sendMail({
+      to: email,
+      subject: 'Resetovanje lozinke – Klavio',
+      text: `Pozdrav ${user.name},\n\nZatraženo je resetovanje lozinke za vaš Klavio nalog.\n\nKliknite na link ispod:\n\n${resetLink}\n\nLink važi 1 sat. Ako niste zatražili resetovanje lozinke, ignorišite ovaj e-mail.\n\n© 2026 Klavio`,
+      html: `<div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#f8fafc;border-radius:16px;">
+        <div style="text-align:center;margin-bottom:24px;">
+          <div style="display:inline-block;background:#3b82f6;color:#fff;font-weight:800;font-size:1.3rem;padding:8px 20px;border-radius:8px;letter-spacing:.05em;">KLAVIO</div>
+        </div>
+        <div style="background:#fff;border-radius:12px;padding:28px 24px;box-shadow:0 2px 8px rgba(0,0,0,.07);">
+          <h2 style="margin:0 0 8px;color:#1e293b;font-size:1.1rem;">Resetovanje lozinke</h2>
+          <p style="color:#64748b;font-size:.9rem;margin:0 0 20px;">Pozdrav <strong>${user.name}</strong>,<br>Zatraženo je resetovanje lozinke za vaš nalog.</p>
+          <a href="${resetLink}" style="display:inline-block;background:#3b82f6;color:#fff;font-weight:600;padding:12px 24px;border-radius:8px;text-decoration:none;font-size:.95rem;">Resetuj lozinku</a>
+          <p style="color:#94a3b8;font-size:.78rem;margin:20px 0 0;">Link važi <strong>1 sat</strong>. Ako niste zatražili resetovanje lozinke, ignorišite ovaj e-mail.</p>
+        </div>
+        <p style="text-align:center;color:#cbd5e1;font-size:.72rem;margin-top:20px;">© 2026 Klavio · klavio.app</p>
+      </div>`
+    }).catch(e => console.error('Reset mail error:', e.message));
+    res.json(successMsg);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+exports.validateResetToken = async (req, res) => {
+  const { token } = req.query;
+  if (!token) return res.status(400).json({ message: 'Token nije naveden' });
+  try {
+    const [rows] = await db.query(
+      'SELECT name, email FROM users WHERE verification_token = ? AND verification_expires > NOW()',
+      [token]
+    );
+    if (!rows.length) return res.status(404).json({ message: 'Link nije validan ili je istekao' });
+    res.json({ name: rows[0].name, email: rows[0].email });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
+exports.resetPassword = async (req, res) => {
+  const { token, password } = req.body;
+  if (!token || !password) return res.status(400).json({ message: 'Token i lozinka su obavezni' });
+  if (password.length < 8) return res.status(400).json({ message: 'Lozinka mora imati najmanje 8 karaktera' });
+  try {
+    const [rows] = await db.query(
+      'SELECT id FROM users WHERE verification_token = ? AND verification_expires > NOW()',
+      [token]
+    );
+    if (!rows.length) return res.status(400).json({ message: 'Link nije validan ili je istekao' });
+    const hash = await bcrypt.hash(password, 10);
+    await db.query(
+      'UPDATE users SET password_hash = ?, email_verified = 1, verification_token = NULL, verification_expires = NULL WHERE id = ?',
+      [hash, rows[0].id]
+    );
+    res.json({ message: 'Lozinka je uspješno resetovana. Možete se prijaviti.' });
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
   }

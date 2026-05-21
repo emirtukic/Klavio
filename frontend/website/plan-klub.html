@@ -3,8 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Klub Plan — Klavio | 60 KM/mj za profesionalne klubove</title>
-  <meta name="description" content="Klavio Klub plan — neograničeni članovi i selekcije, medicinski dosijei, oprema, backup podataka i prioritetna podrška. Sve za profesionalne fudbalske klubove.">
+  <title>Klub Plan - Klavio | 60 KM/mj za profesionalne klubove</title>
+  <meta name="description" content="Klavio Klub plan – 60 KM/mj za profesionalne fudbalske klubove. Neograničeni članovi i selekcije, medicinski dosijei, backup podataka i prioritetna podrška.">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "Za koga je Klub plan pravi izbor?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Klub plan je idealan za etablirane fudbalske klubove s više selekcija (U12, U14, U17, Seniori, Ženska ekipa...), profesionalnim medicinskim timom i aktivnim upravljanjem opremom i sponzorima." } },
+      { "@type": "Question", "name": "Kako funkcioniše backup podataka?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Svake noći automatski pravimo backup cijele vaše baze podataka. Čuvamo posljednjih 30 dana backupa. U slučaju problema, podaci se mogu obnoviti u roku od nekoliko sati." } },
+      { "@type": "Question", "name": "Šta znači prioritetna podrška u praksi?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Vaši upiti imaju prioritet u redu čekanja. Garantujemo odgovor unutar 2 radna sata. Za hitne slučajeve (npr. problem uoči utakmice) dostupni smo i van radnog vremena putem direktnog kanala." } },
+      { "@type": "Question", "name": "Može li više administratora upravljati klubom?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Da, broj administratora i trenera nije ograničen ni u jednom planu. Svaki korisnik ima svoju ulogu i odgovarajuća prava pristupa." } },
+      { "@type": "Question", "name": "Da li postoji godišnji ugovor?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Ne. Plaćate mjesečno i možete otkazati u bilo kom trenutku. Nema penala, nema obaveza. Ako platite godinu unaprijed, dobijate popust od 10%." } }
+    ]
+  }
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
@@ -104,7 +122,7 @@
     .limit-lbl { font-size: 0.8rem; color: var(--muted); margin-top: 6px; }
 
     .compare-section { padding: 88px 0; background: #fff; }
-    .compare-table { width: 100%; border-collapse: collapse; margin-top: 48px; font-size: 0.88rem; }
+    .compare-table { width: 100%; min-width: 500px; border-collapse: collapse; margin-top: 48px; font-size: 0.88rem; }
     .compare-table th { padding: 14px 20px; text-align: center; font-weight: 800; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; background: var(--dark2); color: rgba(255,255,255,0.9); }
     .compare-table th:first-child { text-align: left; background: var(--dark3); }
     .compare-table th.highlight { background: #7c3aed; }
@@ -117,7 +135,8 @@
     .compare-table .c-no { color: #cbd5e1; font-size: 1.1rem; }
     .compare-table .c-hl { background: rgba(124,58,237,0.04); }
     .compare-table .highlight-row { background: rgba(124,58,237,0.04); }
-    .tbl-wrap { overflow-x: auto; border-radius: 14px; border: 1.5px solid #e2e8f0; overflow: hidden; }
+    .tbl-wrap { overflow: hidden; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 14px; border: 1.5px solid #e2e8f0; }
+    .tbl-scroll-hint { display: none; text-align: center; font-size: 0.74rem; color: #94a3b8; margin-top: 10px; letter-spacing: 0.01em; }
 
     .faq-section { padding: 80px 0; background: var(--light); }
     .faq-list { max-width: 700px; margin: 40px auto 0; display: flex; flex-direction: column; gap: 14px; }
@@ -143,6 +162,22 @@
     .support-strip { background: linear-gradient(135deg, #1e1b4b, #2e1065); padding: 48px 0; text-align: center; }
     .support-strip h3 { font-size: 1.4rem; font-weight: 800; color: #fff; margin-bottom: 10px; }
     .support-strip p { color: rgba(255,255,255,0.5); font-size: 0.9rem; max-width: 500px; margin: 0 auto 24px; }
+
+    @media(max-width:640px){
+      .plan-hero{padding:96px 0 44px}
+      .features-section,.compare-section,.prev-feats-section{padding:52px 0}
+      .limits-section,.faq-section{padding:44px 0}
+      .plan-cta-section,.support-strip{padding:44px 0}
+      .tbl-scroll-hint{display:block}
+    }
+
+    .sticky-cta{display:none;position:fixed;bottom:0;left:0;right:0;z-index:800;background:#fff;border-top:1.5px solid #e2e8f0;padding:12px 20px;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 -4px 24px rgba(0,0,0,0.1);transform:translateY(100%);transition:transform 0.3s ease}
+    .sticky-cta.visible{transform:translateY(0)}
+    .sticky-cta-info{display:flex;flex-direction:column;line-height:1.2}
+    .sticky-cta-price{font-size:1.2rem;font-weight:900;color:#111827}
+    .sticky-cta-label{font-size:0.72rem;color:#64748b;margin-top:2px}
+    @media(max-width:640px){.sticky-cta{display:flex}}
+    @media(min-width:641px){.sticky-cta{display:none!important}}
   </style>
 </head>
 <body>
@@ -270,13 +305,13 @@
         <div class="feat-icon">🎯</div>
         <span class="badge-new">Samo Klub</span>
         <h3>Prioritetna podrška</h3>
-        <p>Direktna linija s Klavio timom. Odgovaramo u roku od 2 sata radnim danom. Za hitne slučajeve — i van radnog vremena.</p>
+        <p>Direktna linija s Klavio timom. Odgovaramo u roku od 2 sata radnim danom. Za hitne slučajeve - i van radnog vremena.</p>
       </div>
       <div class="feat-card new reveal reveal-delay-2">
         <div class="feat-icon">📊</div>
         <span class="badge-new">Samo Klub</span>
         <h3>Napredni izvještaji</h3>
-        <p>Detaljni izvještaji o financijama, prisustvu, statistikama i razvoju — sve u jednom exportu za upravu kluba ili skupštinu.</p>
+        <p>Detaljni izvještaji o financijama, prisustvu, statistikama i razvoju - sve u jednom exportu za upravu kluba ili skupštinu.</p>
       </div>
     </div>
   </div>
@@ -303,7 +338,7 @@
       <div class="prev-feat"><span class="sf-icon">✓</span> Razvoj igrača</div>
       <div class="prev-feat"><span class="sf-icon">✓</span> Digitalni obrazci</div>
       <div class="prev-feat"><span class="sf-icon">✓</span> Brendiranje kluba</div>
-      <div class="prev-feat"><span class="sf-icon">✓</span> PWA — mobilni pristup</div>
+      <div class="prev-feat"><span class="sf-icon">✓</span> PWA - mobilni pristup</div>
     </div>
   </div>
 </section>
@@ -347,6 +382,7 @@
         </tbody>
       </table>
     </div>
+    <p class="tbl-scroll-hint">← Prevucite za poređenje →</p>
     <div style="display:flex;gap:14px;justify-content:center;margin-top:36px;flex-wrap:wrap">
       <a href="/website/plan-starter.html" class="btn btn-outline">Pogledaj Starter plan</a>
       <a href="/website/plan-pro.html" class="btn btn-outline">Pogledaj Pro plan</a>
@@ -358,7 +394,7 @@
 <div class="support-strip">
   <div class="container reveal">
     <h3>Prioritetna podrška uključena</h3>
-    <p>Svaki Klub plan korisnik ima direktnu liniju s našim timom. Odgovaramo brzo — jer znamo koliko je vaš klub važan.</p>
+    <p>Svaki Klub plan korisnik ima direktnu liniju s našim timom. Odgovaramo brzo - jer znamo koliko je vaš klub važan.</p>
     <a href="/website/contact.html" class="btn btn-ghost btn-lg">Kontaktirajte nas</a>
   </div>
 </div>
@@ -398,9 +434,9 @@
 <!-- CTA -->
 <section class="plan-cta-section">
   <div class="container reveal">
-    <div class="tag tag-white" style="margin:0 auto 20px;background:rgba(167,139,250,0.15);color:#c4b5fd;">👑 Klub — 60 KM/mj</div>
+    <div class="tag tag-white" style="margin:0 auto 20px;background:rgba(167,139,250,0.15);color:#c4b5fd;">👑 Klub - 60 KM/mj</div>
     <h2>Vaš klub zaslužuje<br>profesionalne alate.</h2>
-    <p>Neograničeni kapaciteti, svi moduli, backup i prioritetna podrška — sve na jednom mjestu.</p>
+    <p>Neograničeni kapaciteti, svi moduli, backup i prioritetna podrška - sve na jednom mjestu.</p>
     <div class="plan-ctas">
       <a href="/website/contact.html" class="btn btn-purple btn-lg">
         Naručite Klub plan →
@@ -419,9 +455,9 @@
         <p class="footer-tagline">Platforma za upravljanje fudbalskim klubovima u BiH i regiji.</p>
       </div>
       <div class="footer-col"><h4>Planovi</h4><ul>
-        <li><a href="/website/plan-starter.html">Starter — Besplatno</a></li>
-        <li><a href="/website/plan-pro.html">Pro — 40 KM/mj</a></li>
-        <li><a href="/website/plan-klub.html">Klub — 60 KM/mj</a></li>
+        <li><a href="/website/plan-starter.html">Starter - Besplatno</a></li>
+        <li><a href="/website/plan-pro.html">Pro - 40 KM/mj</a></li>
+        <li><a href="/website/plan-klub.html">Klub - 60 KM/mj</a></li>
       </ul></div>
       <div class="footer-col"><h4>Kompanija</h4><ul>
         <li><a href="/website/about.html">O nama</a></li>
@@ -443,6 +479,14 @@
   </div>
 </footer>
 
+<div class="sticky-cta" id="stickyCta">
+  <div class="sticky-cta-info">
+    <span class="sticky-cta-price">60 KM <span style="font-size:0.72rem;font-weight:500;color:#64748b">/mj</span></span>
+    <span class="sticky-cta-label">Klub plan · Neograničeni kapaciteti</span>
+  </div>
+  <a href="/website/contact.html" class="btn btn-purple btn-sm">Naručite Klub plan →</a>
+</div>
+
 <script>
   const nav = document.getElementById('mainNav');
   window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 30), { passive: true });
@@ -461,6 +505,8 @@
     entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
   }, { threshold: 0.1 });
   document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  const stickyCta = document.getElementById('stickyCta');
+  window.addEventListener('scroll', () => stickyCta.classList.toggle('visible', window.scrollY > 320), { passive: true });
 </script>
 </body>
 </html>

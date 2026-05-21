@@ -121,7 +121,7 @@
       <div class="tab-pane fade show active" id="tab-overview" role="tabpanel">
         <div class="row g-3">
           <!-- Fee history -->
-          <div class="col-lg-8">
+          <div class="col-12 col-lg-8">
             <div class="card table-card">
               <div class="card-header d-flex justify-content-between align-items-center">
                 <span class="fw-semibold"><i class="bi bi-cash-coin me-1 text-success"></i>Historija članarina</span>
@@ -145,7 +145,7 @@
           </div>
 
           <!-- Quick stats + upcoming events -->
-          <div class="col-lg-4">
+          <div class="col-12 col-lg-4">
             <!-- Quick stats -->
             <div class="card mb-3">
               <div class="card-header fw-semibold"><i class="bi bi-bar-chart me-1 text-primary"></i>Brze statistike</div>
@@ -348,7 +348,7 @@
               <p>Uploadajte dokumenta poput ugovora, medicinskih kartona ili dozvola.</p>
             </div>
             <div class="table-responsive" id="docsTableWrap">
-              <table class="table table-hover table-sm mb-0">
+              <table class="table table-hover table-sm mb-0 table-mobile-cards">
                 <thead>
                   <tr>
                     <th>Naziv</th>
@@ -383,7 +383,7 @@
                   <label class="form-label fw-semibold">Fajl *</label>
                   <input type="file" class="form-control" id="docFileInput"
                     accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.gif,.webp,.txt,.csv,.zip">
-                  <div class="form-text">Maks 20 MB — PDF, Word, Excel, slike, ZIP</div>
+                  <div class="form-text">Maks 20 MB - PDF, Word, Excel, slike, ZIP</div>
                 </div>
               </div>
               <div class="modal-footer">
@@ -779,14 +779,14 @@
     empty.classList.add('d-none'); wrap.classList.remove('d-none');
     tbody.innerHTML = docs.map(d => {
       const ext  = (d.file_url || '').split('.').pop().toUpperCase();
-      const size = d.file_size ? (d.file_size < 1024*1024 ? Math.round(d.file_size/1024) + ' KB' : (d.file_size/1024/1024).toFixed(1) + ' MB') : '—';
-      const date = d.created_at ? new Date(d.created_at).toLocaleDateString('bs-BA') : '—';
+      const size = d.file_size ? (d.file_size < 1024*1024 ? Math.round(d.file_size/1024) + ' KB' : (d.file_size/1024/1024).toFixed(1) + ' MB') : '-';
+      const date = d.created_at ? new Date(d.created_at).toLocaleDateString('bs-BA') : '-';
       const iconCls = { PDF:'bi-file-earmark-pdf text-danger', DOC:'bi-file-earmark-word text-primary', DOCX:'bi-file-earmark-word text-primary', XLS:'bi-file-earmark-excel text-success', XLSX:'bi-file-earmark-excel text-success', PNG:'bi-file-earmark-image text-info', JPG:'bi-file-earmark-image text-info', JPEG:'bi-file-earmark-image text-info' }[ext] || 'bi-file-earmark text-muted';
       return `<tr>
-        <td><a href="${d.file_url}" target="_blank" class="text-decoration-none"><i class="bi ${iconCls} me-1"></i>${d.name || '—'}</a></td>
+        <td><a href="${d.file_url}" target="_blank" class="text-decoration-none"><i class="bi ${iconCls} me-1"></i>${d.name || '-'}</a></td>
         <td><span class="badge bg-light text-dark" style="font-size:.7rem;">${ext}</span></td>
         <td class="text-muted small">${size}</td>
-        <td class="text-muted small">${d.uploaded_by_name || '—'}</td>
+        <td class="text-muted small">${d.uploaded_by_name || '-'}</td>
         <td class="text-muted small">${date}</td>
         <td class="text-end">
           <a href="${d.file_url}" download class="btn btn-sm btn-outline-secondary me-1" title="Download"><i class="bi bi-download"></i></a>

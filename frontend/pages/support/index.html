@@ -63,7 +63,7 @@
 
     <div class="card table-card">
       <div class="table-responsive">
-        <table class="table table-hover mb-0">
+        <table class="table table-hover mb-0 table-mobile-cards">
           <thead><tr><th>#</th><th>Naslov</th><th>Prioritet</th><th>Status</th><th>Odgovori</th><th>Datum</th><th></th></tr></thead>
           <tbody id="ticketTable">
             <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:30px;"></div></td><td><div class="skeleton" style="height:13px;width:65%;"></div></td><td><div class="skeleton" style="height:20px;width:55px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:20px;width:65px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:13px;width:20px;"></div></td><td><div class="skeleton" style="height:13px;width:70px;"></div></td><td><div class="skeleton" style="height:13px;width:16px;"></div></td></tr>
@@ -167,12 +167,12 @@ async function load() {
 function renderTable() {
   document.getElementById('ticketTable').innerHTML = allTickets.map(t => `
     <tr style="cursor:pointer;" onclick="openThread(${t.id})">
-      <td class="text-muted small">#${t.id}</td>
-      <td class="fw-semibold">${t.subject}</td>
-      <td>${PRIO_BADGE[t.priority] || t.priority}</td>
-      <td>${STATUS_BADGE[t.status] || t.status}</td>
-      <td class="text-center">${t.reply_count || 0}</td>
-      <td class="small text-muted">${new Date(t.created_at).toLocaleDateString('bs-BA')}</td>
+      <td data-label="#" class="text-muted small">#${t.id}</td>
+      <td data-label="Naslov" class="fw-semibold">${t.subject}</td>
+      <td data-label="Prioritet">${PRIO_BADGE[t.priority] || t.priority}</td>
+      <td data-label="Status">${STATUS_BADGE[t.status] || t.status}</td>
+      <td data-label="Odgovori" class="text-center">${t.reply_count || 0}</td>
+      <td data-label="Datum" class="small text-muted">${new Date(t.created_at).toLocaleDateString('bs-BA')}</td>
       <td><i class="bi bi-chevron-right text-muted"></i></td>
     </tr>`).join('') || '<tr><td colspan="7" class="text-center text-muted py-3">Nema tiketa</td></tr>';
 }

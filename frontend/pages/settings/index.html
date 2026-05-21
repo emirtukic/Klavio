@@ -6,6 +6,7 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
   <link href="../../assets/css/style.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <style>
     .avatar-wrap {
       position: relative; width: 96px; height: 96px;
@@ -194,14 +195,44 @@
         <div class="card form-card mb-4" id="backupCard">
           <div class="card-body p-4">
             <div class="settings-section-title">Backup podataka</div>
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <div class="fw-semibold">Export podataka kluba</div>
-                <div class="text-muted small">Preuzmite sve podatke kluba u JSON formatu kao sigurnosnu kopiju.</div>
+
+            <!-- Export section -->
+            <div class="mb-4">
+              <div class="fw-semibold mb-1">Export podataka kluba</div>
+              <div class="text-muted small mb-3">Preuzmite sve podatke kluba kao sigurnosnu kopiju. Dostupni formati: JSON (kompletan) ili CSV ZIP (tabele zasebno).</div>
+              <div class="d-flex flex-wrap gap-2 align-items-center">
+                <button class="btn btn-outline-primary btn-sm" id="exportJsonBtn" onclick="downloadBackup('json')">
+                  <span id="exportJsonSpinner" class="spinner-border spinner-border-sm d-none me-1"></span>
+                  <i class="bi bi-filetype-json me-1"></i>Preuzmi JSON
+                </button>
+                <button class="btn btn-outline-success btn-sm" id="exportCsvBtn" onclick="downloadBackup('csv')">
+                  <span id="exportCsvSpinner" class="spinner-border spinner-border-sm d-none me-1"></span>
+                  <i class="bi bi-file-earmark-zip me-1"></i>Preuzmi CSV ZIP
+                </button>
+                <span class="text-muted small ms-2" id="lastBackupLabel"></span>
               </div>
-              <button class="btn btn-outline-primary ms-3 flex-shrink-0" onclick="downloadBackup()">
-                <i class="bi bi-download me-1"></i>Preuzmi backup
-              </button>
+            </div>
+
+            <hr class="my-3">
+
+            <!-- Import section -->
+            <div>
+              <div class="fw-semibold mb-1">Import / Restore</div>
+              <div class="text-muted small mb-3">Uvezite prethodno preuzeti JSON backup. Postojeći zapisi neće biti prepisani (INSERT IGNORE).</div>
+              <div class="mb-2">
+                <input type="file" class="form-control form-control-sm" id="importFileInput" accept=".json" onchange="handleImportFile(this)">
+              </div>
+              <div id="importPreview" class="d-none">
+                <div class="alert alert-info py-2 small mb-2" id="importPreviewText"></div>
+                <div class="d-flex gap-2">
+                  <button class="btn btn-sm btn-success" id="confirmImportBtn" onclick="confirmImport()">
+                    <span id="importSpinner" class="spinner-border spinner-border-sm d-none me-1"></span>
+                    <i class="bi bi-cloud-upload me-1"></i>Potvrdi import
+                  </button>
+                  <button class="btn btn-sm btn-outline-secondary" onclick="cancelImport()">Otkaži</button>
+                </div>
+              </div>
+              <div id="importResult" class="d-none mt-2"></div>
             </div>
           </div>
         </div>
@@ -413,25 +444,175 @@
     showToast(theme === 'dark' ? 'Tamna tema aktivirana' : 'Svijetla tema aktivirana', 'success');
   });
 
-  function downloadBackup() {
-    fetch('/api/backup/export', { headers: { 'Authorization': 'Bearer ' + getToken() } })
-      .then(r => r.blob())
-      .then(blob => {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `klavio_backup_${new Date().toISOString().split('T')[0]}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast('Backup preuzet', 'success');
-      })
-      .catch(() => showToast('Greška pri preuzimanju', 'error'));
+  // ── Backup helpers ─────────────────────────────────────────────────────────
+
+  function updateLastBackupUI() {
+    const ts = localStorage.getItem('klavio_lastBackup');
+    const el = document.getElementById('lastBackupLabel');
+    if (!el) return;
+    el.textContent = ts
+      ? 'Zadnji backup: ' + new Date(Number(ts)).toLocaleString('bs-BA')
+      : '';
   }
 
-  // Only admins need the club data export
-  if (user.role !== 'admin') {
+  function triggerDownload(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function toCSV(rows) {
+    if (!rows || !rows.length) return '';
+    const keys = Object.keys(rows[0]);
+    const esc = v => {
+      if (v == null) return '""';
+      if (typeof v === 'object') return '"' + JSON.stringify(v).replace(/"/g, '""') + '"';
+      return '"' + String(v).replace(/"/g, '""') + '"';
+    };
+    return [keys.map(k => `"${k}"`).join(','), ...rows.map(r => keys.map(k => esc(r[k])).join(','))].join('\r\n');
+  }
+
+  async function downloadAsCSVZip(backup) {
+    const tables = backup.tables || {};
+    const zip = new JSZip();
+    let fileCount = 0;
+    for (const [table, rows] of Object.entries(tables)) {
+      if (!Array.isArray(rows) || rows.length === 0) continue;
+      const csv = toCSV(rows);
+      if (csv) { zip.file(`${table}.csv`, csv); fileCount++; }
+    }
+    if (fileCount === 0) {
+      showToast('Nema podataka za CSV export (baza prazna)', 'error');
+      return false;
+    }
+    const blob = await zip.generateAsync({ type: 'blob' });
+    triggerDownload(blob, `klavio_backup_${new Date().toISOString().split('T')[0]}.zip`);
+    return true;
+  }
+
+  async function downloadBackup(format) {
+    const jsonBtn = document.getElementById('exportJsonBtn');
+    const csvBtn  = document.getElementById('exportCsvBtn');
+    const jsonSp  = document.getElementById('exportJsonSpinner');
+    const csvSp   = document.getElementById('exportCsvSpinner');
+    jsonBtn.disabled = true; csvBtn.disabled = true;
+    if (format === 'json') jsonSp.classList.remove('d-none');
+    else csvSp.classList.remove('d-none');
+
+    try {
+      const res = await fetch('/api/backup/export', { headers: { 'Authorization': 'Bearer ' + getToken() } });
+      if (!res.ok) throw new Error('Server error');
+      const backup = await res.json();
+      const date = new Date().toISOString().split('T')[0];
+
+      if (format === 'csv') {
+        const ok = await downloadAsCSVZip(backup);
+        if (!ok) return;
+      } else {
+        const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+        triggerDownload(blob, `klavio_backup_${date}.json`);
+      }
+
+      localStorage.setItem('klavio_lastBackup', Date.now());
+      updateLastBackupUI();
+      showToast('Backup preuzet', 'success');
+    } catch (e) {
+      showToast('Greška pri preuzimanju: ' + e.message, 'error');
+    } finally {
+      jsonBtn.disabled = false; csvBtn.disabled = false;
+      jsonSp.classList.add('d-none'); csvSp.classList.add('d-none');
+    }
+  }
+
+  // ── Import ──────────────────────────────────────────────────────────────────
+
+  let pendingImportData = null;
+
+  function handleImportFile(input) {
+    const preview    = document.getElementById('importPreview');
+    const previewTxt = document.getElementById('importPreviewText');
+    const confirmBtn = document.getElementById('confirmImportBtn');
+    const resultEl   = document.getElementById('importResult');
+    resultEl.classList.add('d-none');
+    pendingImportData = null;
+    if (!input.files[0]) { preview.classList.add('d-none'); return; }
+
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const backup = JSON.parse(e.target.result);
+        if (!backup.tables) throw new Error('Neispravan format');
+        const tables = Object.keys(backup.tables);
+        const totalRows = tables.reduce((s, t) => s + (backup.tables[t]?.length || 0), 0);
+        const date = backup.exported_at ? new Date(backup.exported_at).toLocaleString('bs-BA') : 'nepoznato';
+        previewTxt.className = 'alert alert-info py-2 small mb-2';
+        previewTxt.innerHTML =
+          `<strong>Backup od:</strong> ${date}<br>` +
+          `<strong>Tabele:</strong> ${tables.length} &nbsp;|&nbsp; <strong>Ukupno redova:</strong> ${totalRows.toLocaleString()}`;
+        pendingImportData = backup;
+        confirmBtn.style.display = '';
+        preview.classList.remove('d-none');
+      } catch (_) {
+        previewTxt.className = 'alert alert-danger py-2 small mb-2';
+        previewTxt.textContent = 'Neispravan JSON fajl ili format.';
+        confirmBtn.style.display = 'none';
+        preview.classList.remove('d-none');
+      }
+    };
+    reader.readAsText(input.files[0]);
+  }
+
+  function cancelImport() {
+    document.getElementById('importFileInput').value = '';
+    document.getElementById('importPreview').classList.add('d-none');
+    document.getElementById('importResult').classList.add('d-none');
+    pendingImportData = null;
+  }
+
+  async function confirmImport() {
+    if (!pendingImportData) return;
+    const btn      = document.getElementById('confirmImportBtn');
+    const spinner  = document.getElementById('importSpinner');
+    const resultEl = document.getElementById('importResult');
+    btn.disabled = true; spinner.classList.remove('d-none');
+
+    try {
+      const blob = new Blob([JSON.stringify(pendingImportData)], { type: 'application/json' });
+      const fd = new FormData();
+      fd.append('backup', blob, 'backup.json');
+
+      const res = await fetch('/api/backup/import', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + getToken() },
+        body: fd
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+
+      const inserted = Object.entries(data.summary || {}).filter(([, v]) => v > 0);
+      const lines = inserted.map(([t, v]) => `${t}: ${v}`).join(', ');
+      resultEl.innerHTML = `<div class="alert alert-success py-2 small">Import završen. ${inserted.length > 0 ? 'Uvezeno: ' + lines : 'Svi zapisi već postoje (INSERT IGNORE).'}</div>`;
+      resultEl.classList.remove('d-none');
+      // Clear file input + preview but keep result visible
+      document.getElementById('importFileInput').value = '';
+      document.getElementById('importPreview').classList.add('d-none');
+      pendingImportData = null;
+      showToast('Import završen', 'success');
+    } catch (e) {
+      resultEl.innerHTML = `<div class="alert alert-danger py-2 small">Greška: ${e.message}</div>`;
+      resultEl.classList.remove('d-none');
+    } finally {
+      btn.disabled = false; spinner.classList.add('d-none');
+    }
+  }
+
+  // Only admins / super_admin need the club data export
+  if (!['admin', 'super_admin'].includes(user.role)) {
     document.getElementById('backupCard').style.display = 'none';
   }
+
+  updateLastBackupUI();
 
   loadProfile();
 </script>

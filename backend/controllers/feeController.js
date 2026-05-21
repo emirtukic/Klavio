@@ -92,7 +92,7 @@ exports.markPaid = async (req, res) => {
 };
 
 async function autoAddIncome(fee, date, userId) {
-  // Avoid duplicates — skip if a finance entry already references this fee
+  // Avoid duplicates - skip if a finance entry already references this fee
   const [exists] = await db.query(
     "SELECT id FROM finances WHERE club_id = ? AND reference = ? LIMIT 1",
     [fee.club_id, `CLN-${fee.id}`]
@@ -102,7 +102,7 @@ async function autoAddIncome(fee, date, userId) {
   const periodStr = fee.period_start
     ? new Date(fee.period_start).toISOString().slice(0, 7)
     : null;
-  const description = `Članarina — ${fee.member_name || 'član'}${periodStr ? ` (${periodStr})` : ''}`;
+  const description = `Članarina - ${fee.member_name || 'član'}${periodStr ? ` (${periodStr})` : ''}`;
 
   await db.query(
     'INSERT INTO finances (club_id, type, category, description, amount, date, reference, created_by) VALUES (?,?,?,?,?,?,?,?)',

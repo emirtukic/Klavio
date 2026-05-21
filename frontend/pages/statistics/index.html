@@ -56,6 +56,11 @@
       padding: 1.25rem 1.5rem;
     }
 
+    @media (max-width: 640px) {
+      #statsTabs { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+      #statsTabs::-webkit-scrollbar { display: none; }
+      #statsTabs .nav-link { white-space: nowrap; padding: 0.55rem 0.85rem; font-size: 0.82rem; }
+    }
     [data-theme="dark"] .nav-tabs { border-bottom-color: #334155; }
     [data-theme="dark"] .nav-tabs .nav-link { color: #94a3b8; }
     [data-theme="dark"] .nav-tabs .nav-link:hover { color: #e2e8f0; border-bottom-color: #475569; }
@@ -92,7 +97,7 @@
         <h4 id="pageTitle">Statistike</h4>
         <p class="text-muted mb-0" id="pageSubtitle">Statistike igrača, prisustvo i rezultati utakmica</p>
       </div>
-      <!-- Selection switcher — admin only -->
+      <!-- Selection switcher - admin only -->
       <div id="selectionSwitcher" class="d-none">
         <select class="form-select form-select-sm" id="selectionFilter" style="min-width:180px" onchange="onSelectionChange()">
           <option value="">Sve selekcije</option>
@@ -196,7 +201,7 @@
       <!-- Tab: Strijelci -->
       <div id="tab-scorers" class="tab-pane-custom">
         <div class="row g-3 mb-4">
-          <div class="col-lg-8">
+          <div class="col-12 col-lg-8">
             <div class="card chart-card">
               <div class="card-header">
                 <span class="fw-semibold"><i class="bi bi-bar-chart-line me-2 text-primary"></i>Top 10 strijelaca (golovi + asistencije)</span>
@@ -206,7 +211,7 @@
               </div>
             </div>
           </div>
-          <div class="col-lg-4">
+          <div class="col-12 col-lg-4">
             <div class="card chart-card h-100">
               <div class="card-header">
                 <span class="fw-semibold"><i class="bi bi-award me-2 text-warning"></i>Brzi pregled</span>
@@ -221,7 +226,18 @@
         <div class="card table-card">
           <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
             <span class="fw-semibold">Tabela strijelaca</span>
-            <span class="text-muted small" id="scorersCount"></span>
+            <div class="d-flex align-items-center gap-2">
+              <span class="text-muted small" id="scorersCount"></span>
+              <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                  <i class="bi bi-download me-1"></i>Export
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li><a class="dropdown-item" href="#" onclick="exportScorersCSV();return false;"><i class="bi bi-file-earmark-spreadsheet me-2 text-success"></i>CSV (Excel)</a></li>
+                  <li><a class="dropdown-item" href="#" onclick="exportScorersPDF();return false;"><i class="bi bi-file-earmark-pdf me-2 text-danger"></i>PDF izvještaj</a></li>
+                </ul>
+              </div>
+            </div>
           </div>
           <div class="table-responsive">
             <table class="table table-hover mb-0 table-mobile-cards">
@@ -253,7 +269,18 @@
         <div class="card table-card">
           <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
             <span class="fw-semibold"><i class="bi bi-calendar-check me-2 text-success"></i>Statistike prisustva</span>
-            <span class="text-muted small" id="attendanceCount"></span>
+            <div class="d-flex align-items-center gap-2">
+              <span class="text-muted small" id="attendanceCount"></span>
+              <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                  <i class="bi bi-download me-1"></i>Export
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li><a class="dropdown-item" href="#" onclick="exportAttendanceCSV();return false;"><i class="bi bi-file-earmark-spreadsheet me-2 text-success"></i>CSV (Excel)</a></li>
+                  <li><a class="dropdown-item" href="#" onclick="exportAttendancePDF();return false;"><i class="bi bi-file-earmark-pdf me-2 text-danger"></i>PDF izvještaj</a></li>
+                </ul>
+              </div>
+            </div>
           </div>
           <div class="table-responsive">
             <table class="table table-hover mb-0 table-mobile-cards">
@@ -314,7 +341,7 @@
         </div>
 
         <div class="row g-3">
-          <div class="col-lg-5">
+          <div class="col-12 col-lg-5">
             <div class="card chart-card h-100">
               <div class="card-header">
                 <span class="fw-semibold"><i class="bi bi-pie-chart me-2 text-primary"></i>Raspored rezultata</span>
@@ -324,7 +351,7 @@
               </div>
             </div>
           </div>
-          <div class="col-lg-7">
+          <div class="col-12 col-lg-7">
             <div class="card chart-card h-100">
               <div class="card-header">
                 <span class="fw-semibold"><i class="bi bi-bullseye me-2 text-success"></i>Golovi</span>
@@ -383,10 +410,21 @@
         <div class="card table-card">
           <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
             <span class="fw-semibold"><i class="bi bi-exclamation-triangle me-2 text-warning"></i>Disciplinska lista igrača</span>
-            <span class="text-muted small" id="disciplineCount"></span>
+            <div class="d-flex align-items-center gap-2">
+              <span class="text-muted small" id="disciplineCount"></span>
+              <div class="dropdown">
+                <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                  <i class="bi bi-download me-1"></i>Export
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li><a class="dropdown-item" href="#" onclick="exportDisciplineCSV();return false;"><i class="bi bi-file-earmark-spreadsheet me-2 text-success"></i>CSV (Excel)</a></li>
+                  <li><a class="dropdown-item" href="#" onclick="exportDisciplinePDF();return false;"><i class="bi bi-file-earmark-pdf me-2 text-danger"></i>PDF izvještaj</a></li>
+                </ul>
+              </div>
+            </div>
           </div>
           <div class="table-responsive">
-            <table class="table table-hover mb-0">
+            <table class="table table-hover mb-0 table-mobile-cards">
               <thead>
                 <tr>
                   <th>#</th>
@@ -413,6 +451,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
 <script src="../../assets/js/auth.js"></script>
 <script src="../../assets/js/api.js"></script>
 <script src="../../assets/js/utils.js"></script>
@@ -514,7 +554,7 @@
 
   function chartTheme() {
     const dark = document.documentElement.getAttribute('data-theme') === 'dark';
-    return { isDark: dark, grid: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', label: dark ? '#94a3b8' : '#64748b', tbg: dark ? 'rgba(15,23,42,0.95)' : 'rgba(15,23,42,0.88)' };
+    return { isDark: dark, grid: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', label: dark ? '#94a3b8' : '#64748b', tbg: dark ? 'rgba(51,65,85,0.97)' : 'rgba(15,23,42,0.88)' };
   }
 
   /* ── MEMBER: personal stats card ── */
@@ -607,7 +647,7 @@
           <span class="rank-badge ${rankClass}">${i + 1}</span>
         </td>
         <td data-label="Igrač"><span class="fw-semibold">${s.name || s.player_name || '-'}</span></td>
-        ${isAdmin ? `<td data-label="Selekcija"><span class="badge bg-secondary bg-opacity-10 text-secondary">${s.selection_name || '—'}</span></td>` : ''}
+        ${isAdmin ? `<td data-label="Selekcija"><span class="badge bg-secondary bg-opacity-10 text-secondary">${s.selection_name || '-'}</span></td>` : ''}
         <td data-label="Utakmice">${s.matches || 0}</td>
         <td data-label="Golovi"><span class="fw-bold text-success">${s.goals || 0}</span></td>
         <td data-label="Asistencije"><span class="text-primary">${s.assists || 0}</span></td>
@@ -704,7 +744,7 @@
       const barClass = pct >= 80 ? 'bg-success' : pct >= 60 ? 'bg-warning' : 'bg-danger';
       return `<tr>
         <td data-label="Igrač"><span class="fw-semibold">${r.name || r.player_name || '-'}</span></td>
-        ${isAdmin ? `<td data-label="Selekcija"><span class="badge bg-secondary bg-opacity-10 text-secondary">${r.selection_name || '—'}</span></td>` : ''}
+        ${isAdmin ? `<td data-label="Selekcija"><span class="badge bg-secondary bg-opacity-10 text-secondary">${r.selection_name || '-'}</span></td>` : ''}
         <td data-label="Prisutan"><span class="text-success fw-semibold">${r.present || 0}</span></td>
         <td data-label="Odsutan"><span class="text-danger">${r.absent || 0}</span></td>
         <td data-label="Opravdano"><span class="text-warning">${r.excused || 0}</span></td>
@@ -849,18 +889,168 @@
     tbody.innerHTML = display.map((p, i) => {
       const pts = parseInt(p.yellow_cards || 0) + parseInt(p.red_cards || 0) * 3;
       return `<tr>
-        <td><span class="text-muted small">${i + 1}</span></td>
-        <td class="fw-semibold">${p.name || '-'}</td>
-        ${isAdmin ? `<td><span class="badge bg-secondary bg-opacity-10 text-secondary">${p.selection_name || '—'}</span></td>` : ''}
-        <td>${p.matches || 0}</td>
-        <td><span class="badge bg-warning text-dark">${p.yellow_cards || 0}</span></td>
-        <td><span class="badge bg-danger">${p.red_cards || 0}</span></td>
-        <td>
+        <td data-label="#"><span class="text-muted small">${i + 1}</span></td>
+        <td data-label="Igrač" class="fw-semibold">${p.name || '-'}</td>
+        ${isAdmin ? `<td data-label="Selekcija"><span class="badge bg-secondary bg-opacity-10 text-secondary">${p.selection_name || '-'}</span></td>` : ''}
+        <td data-label="Utakmice">${p.matches || 0}</td>
+        <td data-label="Žuti"><span class="badge bg-warning text-dark">${p.yellow_cards || 0}</span></td>
+        <td data-label="Crveni"><span class="badge bg-danger">${p.red_cards || 0}</span></td>
+        <td data-label="Kazneni bodovi">
           <span class="fw-semibold ${pts > 0 ? 'text-danger' : 'text-muted'}">${pts}</span>
           ${pts > 0 ? `<div class="progress mt-1" style="height:4px;border-radius:4px;"><div class="progress-bar bg-danger" style="width:${Math.min(100,pts*10)}%"></div></div>` : ''}
         </td>
       </tr>`;
     }).join('');
+  }
+
+  /* ── Export helpers ── */
+  function _csvEsc(v) {
+    const s = String(v ?? '').replace(/"/g, '""');
+    return /[",\n]/.test(s) ? `"${s}"` : s;
+  }
+  function exportCSV(filename, headers, rows) {
+    const lines = [headers.map(_csvEsc).join(','), ...rows.map(r => r.map(_csvEsc).join(','))];
+    const blob = new Blob(['﻿' + lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const a = Object.assign(document.createElement('a'), { href: URL.createObjectURL(blob), download: filename });
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+  }
+  function exportPDF(filename, reportTitle, headers, rows) {
+    const { jsPDF } = window.jspdf;
+    const isLandscape = headers.length > 6;
+    const doc = new jsPDF({ orientation: isLandscape ? 'landscape' : 'portrait', unit: 'mm', format: 'a4' });
+    const pageW = doc.internal.pageSize.getWidth();
+    const club  = (typeof getClub === 'function' && getClub()) ? getClub().name : 'Klavio';
+    const date  = new Date().toLocaleDateString('bs-BA', { day: '2-digit', month: 'long', year: 'numeric' });
+
+    // Header bar
+    doc.setFillColor(30, 41, 59);
+    doc.rect(0, 0, pageW, 30, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.text('KLAVIO', 14, 13);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.text(club, 14, 20);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.text(reportTitle, 14, 27);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(148, 163, 184);
+    doc.text(date, pageW - 14, 13, { align: 'right' });
+
+    // Accent line
+    doc.setFillColor(59, 130, 246);
+    doc.rect(0, 30, pageW, 1.5, 'F');
+
+    // Table
+    doc.autoTable({
+      head: [headers],
+      body: rows,
+      startY: 37,
+      styles: { fontSize: 9, cellPadding: { top: 3, bottom: 3, left: 4, right: 4 }, lineColor: [226, 232, 240], lineWidth: 0.15 },
+      headStyles: { fillColor: [59, 130, 246], textColor: [255, 255, 255], fontStyle: 'bold', fontSize: 9 },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      margin: { left: 14, right: 14 },
+      tableLineColor: [226, 232, 240],
+      tableLineWidth: 0.15,
+    });
+
+    // Footer on every page
+    const totalPages = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= totalPages; i++) {
+      doc.setPage(i);
+      const ph = doc.internal.pageSize.getHeight();
+      doc.setFillColor(248, 250, 252);
+      doc.rect(0, ph - 10, pageW, 10, 'F');
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor(148, 163, 184);
+      doc.text(`${reportTitle} · ${club} · ${date}`, 14, ph - 3.5);
+      doc.text(`Stranica ${i} / ${totalPages}`, pageW - 14, ph - 3.5, { align: 'right' });
+    }
+
+    doc.save(filename);
+    showToast('PDF preuzet', 'success');
+  }
+
+  // Scorers export
+  function exportScorersCSV() {
+    const q = (document.getElementById('globalSearch')?.value || '').toLowerCase();
+    const data = allScorersData.filter(s => !q || (s.name||'').toLowerCase().includes(q));
+    if (!data.length) { showToast('Nema podataka za export', 'warning'); return; }
+    const headers = ['#', 'Igrač', ...(isAdmin ? ['Selekcija'] : []), 'Utakmice', 'Golovi', 'Asistencije', 'Žuti kartoni', 'Crveni kartoni', 'Minuti'];
+    const rows = data.map((s, i) => [i+1, s.name||'-', ...(isAdmin ? [s.selection_name||'-'] : []), s.matches||0, s.goals||0, s.assists||0, s.yellow_cards||0, s.red_cards||0, s.minutes_played||0]);
+    exportCSV('statistike-strijelaca.csv', headers, rows);
+    showToast('CSV preuzet', 'success');
+  }
+  function exportScorersPDF() {
+    const q = (document.getElementById('globalSearch')?.value || '').toLowerCase();
+    const data = allScorersData.filter(s => !q || (s.name||'').toLowerCase().includes(q));
+    if (!data.length) { showToast('Nema podataka za export', 'warning'); return; }
+    const headers = ['#', 'Igrač', ...(isAdmin ? ['Selekcija'] : []), 'Utakmice', 'Golovi', 'Asistencije', 'Žuti', 'Crveni', 'Minuti'];
+    const rows = data.map((s, i) => [i+1, s.name||'-', ...(isAdmin ? [s.selection_name||'-'] : []), s.matches||0, s.goals||0, s.assists||0, s.yellow_cards||0, s.red_cards||0, (s.minutes_played||0)+"'"] );
+    exportPDF('statistike-strijelaca.pdf', 'Tabela strijelaca', headers, rows);
+  }
+
+  // Attendance export
+  function exportAttendanceCSV() {
+    const q = (document.getElementById('globalSearch')?.value || '').toLowerCase();
+    const data = allAttendData.filter(r => !q || (r.name||'').toLowerCase().includes(q));
+    if (!data.length) { showToast('Nema podataka za export', 'warning'); return; }
+    const headers = ['Igrač', ...(isAdmin ? ['Selekcija'] : []), 'Prisutan', 'Odsutan', 'Opravdano', 'Ukupno', '% Prisustva'];
+    const rows = data.map(r => {
+      const total = (r.present||0)+(r.absent||0)+(r.excused||0);
+      const pct   = total > 0 ? Math.round((r.present||0)/total*100) : 0;
+      return [r.name||'-', ...(isAdmin ? [r.selection_name||'-'] : []), r.present||0, r.absent||0, r.excused||0, total, pct+'%'];
+    });
+    exportCSV('statistike-prisustva.csv', headers, rows);
+    showToast('CSV preuzet', 'success');
+  }
+  function exportAttendancePDF() {
+    const q = (document.getElementById('globalSearch')?.value || '').toLowerCase();
+    const data = allAttendData.filter(r => !q || (r.name||'').toLowerCase().includes(q));
+    if (!data.length) { showToast('Nema podataka za export', 'warning'); return; }
+    const headers = ['Igrač', ...(isAdmin ? ['Selekcija'] : []), 'Prisutan', 'Odsutan', 'Opravdano', 'Ukupno', '% Prisustva'];
+    const rows = data.map(r => {
+      const total = (r.present||0)+(r.absent||0)+(r.excused||0);
+      const pct   = total > 0 ? Math.round((r.present||0)/total*100) : 0;
+      return [r.name||'-', ...(isAdmin ? [r.selection_name||'-'] : []), r.present||0, r.absent||0, r.excused||0, total, pct+'%'];
+    });
+    exportPDF('statistike-prisustva.pdf', 'Statistike prisustva', headers, rows);
+  }
+
+  // Discipline export
+  function exportDisciplineCSV() {
+    const sorted = [...allScorersData].sort((a,b) => {
+      const pa = (parseInt(a.yellow_cards||0)) + (parseInt(a.red_cards||0)*3);
+      const pb = (parseInt(b.yellow_cards||0)) + (parseInt(b.red_cards||0)*3);
+      return pb - pa;
+    });
+    if (!sorted.length) { showToast('Nema podataka za export', 'warning'); return; }
+    const headers = ['#', 'Igrač', ...(isAdmin ? ['Selekcija'] : []), 'Utakmice', 'Žuti kartoni', 'Crveni kartoni', 'Kazneni bodovi'];
+    const rows = sorted.map((p, i) => {
+      const pts = parseInt(p.yellow_cards||0) + parseInt(p.red_cards||0)*3;
+      return [i+1, p.name||'-', ...(isAdmin ? [p.selection_name||'-'] : []), p.matches||0, p.yellow_cards||0, p.red_cards||0, pts];
+    });
+    exportCSV('disciplinska-lista.csv', headers, rows);
+    showToast('CSV preuzet', 'success');
+  }
+  function exportDisciplinePDF() {
+    const sorted = [...allScorersData].sort((a,b) => {
+      const pa = (parseInt(a.yellow_cards||0)) + (parseInt(a.red_cards||0)*3);
+      const pb = (parseInt(b.yellow_cards||0)) + (parseInt(b.red_cards||0)*3);
+      return pb - pa;
+    });
+    if (!sorted.length) { showToast('Nema podataka za export', 'warning'); return; }
+    const headers = ['#', 'Igrač', ...(isAdmin ? ['Selekcija'] : []), 'Utakmice', 'Žuti', 'Crveni', 'Kazneni bodovi'];
+    const rows = sorted.map((p, i) => {
+      const pts = parseInt(p.yellow_cards||0) + parseInt(p.red_cards||0)*3;
+      return [i+1, p.name||'-', ...(isAdmin ? [p.selection_name||'-'] : []), p.matches||0, p.yellow_cards||0, p.red_cards||0, pts];
+    });
+    exportPDF('disciplinska-lista.pdf', 'Disciplinska lista igrača', headers, rows);
   }
 
   /* ── Init ── */
@@ -871,7 +1061,7 @@
     if (isCoach) {
       const sel = getSelection();
       const selName = sel ? sel.name : null;
-      document.getElementById('pageTitle').textContent = 'Statistike' + (selName ? ' — ' + selName : '');
+      document.getElementById('pageTitle').textContent = 'Statistike' + (selName ? ' - ' + selName : '');
       document.getElementById('pageSubtitle').textContent = 'Statistike igrača vaše selekcije';
     }
 

@@ -3,8 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pro Plan — Klavio | 40 KM/mj za ozbiljne klubove</title>
-  <meta name="description" content="Klavio Pro plan — do 150 članova, 5 selekcija, finansije, galerija, statistike igrača i razvoj. Sve što trebate za profesionalno upravljanje klubom.">
+  <title>Pro Plan - Klavio | 40 KM/mj za ozbiljne klubove</title>
+  <meta name="description" content="Klavio Pro plan – 40 KM/mj za ozbiljne fudbalske klubove. Do 150 članova, 5 selekcija, finansije, galerija, statistike igrača, razvoj i digitalni obrazci.">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "Kako se naručuje Pro plan?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Kontaktirajte nas putem kontakt stranice ili emailom. Aktiviramo plan u roku od 24 sata, a vi dobijate pristup svim Pro funkcijama odmah." } },
+      { "@type": "Question", "name": "Mogu li testirati Pro plan prije plaćanja?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Da, nudimo besplatni probni period od 14 dana za Pro plan. Registrujte klub na Starter plan, zatim nas kontaktirajte za aktivaciju probe." } },
+      { "@type": "Question", "name": "Šta se dešava s podacima ako otkažem pretplatu?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Vaši podaci ostaju u sistemu. Nalog prelazi na Starter ograničenja, ali sve što ste unijeli ostaje vidljivo i dostupno. Ne brišemo podatke." } },
+      { "@type": "Question", "name": "Mogu li imati više od 5 selekcija ako mi treba?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Za neograničen broj selekcija preporučujemo Klub plan. Ako imate specifičan zahtjev, kontaktirajte nas - možemo dogovoriti individualno rješenje." } },
+      { "@type": "Question", "name": "Kako izgleda plaćanje?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Plaćanje se vrši bankovnim transferom ili karticom, jednom mjesečno. Faktura se izdaje automatski na email adresu kluba. Nema godišnjeg ugovora - otkazujete kad god želite." } }
+    ]
+  }
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
@@ -104,7 +122,7 @@
     .limit-lbl { font-size: 0.8rem; color: var(--muted); margin-top: 6px; }
 
     .compare-section { padding: 88px 0; background: #fff; }
-    .compare-table { width: 100%; border-collapse: collapse; margin-top: 48px; font-size: 0.88rem; }
+    .compare-table { width: 100%; min-width: 500px; border-collapse: collapse; margin-top: 48px; font-size: 0.88rem; }
     .compare-table th { padding: 14px 20px; text-align: center; font-weight: 800; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; background: var(--dark2); color: rgba(255,255,255,0.9); }
     .compare-table th:first-child { text-align: left; background: var(--dark3); }
     .compare-table th.highlight { background: var(--blue); }
@@ -117,7 +135,8 @@
     .compare-table .c-no { color: #cbd5e1; font-size: 1.1rem; }
     .compare-table .c-hl { background: rgba(37,99,235,0.04); }
     .compare-table .highlight-row { background: rgba(37,99,235,0.05); }
-    .tbl-wrap { overflow-x: auto; border-radius: 14px; border: 1.5px solid #e2e8f0; overflow: hidden; }
+    .tbl-wrap { overflow: hidden; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 14px; border: 1.5px solid #e2e8f0; }
+    .tbl-scroll-hint { display: none; text-align: center; font-size: 0.74rem; color: #94a3b8; margin-top: 10px; letter-spacing: 0.01em; }
 
     .faq-section { padding: 80px 0; background: var(--light); }
     .faq-list { max-width: 700px; margin: 40px auto 0; display: flex; flex-direction: column; gap: 14px; }
@@ -139,6 +158,22 @@
     @media(max-width:480px){ .starter-grid { grid-template-columns: 1fr; } }
     .starter-feat { display: flex; align-items: center; gap: 10px; background: #fff; border: 1.5px solid #e8edf3; border-radius: 10px; padding: 14px 16px; font-size: 0.85rem; font-weight: 600; color: var(--dark3); }
     .starter-feat .sf-icon { width: 28px; height: 28px; border-radius: 8px; background: #dcfce7; color: #16a34a; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; flex-shrink: 0; }
+
+    @media(max-width:640px){
+      .plan-hero{padding:96px 0 44px}
+      .features-section,.compare-section,.starter-feats-section{padding:52px 0}
+      .limits-section,.faq-section{padding:44px 0}
+      .plan-cta-section{padding:60px 0}
+      .tbl-scroll-hint{display:block}
+    }
+
+    .sticky-cta{display:none;position:fixed;bottom:0;left:0;right:0;z-index:800;background:#fff;border-top:1.5px solid #e2e8f0;padding:12px 20px;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 -4px 24px rgba(0,0,0,0.1);transform:translateY(100%);transition:transform 0.3s ease}
+    .sticky-cta.visible{transform:translateY(0)}
+    .sticky-cta-info{display:flex;flex-direction:column;line-height:1.2}
+    .sticky-cta-price{font-size:1.2rem;font-weight:900;color:#111827}
+    .sticky-cta-label{font-size:0.72rem;color:#64748b;margin-top:2px}
+    @media(max-width:640px){.sticky-cta{display:flex}}
+    @media(min-width:641px){.sticky-cta{display:none!important}}
   </style>
 </head>
 <body>
@@ -191,7 +226,7 @@
     <div class="plan-badge">🚀 Pro Plan</div>
     <h1>Sve što treba<br><em>ozbiljnom klubu.</em></h1>
     <div class="plan-hero-price">40 KM<sub>/mj</sub></div>
-    <p class="plan-hero-sub">Do 150 članova, 5 selekcija, finansije, galerija, statistike, razvoj igrača i digitalni obrazci. Plaća se jednom — vrijedi cijelu godinu.</p>
+    <p class="plan-hero-sub">Do 150 članova, 5 selekcija, finansije, galerija, statistike, razvoj igrača i digitalni obrazci. Plaća se jednom - vrijedi cijelu godinu.</p>
     <div class="plan-ctas">
       <a href="/website/contact.html" class="btn btn-primary btn-lg">
         Naručite Pro plan
@@ -255,7 +290,7 @@
         <div class="feat-icon">📈</div>
         <span class="badge-new">Novo u Pro</span>
         <h3>Statistike igrača</h3>
-        <p>Golovi, asistencije, žuti i crveni kartoni, minute igre — sve na jednom profilu. Vizualni grafikoni napretka tokom sezone.</p>
+        <p>Golovi, asistencije, žuti i crveni kartoni, minute igre - sve na jednom profilu. Vizualni grafikoni napretka tokom sezone.</p>
       </div>
       <div class="feat-card new reveal reveal-delay-4">
         <div class="feat-icon">🌱</div>
@@ -267,7 +302,7 @@
         <div class="feat-icon">📄</div>
         <span class="badge-new">Novo u Pro</span>
         <h3>Digitalni obrazci</h3>
-        <p>FSKS, NS BiH i NS FBiH obrasci — popunite direktno u aplikaciji. Štampajte ili preuzmite popunjeni PDF za svaku utakmicu.</p>
+        <p>FSKS, NS BiH i NS FBiH obrasci - popunite direktno u aplikaciji. Štampajte ili preuzmite popunjeni PDF za svaku utakmicu.</p>
       </div>
     </div>
   </div>
@@ -279,7 +314,7 @@
     <div style="text-align:center" class="reveal">
       <div class="tag tag-green">✅ Uključeno iz Starter plana</div>
       <h2 class="st">Plus sve osnove koje već poznajete</h2>
-      <p class="ss" style="margin:12px auto 0;text-align:center">Pro plan uključuje sve funkcije Starter plana — ništa ne gubite, samo dobijate više.</p>
+      <p class="ss" style="margin:12px auto 0;text-align:center">Pro plan uključuje sve funkcije Starter plana - ništa ne gubite, samo dobijate više.</p>
     </div>
     <div class="starter-grid reveal" style="margin-top:40px">
       <div class="starter-feat"><span class="sf-icon">✓</span> Upravljanje članovima</div>
@@ -289,7 +324,7 @@
       <div class="starter-feat"><span class="sf-icon">✓</span> Vizualna postava</div>
       <div class="starter-feat"><span class="sf-icon">✓</span> Obavijesti i oglasi</div>
       <div class="starter-feat"><span class="sf-icon">✓</span> Kalendar termina</div>
-      <div class="starter-feat"><span class="sf-icon">✓</span> PWA — mobilni pristup</div>
+      <div class="starter-feat"><span class="sf-icon">✓</span> PWA - mobilni pristup</div>
       <div class="starter-feat"><span class="sf-icon">✓</span> Brendiranje kluba</div>
     </div>
   </div>
@@ -333,6 +368,7 @@
         </tbody>
       </table>
     </div>
+    <p class="tbl-scroll-hint">← Prevucite za poređenje →</p>
     <div style="display:flex;gap:14px;justify-content:center;margin-top:36px;flex-wrap:wrap">
       <a href="/website/plan-starter.html" class="btn btn-outline">Pogledaj Starter plan</a>
       <a href="/website/plan-klub.html" class="btn btn-outline">Pogledaj Klub plan</a>
@@ -362,11 +398,11 @@
       </div>
       <div class="faq-item">
         <div class="faq-q" onclick="toggleFaq(this)">Mogu li imati više od 5 selekcija ako mi treba? <span class="faq-arrow">▼</span></div>
-        <div class="faq-a">Za neograničen broj selekcija preporučujemo Klub plan. Ako imate specifičan zahtjev, kontaktirajte nas — možemo dogovoriti individualno rješenje.</div>
+        <div class="faq-a">Za neograničen broj selekcija preporučujemo Klub plan. Ako imate specifičan zahtjev, kontaktirajte nas - možemo dogovoriti individualno rješenje.</div>
       </div>
       <div class="faq-item">
         <div class="faq-q" onclick="toggleFaq(this)">Kako izgleda plaćanje? <span class="faq-arrow">▼</span></div>
-        <div class="faq-a">Plaćanje se vrši bankovnim transferom ili karticom, jednom mjesečno. Faktura se izdaje automatski na email adresu kluba. Nema godišnjeg ugovora — otkazujete kad god želite.</div>
+        <div class="faq-a">Plaćanje se vrši bankovnim transferom ili karticom, jednom mjesečno. Faktura se izdaje automatski na email adresu kluba. Nema godišnjeg ugovora - otkazujete kad god želite.</div>
       </div>
     </div>
   </div>
@@ -375,9 +411,9 @@
 <!-- CTA -->
 <section class="plan-cta-section">
   <div class="container reveal">
-    <div class="tag tag-white" style="margin:0 auto 20px;">🚀 Pro — 40 KM/mj</div>
+    <div class="tag tag-white" style="margin:0 auto 20px;">🚀 Pro - 40 KM/mj</div>
     <h2>Vaš klub je spreman<br>za sljedeći nivo.</h2>
-    <p>150 članova, 5 selekcija, finansije, galerija, statistike, razvoj igrača i digitalni obrazci — sve na jednom mjestu.</p>
+    <p>150 članova, 5 selekcija, finansije, galerija, statistike, razvoj igrača i digitalni obrazci - sve na jednom mjestu.</p>
     <div class="plan-ctas">
       <a href="/website/contact.html" class="btn btn-primary btn-lg">
         Naručite Pro plan →
@@ -396,9 +432,9 @@
         <p class="footer-tagline">Platforma za upravljanje fudbalskim klubovima u BiH i regiji.</p>
       </div>
       <div class="footer-col"><h4>Planovi</h4><ul>
-        <li><a href="/website/plan-starter.html">Starter — Besplatno</a></li>
-        <li><a href="/website/plan-pro.html">Pro — 40 KM/mj</a></li>
-        <li><a href="/website/plan-klub.html">Klub — 60 KM/mj</a></li>
+        <li><a href="/website/plan-starter.html">Starter - Besplatno</a></li>
+        <li><a href="/website/plan-pro.html">Pro - 40 KM/mj</a></li>
+        <li><a href="/website/plan-klub.html">Klub - 60 KM/mj</a></li>
       </ul></div>
       <div class="footer-col"><h4>Kompanija</h4><ul>
         <li><a href="/website/about.html">O nama</a></li>
@@ -420,6 +456,14 @@
   </div>
 </footer>
 
+<div class="sticky-cta" id="stickyCta">
+  <div class="sticky-cta-info">
+    <span class="sticky-cta-price">40 KM <span style="font-size:0.72rem;font-weight:500;color:#64748b">/mj</span></span>
+    <span class="sticky-cta-label">Pro plan · 150 članova, 5 selekcija</span>
+  </div>
+  <a href="/website/contact.html" class="btn btn-primary btn-sm">Aktiviraj Pro plan →</a>
+</div>
+
 <script>
   const nav = document.getElementById('mainNav');
   window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 30), { passive: true });
@@ -438,6 +482,8 @@
     entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
   }, { threshold: 0.1 });
   document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  const stickyCta = document.getElementById('stickyCta');
+  window.addEventListener('scroll', () => stickyCta.classList.toggle('visible', window.scrollY > 320), { passive: true });
 </script>
 </body>
 </html>

@@ -216,7 +216,7 @@
             </button>
           </div>
           <div id="playerStatsBody" class="table-responsive rounded-3 border">
-            <table class="table table-sm table-hover mb-0">
+            <table class="table table-sm table-hover mb-0 table-mobile-cards">
               <thead class="table-light">
                 <tr>
                   <th>Igrač</th>
@@ -466,27 +466,27 @@ async function loadPlayerStats(matchId) {
       const s = statsMap[m.id] || {};
       const hasData = s.goals > 0 || s.assists > 0 || s.yellow_cards > 0 || s.red_cards > 0 || s.started;
       return `<tr class="player-row">
-        <td class="fw-semibold small">${esc(m.name)}</td>
-        <td class="text-center">
+        <td data-label="Igrač" class="fw-semibold small">${esc(m.name)}</td>
+        <td data-label="Starter" class="text-center">
           <input type="checkbox" class="form-check-input" id="ps_s_${m.id}" ${s.started ? 'checked' : ''}>
         </td>
-        <td class="text-center">
+        <td data-label="Golovi" class="text-center">
           <input type="number" class="form-control form-control-sm stat-input" id="ps_g_${m.id}"
             value="${s.goals || 0}" min="0" max="20">
         </td>
-        <td class="text-center">
+        <td data-label="Asistencije" class="text-center">
           <input type="number" class="form-control form-control-sm stat-input" id="ps_a_${m.id}"
             value="${s.assists || 0}" min="0" max="20">
         </td>
-        <td class="text-center">
+        <td data-label="Žuti" class="text-center">
           <input type="number" class="form-control form-control-sm stat-input" id="ps_y_${m.id}"
             value="${s.yellow_cards || 0}" min="0" max="2">
         </td>
-        <td class="text-center">
+        <td data-label="Crveni" class="text-center">
           <input type="number" class="form-control form-control-sm stat-input" id="ps_r_${m.id}"
             value="${s.red_cards || 0}" min="0" max="1">
         </td>
-        <td class="text-center">
+        <td data-label="Min" class="text-center">
           <input type="number" class="form-control form-control-sm" id="ps_m_${m.id}"
             value="${s.minutes_played ?? (hasData ? 90 : 0)}" min="0" max="120" style="width:62px;text-align:center;">
         </td>

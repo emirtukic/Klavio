@@ -6,7 +6,12 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
   <link href="../../assets/css/style.css" rel="stylesheet">
-
+  <style>
+    .fee-bulk-bar { background:#10b981;color:#fff;border-radius:10px;padding:.6rem 1rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap; }
+    .fee-bulk-bar .count-pill { background:rgba(255,255,255,.25);border-radius:999px;padding:.15em .65em;font-weight:700;font-size:.85rem; }
+    #tableBody tr.row-selected { background:rgba(16,185,129,.07); }
+    .cb-col { width:36px; }
+  </style>
 </head>
 <body>
 <div class="sidebar"></div>
@@ -66,15 +71,26 @@
       </div>
     </div>
 
+    <!-- Bulk action bar -->
+    <div id="feeBulkBar" class="fee-bulk-bar mb-3 d-none">
+      <span class="count-pill" id="feeBulkCount">0</span>
+      <span>odabranih</span>
+      <div class="d-flex gap-2 flex-wrap ms-auto">
+        <button class="btn btn-sm btn-light" onclick="bulkMarkFeesPaid()"><i class="bi bi-check-lg me-1"></i>Označi plaćeno</button>
+        <button class="btn btn-sm btn-danger" onclick="bulkDeleteFees()"><i class="bi bi-trash me-1"></i>Obriši</button>
+        <button class="btn btn-sm btn-outline-light" onclick="clearFeeSelection()"><i class="bi bi-x"></i></button>
+      </div>
+    </div>
+
     <!-- Filters -->
     <div class="filter-bar mb-3">
       <div class="row g-2 align-items-end">
-        <div class="col-sm-6 col-lg-3">
+        <div class="col-12 col-sm-6 col-lg-3">
           <input type="text" class="form-control form-control-sm" id="fSearch"
             placeholder="Pretraži člana..." oninput="feePage=1;renderTable()"
             autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly')">
         </div>
-        <div class="col-auto">
+        <div class="col-6 col-sm-auto">
           <select class="form-select form-select-sm" id="fStatus" onchange="feePage=1;renderTable()">
             <option value="">Svi statusi</option>
             <option value="paid">Plaćeno</option>
@@ -82,19 +98,19 @@
             <option value="overdue">Zakašnjelo</option>
           </select>
         </div>
-        <div class="col-auto">
+        <div class="col-6 col-sm-auto">
           <input type="date" class="form-control form-control-sm" id="fFrom" onchange="feePage=1;renderTable()" title="Dospijeće od">
         </div>
-        <div class="col-auto">
+        <div class="col-6 col-sm-auto">
           <input type="date" class="form-control form-control-sm" id="fTo" onchange="feePage=1;renderTable()" title="Dospijeće do">
         </div>
-        <div class="col-auto">
+        <div class="col-6 col-sm-auto">
           <input type="number" class="form-control form-control-sm" id="fAmtMin"
-            placeholder="Min KM" min="0" step="1" style="width:90px" oninput="feePage=1;renderTable()">
+            placeholder="Min KM" min="0" step="1" oninput="feePage=1;renderTable()">
         </div>
-        <div class="col-auto">
+        <div class="col-6 col-sm-auto">
           <input type="number" class="form-control form-control-sm" id="fAmtMax"
-            placeholder="Max KM" min="0" step="1" style="width:90px" oninput="feePage=1;renderTable()">
+            placeholder="Max KM" min="0" step="1" oninput="feePage=1;renderTable()">
         </div>
         <div class="col-auto">
           <button class="btn btn-outline-secondary btn-sm" onclick="resetFilters()" title="Resetuj filtere">
@@ -114,6 +130,7 @@
         <table class="table table-hover mb-0 table-mobile-cards">
           <thead>
             <tr>
+              <th class="cb-col"><input type="checkbox" class="form-check-input" id="feeSelectAll" onchange="toggleFeeSelectAll(this.checked)"></th>
               <th>Član</th>
               <th>Period</th>
               <th>Iznos</th>
@@ -124,10 +141,10 @@
             </tr>
           </thead>
           <tbody id="tableBody">
-            <tr><td colspan="7" class="p-2"><span class="skeleton sk-row"></span></td></tr>
-            <tr><td colspan="7" class="p-2"><span class="skeleton sk-row"></span></td></tr>
-            <tr><td colspan="7" class="p-2"><span class="skeleton sk-row"></span></td></tr>
-            <tr><td colspan="7" class="p-2"><span class="skeleton sk-row" style="width:80%"></span></td></tr>
+            <tr><td colspan="8" class="p-2"><span class="skeleton sk-row"></span></td></tr>
+            <tr><td colspan="8" class="p-2"><span class="skeleton sk-row"></span></td></tr>
+            <tr><td colspan="8" class="p-2"><span class="skeleton sk-row"></span></td></tr>
+            <tr><td colspan="8" class="p-2"><span class="skeleton sk-row" style="width:80%"></span></td></tr>
           </tbody>
         </table>
       </div>
@@ -138,6 +155,50 @@
 
   </div>
 </div>
+<!-- Quick-edit modal -->
+<div class="modal fade" id="feeEditModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:14px;overflow:hidden;">
+      <div class="modal-header border-0 pb-1">
+        <h5 class="modal-title fw-bold"><i class="bi bi-pencil me-2"></i>Uredi članarinu</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editFeeId">
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <label class="form-label">Iznos (KM)</label>
+            <input type="number" class="form-control" id="editFeeAmount" step="0.01" min="0">
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label">Status</label>
+            <select class="form-select" id="editFeeStatus">
+              <option value="pending">Na čekanju</option>
+              <option value="paid">Plaćeno</option>
+              <option value="overdue">Zakašnjelo</option>
+            </select>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label">Rok dospijeća</label>
+            <input type="date" class="form-control" id="editFeeDueDate">
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label">Datum plaćanja</label>
+            <input type="date" class="form-control" id="editFeePaidDate">
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-1">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
+        <button type="button" class="btn btn-primary" id="saveFeeEditBtn" onclick="saveQuickEditFee()">
+          <span id="editFeeSpinner" class="spinner-border spinner-border-sm d-none me-1"></span>
+          Sačuvaj
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../../assets/js/auth.js"></script>
 <script src="../../assets/js/api.js"></script>
@@ -150,6 +211,7 @@ buildSidebar();
 let allFees = [];
 const FEE_PAGE_SIZE = 20;
 let feePage = 1;
+let selectedFeeIds = new Set();
 
 async function load() {
   try {
@@ -186,24 +248,40 @@ function filtered() {
 
 function renderTable() {
   const rows  = filtered();
+  const anyFilter = document.getElementById('fSearch').value || document.getElementById('fStatus').value ||
+    document.getElementById('fFrom').value || document.getElementById('fTo').value ||
+    document.getElementById('fAmtMin').value || document.getElementById('fAmtMax').value;
   const pages = Math.ceil(rows.length / FEE_PAGE_SIZE) || 1;
   if (feePage > pages) feePage = 1;
   const slice = rows.slice((feePage - 1) * FEE_PAGE_SIZE, feePage * FEE_PAGE_SIZE);
   document.getElementById('feeCount').textContent = rows.length + ' zapisa';
-  document.getElementById('tableBody').innerHTML = slice.length ? slice.map(f => `
-    <tr>
+  document.getElementById('tableBody').innerHTML = slice.length ? slice.map(f => {
+    const checked = selectedFeeIds.has(f.id) ? 'checked' : '';
+    const rowSel  = selectedFeeIds.has(f.id) ? 'row-selected' : '';
+    return `
+    <tr id="fee-row-${f.id}" class="${rowSel}">
+      <td class="cb-col"><input type="checkbox" class="form-check-input" data-id="${f.id}" ${checked} onchange="toggleFeeRow(${f.id},this.checked)"></td>
       <td data-label="Član" class="fw-semibold">${f.member_name}</td>
-      <td data-label="Period" class="small text-muted">${formatDate(f.period_start)} - ${formatDate(f.period_end)}</td>
+      <td data-label="Period" class="small text-muted">${formatDate(f.period_start)} – ${formatDate(f.period_end)}</td>
       <td data-label="Iznos" class="fw-semibold">${parseFloat(f.amount).toFixed(2)} KM</td>
       <td data-label="Dospijeće">${formatDate(f.due_date)}</td>
       <td data-label="Plaćeno">${f.paid_date ? formatDate(f.paid_date) : '-'}</td>
       <td data-label="Status">${statusBadge(f.status)}</td>
       <td>
-        ${f.status !== 'paid' ? `<button class="btn btn-sm btn-success me-1" onclick="markPaid(${f.id})" title="Označi kao plaćeno"><i class="bi bi-check-lg"></i></button>` : ''}
+        ${f.status !== 'paid' ? `<button class="btn btn-sm btn-success me-1" onclick="markPaid(${f.id})" title="Označi plaćeno"><i class="bi bi-check-lg"></i></button>` : ''}
+        ${f.status !== 'paid' ? `<button class="btn btn-sm btn-outline-warning me-1" onclick="sendFeeReminder(${f.id})" title="Pošalji podsjetnik"><i class="bi bi-bell"></i></button>` : ''}
+        <button class="btn btn-sm btn-outline-secondary me-1" onclick="quickEditFee(${f.id})" title="Uredi"><i class="bi bi-pencil"></i></button>
         <button class="btn btn-sm btn-outline-danger" onclick="deleteFee(${f.id})" title="Obriši"><i class="bi bi-trash"></i></button>
       </td>
-    </tr>`).join('') :
-    `<tr><td colspan="7" class="text-center py-5 text-muted"><i class="bi bi-inbox fs-2 d-block mb-2"></i>Nema pronađenih članarina</td></tr>`;
+    </tr>`;
+  }).join('') :
+  `<tr><td colspan="8" class="text-center py-5">
+    <i class="bi bi-${anyFilter ? 'search' : 'cash-coin'} fs-2 d-block mb-2 text-muted opacity-25"></i>
+    <div class="fw-semibold text-muted mb-1">${anyFilter ? 'Nema pronađenih članarina' : 'Još nema unesenih članarina'}</div>
+    <div class="small text-muted">${anyFilter ? 'Prilagodite filtere za pretragu.' : 'Dodajte prvu članarinu kluba.'}</div>
+    ${!anyFilter ? '<a href="add.html" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg me-1"></i>Dodaj članarinu</a>' : ''}
+  </td></tr>`;
+  syncFeeSelectAll();
   renderFeePagination(pages);
 }
 
@@ -248,6 +326,91 @@ async function deleteFee(id) {
 async function checkReminders() {
   try { const r = await apiPost('/reminders/check-fees', {}); showToast(r.message, 'success'); }
   catch(e) { showToast(e.message, 'error'); }
+}
+
+/* ── Bulk selection ── */
+function toggleFeeRow(id, checked) {
+  checked ? selectedFeeIds.add(id) : selectedFeeIds.delete(id);
+  const row = document.getElementById('fee-row-' + id);
+  if (row) row.classList.toggle('row-selected', checked);
+  updateFeeBulkBar(); syncFeeSelectAll();
+}
+function toggleFeeSelectAll(checked) {
+  filtered().forEach(f => checked ? selectedFeeIds.add(f.id) : selectedFeeIds.delete(f.id));
+  renderTable(); updateFeeBulkBar();
+}
+function syncFeeSelectAll() {
+  const vis = filtered();
+  const sa = document.getElementById('feeSelectAll');
+  if (!sa) return;
+  sa.checked = vis.length > 0 && vis.every(f => selectedFeeIds.has(f.id));
+  sa.indeterminate = !sa.checked && vis.some(f => selectedFeeIds.has(f.id));
+}
+function clearFeeSelection() { selectedFeeIds.clear(); renderTable(); updateFeeBulkBar(); }
+function updateFeeBulkBar() {
+  document.getElementById('feeBulkCount').textContent = selectedFeeIds.size;
+  document.getElementById('feeBulkBar').classList.toggle('d-none', selectedFeeIds.size === 0);
+}
+
+/* ── Bulk actions ── */
+async function bulkMarkFeesPaid() {
+  const ids = Array.from(selectedFeeIds);
+  if (!ids.length) return;
+  confirmAction(`Označiti ${ids.length} članarina kao plaćene?`, async () => {
+    try {
+      await Promise.all(ids.map(id => apiPut('/fees/' + id + '/pay', { payment_method: 'cash' })));
+      showToast(`${ids.length} članarina označeno kao plaćeno`, 'success');
+      clearFeeSelection(); load();
+    } catch(e) { showToast(e.message, 'error'); }
+  }, { title: 'Bulk plaćanje', btnLabel: 'Označi plaćeno', btnClass: 'btn-success' });
+}
+async function bulkDeleteFees() {
+  const ids = Array.from(selectedFeeIds);
+  if (!ids.length) return;
+  confirmDelete(async () => {
+    try {
+      await Promise.all(ids.map(id => apiDelete('/fees/' + id)));
+      showToast(`${ids.length} članarina obrisano`, 'success');
+      clearFeeSelection(); load();
+    } catch(e) { showToast(e.message, 'error'); }
+  }, `Obrisati ${ids.length} odabranih članarina? Ova radnja je nepovratna.`);
+}
+
+/* ── Quick edit ── */
+function quickEditFee(id) {
+  const f = allFees.find(f => f.id === id);
+  if (!f) return;
+  document.getElementById('editFeeId').value     = id;
+  document.getElementById('editFeeAmount').value = parseFloat(f.amount).toFixed(2);
+  document.getElementById('editFeeStatus').value = f.status;
+  document.getElementById('editFeeDueDate').value  = f.due_date  ? f.due_date.slice(0,10)  : '';
+  document.getElementById('editFeePaidDate').value = f.paid_date ? f.paid_date.slice(0,10) : '';
+  new bootstrap.Modal(document.getElementById('feeEditModal')).show();
+}
+async function saveQuickEditFee() {
+  const id = document.getElementById('editFeeId').value;
+  const btn = document.getElementById('saveFeeEditBtn');
+  const sp  = document.getElementById('editFeeSpinner');
+  btn.disabled = true; sp.classList.remove('d-none');
+  try {
+    await apiPut('/fees/' + id, {
+      amount:    parseFloat(document.getElementById('editFeeAmount').value),
+      status:    document.getElementById('editFeeStatus').value,
+      due_date:  document.getElementById('editFeeDueDate').value  || null,
+      paid_date: document.getElementById('editFeePaidDate').value || null,
+    });
+    bootstrap.Modal.getInstance(document.getElementById('feeEditModal')).hide();
+    showToast('Članarina ažurirana', 'success'); load();
+  } catch(e) { showToast(e.message, 'error'); }
+  finally { btn.disabled = false; sp.classList.add('d-none'); }
+}
+
+/* ── Per-row reminder ── */
+async function sendFeeReminder(id) {
+  try {
+    const r = await apiPost('/reminders/send-fee/' + id, {});
+    showToast(r.message || 'Podsjetnik poslan', 'success');
+  } catch(e) { showToast(e.message, 'error'); }
 }
 
 load();

@@ -62,7 +62,7 @@ function setUserInfo(user) {
     n.style.cssText = 'cursor:pointer;border-bottom:1px dashed #94a3b8;' + (n.style.cssText || '');
     n.title = 'Postavke profila';
 
-    // Avatar circle — insert just before the name element
+    // Avatar circle - insert just before the name element
     let av = document.getElementById('topbar-avatar');
     if (!av) {
       av = document.createElement('div');
@@ -79,6 +79,53 @@ function setUserInfo(user) {
   const displayRole = (user.role === 'super_admin' && user.club_id) ? 'admin' : user.role;
   const r = document.getElementById('userRole');
   if (r) r.textContent = roleLabels[displayRole] || displayRole.replace(/_/g,' ').toUpperCase();
+
+  _initNotificationBell();
+}
+
+function _initNotificationBell() {
+  if (document.getElementById('notif-bell')) return;
+  const roleEl = document.getElementById('userRole');
+  if (!roleEl) return;
+
+  const bell = document.createElement('button');
+  bell.id = 'notif-bell';
+  bell.title = 'Obavijesti';
+  bell.style.cssText = 'background:none;border:none;padding:0 2px;position:relative;color:#64748b;font-size:1.15rem;line-height:1;cursor:pointer;flex-shrink:0;display:flex;align-items:center;';
+  bell.onclick = () => window.location.href = '/pages/notifications/index.html';
+  bell.innerHTML = `
+    <i class="bi bi-bell" id="notif-bell-icon"></i>
+    <span id="notif-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;font-size:0.55rem;font-weight:700;min-width:16px;height:16px;border-radius:8px;padding:0 3px;line-height:16px;text-align:center;"></span>`;
+  roleEl.insertAdjacentElement('beforebegin', bell);
+
+  async function refreshBell() {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const res = await fetch('/api/notifications/unread', {
+        headers: { Authorization: 'Bearer ' + token }
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      const count = data.count || 0;
+      const badge = document.getElementById('notif-badge');
+      const icon  = document.getElementById('notif-bell-icon');
+      if (!badge) return;
+      if (count > 0) {
+        badge.textContent = count > 99 ? '99+' : count;
+        badge.style.display = 'block';
+        icon.className = 'bi bi-bell-fill';
+        document.getElementById('notif-bell').style.color = '#ef4444';
+      } else {
+        badge.style.display = 'none';
+        icon.className = 'bi bi-bell';
+        document.getElementById('notif-bell').style.color = '#64748b';
+      }
+    } catch (_) {}
+  }
+
+  refreshBell();
+  setInterval(refreshBell, 60000);
 }
 
 function renderAvatarEl(el, url, name) {

@@ -52,7 +52,7 @@
 
     <div class="card table-card">
       <div class="table-responsive">
-        <table class="table table-hover mb-0">
+        <table class="table table-hover mb-0 table-mobile-cards">
           <thead><tr><th>Tip</th><th>Naslov</th><th>Klub</th><th>Odgovori</th><th>Posljednja aktivnost</th><th></th></tr></thead>
           <tbody id="msgTable">
             <tr class="sk-row"><td><div class="skeleton" style="height:20px;width:70px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:13px;width:65%;"></div></td><td><div class="skeleton" style="height:13px;width:50%;"></div></td><td><div class="skeleton" style="height:13px;width:30px;"></div></td><td><div class="skeleton" style="height:13px;width:100px;"></div></td><td><div class="skeleton" style="height:28px;width:36px;border-radius:6px;"></div></td></tr>
@@ -160,13 +160,13 @@ function renderTable() {
     const lastActivity = m.last_reply_at || m.created_at;
     return `
     <tr style="cursor:pointer;${hasAdminReply ? 'font-weight:600;' : ''}" onclick="openThread(${m.id})">
-      <td>${m.type === 'broadcast'
+      <td data-label="Tip">${m.type === 'broadcast'
         ? '<span class="badge bg-primary">Broadcast</span>'
         : '<span class="badge bg-info text-dark">Direktna</span>'}</td>
-      <td>${m.subject}${indicator}</td>
-      <td class="text-muted small">${m.club_name || '<span class="text-muted">Svi klubovi</span>'}</td>
-      <td class="text-center">${m.reply_count || 0}</td>
-      <td class="small text-muted">${new Date(lastActivity).toLocaleString('bs-BA')}</td>
+      <td data-label="Naslov">${m.subject}${indicator}</td>
+      <td data-label="Klub" class="text-muted small">${m.club_name || '<span class="text-muted">Svi klubovi</span>'}</td>
+      <td data-label="Odgovori" class="text-center">${m.reply_count || 0}</td>
+      <td data-label="Aktivnost" class="small text-muted">${new Date(lastActivity).toLocaleString('bs-BA')}</td>
       <td>
         <button class="btn btn-sm btn-outline-danger" onclick="event.stopPropagation();deleteMsg(${m.id})" title="Obriši"><i class="bi bi-trash"></i></button>
       </td>

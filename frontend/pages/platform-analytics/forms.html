@@ -73,7 +73,7 @@
     </div>
 
     <!-- KPI row -->
-    <div class="sec-title"><i class="bi bi-file-earmark-bar-graph text-primary"></i>Pregled — odabrani period</div>
+    <div class="sec-title"><i class="bi bi-file-earmark-bar-graph text-primary"></i>Pregled - odabrani period</div>
     <div class="row g-3 mb-4">
       <div class="col-6 col-md-3">
         <div class="kpi-card h-100">
@@ -151,7 +151,7 @@
         <div class="an-card h-100">
           <div class="card-header fw-semibold small"><i class="bi bi-list-ol me-2 text-primary"></i>Rang lista obrazaca</div>
           <div class="table-responsive">
-            <table class="table an-table mb-0">
+            <table class="table an-table mb-0 table-mobile-cards">
               <thead><tr><th style="width:36px">#</th><th>Obrazac</th><th>Vrsta</th><th class="text-center">Popunjeno</th><th style="min-width:100px">Udio</th></tr></thead>
               <tbody id="typeTableBody">
                 <tr><td colspan="5" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Učitavanje...</td></tr>
@@ -168,7 +168,7 @@
       <div class="card-header fw-semibold small"><i class="bi bi-bar-chart-fill me-2" style="color:#8b5cf6"></i>Klubovi koji najviše koriste obrazce (top 10)</div>
       <div class="card-body pb-2"><canvas id="clubChart" style="max-height:280px;"></canvas></div>
       <div class="table-responsive">
-        <table class="table an-table mb-0">
+        <table class="table an-table mb-0 table-mobile-cards">
           <thead><tr><th style="width:36px">#</th><th>Klub</th><th class="text-center">Popunjeno (period)</th><th style="min-width:120px">Udio</th></tr></thead>
           <tbody id="clubTableBody">
             <tr><td colspan="4" class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Učitavanje...</td></tr>
@@ -196,7 +196,7 @@ const MONTHS = ['Jan','Feb','Mar','Apr','Maj','Jun','Jul','Aug','Sep','Okt','Nov
 const PALETTE = ['#6366f1','#22c55e','#f59e0b','#ef4444','#06b6d4','#8b5cf6','#f97316','#ec4899','#14b8a6','#84cc16'];
 
 const FORM_LABELS = {
-  'fsks-1': 'Spisak igrača — FSKS',
+  'fsks-1': 'Spisak igrača - FSKS',
   'nsfbih-1': 'Obrazac NS FBiH',
   'nsbih-1': 'Obrazac NS BiH',
 };
@@ -248,7 +248,7 @@ function applyCustomRange() {
 
 function updatePeriodLabel() {
   const fmt = d => new Date(d).toLocaleDateString('bs-BA');
-  document.getElementById('periodLabel').textContent = `Period: ${fmt(currentFrom)} — ${fmt(currentTo)}`;
+  document.getElementById('periodLabel').textContent = `Period: ${fmt(currentFrom)} - ${fmt(currentTo)}`;
 }
 
 async function loadAll() {
@@ -334,11 +334,11 @@ function renderTypeTable(byType) {
                : i === 1 ? 'style="background:#f1f5f9;color:#334155"'
                : i === 2 ? 'style="background:#fef3c7;color:#92400e"' : '';
     return `<tr>
-      <td><span class="rank-num" ${rank}>${i+1}</span></td>
-      <td class="fw-semibold">${formLabel(r.form_type, r.form_name)}</td>
-      <td><span class="badge" style="background:#e0e7ff;color:#4f46e5;font-size:.65rem;">${r.form_type.toUpperCase()}</span></td>
-      <td class="text-center fw-bold">${fmtNum(r.fills)}</td>
-      <td>
+      <td data-label="#"><span class="rank-num" ${rank}>${i+1}</span></td>
+      <td data-label="Obrazac" class="fw-semibold">${formLabel(r.form_type, r.form_name)}</td>
+      <td data-label="Vrsta"><span class="badge" style="background:#e0e7ff;color:#4f46e5;font-size:.65rem;">${r.form_type.toUpperCase()}</span></td>
+      <td data-label="Popunjeno" class="text-center fw-bold">${fmtNum(r.fills)}</td>
+      <td data-label="Udio">
         <div class="d-flex align-items-center gap-2">
           <div class="mini-bar flex-grow-1"><div class="mini-bar-fill" style="width:${pct}%;background:#6366f1;"></div></div>
           <span class="text-muted small">${pct}%</span>
@@ -387,10 +387,10 @@ function renderClubTable(byClub) {
                : i === 1 ? 'style="background:#f1f5f9;color:#334155"'
                : i === 2 ? 'style="background:#fef3c7;color:#92400e"' : '';
     return `<tr>
-      <td><span class="rank-num" ${rank}>${i+1}</span></td>
-      <td class="fw-semibold">${r.club_name}</td>
-      <td class="text-center fw-bold">${fmtNum(r.fills)}</td>
-      <td>
+      <td data-label="#"><span class="rank-num" ${rank}>${i+1}</span></td>
+      <td data-label="Klub" class="fw-semibold">${r.club_name}</td>
+      <td data-label="Popunjeno" class="text-center fw-bold">${fmtNum(r.fills)}</td>
+      <td data-label="Udio">
         <div class="d-flex align-items-center gap-2">
           <div class="mini-bar flex-grow-1"><div class="mini-bar-fill" style="width:${pct}%;background:#8b5cf6;"></div></div>
           <span class="text-muted small">${pct}%</span>

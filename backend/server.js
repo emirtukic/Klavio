@@ -51,14 +51,14 @@ app.get('*splat', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
-// Daily 08:00 — send day-before match reminders
+// Daily 08:00 - send day-before match reminders
 const { sendDayBeforeReminders } = require('./services/matchNotificationService');
 cron.schedule('0 8 * * *', () => {
   console.log('[cron] Running day-before match reminder job...');
   sendDayBeforeReminders();
 });
 
-// Daily midnight — mark expired subscriptions as overdue
+// Daily midnight - mark expired subscriptions as overdue
 const db = require('./config/db');
 cron.schedule('0 0 * * *', async () => {
   try {

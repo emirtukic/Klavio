@@ -181,7 +181,7 @@
 
   // Show "Novo obavještenje" button for eligible roles
   if (canPost) document.getElementById('addBtn').classList.remove('d-none');
-  // Only admins can pin — hide the pinned row for coaches
+  // Only admins can pin - hide the pinned row for coaches
   if (!canAdmin) document.getElementById('pinnedRow').classList.add('d-none');
 
   let allAnnouncements = [];

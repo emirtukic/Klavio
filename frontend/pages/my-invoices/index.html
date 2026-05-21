@@ -63,7 +63,7 @@
 
     <div class="card table-card">
       <div class="table-responsive">
-        <table class="table table-hover mb-0">
+        <table class="table table-hover mb-0 table-mobile-cards">
           <thead><tr><th>Br. fakture</th><th>Iznos</th><th>Status</th><th>Rok</th><th>Plaćeno</th><th>Period</th><th>Napomene</th></tr></thead>
           <tbody id="invTable">
             <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:90px;"></div></td><td><div class="skeleton" style="height:13px;width:60px;"></div></td><td><div class="skeleton" style="height:20px;width:65px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:13px;width:70px;"></div></td><td><div class="skeleton" style="height:13px;width:70px;"></div></td><td><div class="skeleton" style="height:13px;width:80%;"></div></td><td><div class="skeleton" style="height:13px;width:60%;"></div></td></tr>
@@ -106,13 +106,13 @@ function renderTable() {
   const rows = allInv.filter(i => !st || i.status === st);
   document.getElementById('invTable').innerHTML = rows.map(i => `
     <tr>
-      <td class="fw-semibold small">${i.invoice_number}</td>
-      <td class="fw-semibold">${fmt(i.amount)}</td>
-      <td>${STATUS_BADGE[i.status] || i.status}</td>
-      <td class="small">${fmtD(i.due_date)}</td>
-      <td class="small">${fmtD(i.paid_date)}</td>
-      <td class="small text-muted">${i.period_start ? fmtD(i.period_start) + ' – ' + fmtD(i.period_end) : '-'}</td>
-      <td class="small text-muted">${i.notes || '-'}</td>
+      <td data-label="Br. fakture" class="fw-semibold small">${i.invoice_number}</td>
+      <td data-label="Iznos" class="fw-semibold">${fmt(i.amount)}</td>
+      <td data-label="Status">${STATUS_BADGE[i.status] || i.status}</td>
+      <td data-label="Rok" class="small">${fmtD(i.due_date)}</td>
+      <td data-label="Plaćeno" class="small">${fmtD(i.paid_date)}</td>
+      <td data-label="Period" class="small text-muted">${i.period_start ? fmtD(i.period_start) + ' – ' + fmtD(i.period_end) : '-'}</td>
+      <td data-label="Napomene" class="small text-muted">${i.notes || '-'}</td>
     </tr>`).join('') || '<tr><td colspan="7" class="text-center text-muted py-3">Nema faktura</td></tr>';
 }
 

@@ -131,7 +131,7 @@
 
       <div class="row g-3 mb-4">
         <!-- Monthly revenue chart -->
-        <div class="col-lg-8">
+        <div class="col-12 col-lg-8">
           <div class="card rep-chart-card h-100">
             <div class="card-header d-flex justify-content-between align-items-center">
               <span class="fw-semibold"><i class="bi bi-bar-chart-line me-2 text-primary"></i>Prihodi po mjesecima</span>
@@ -142,7 +142,7 @@
           </div>
         </div>
         <!-- Collection rate card -->
-        <div class="col-lg-4">
+        <div class="col-12 col-lg-4">
           <div class="card rep-chart-card h-100">
             <div class="card-header">
               <span class="fw-semibold"><i class="bi bi-pie-chart me-2 text-success"></i>Naplata</span>
@@ -179,7 +179,7 @@
           <span class="text-muted small" id="monthlyCount"></span>
         </div>
         <div class="table-responsive">
-          <table class="table table-hover mb-0">
+          <table class="table table-hover mb-0 table-mobile-cards">
             <thead><tr><th>Mjesec</th><th>Naplaćeno</th><th>Neplaćeno</th><th>Ukupno faktura</th><th>Udio</th></tr></thead>
             <tbody id="monthlyTable">
               <tr class="sk-row"><td colspan="5"><div class="skeleton" style="height:13px;"></div></td></tr>
@@ -195,7 +195,7 @@
           <span class="fw-semibold">Top 10 dužnika</span>
         </div>
         <div class="table-responsive">
-          <table class="table table-hover mb-0">
+          <table class="table table-hover mb-0 table-mobile-cards">
             <thead><tr><th>#</th><th>Član</th><th>Selekcija</th><th>Br. faktura</th><th>Ukupan dug</th></tr></thead>
             <tbody id="debtorsTable">
               <tr class="sk-row"><td colspan="5"><div class="skeleton" style="height:13px;"></div></td></tr>
@@ -237,7 +237,7 @@
 
       <div class="row g-3 mb-4">
         <!-- Status doughnut -->
-        <div class="col-lg-5">
+        <div class="col-12 col-lg-5">
           <div class="card rep-chart-card h-100">
             <div class="card-header">
               <span class="fw-semibold"><i class="bi bi-pie-chart me-2 text-primary"></i>Status članova</span>
@@ -248,7 +248,7 @@
           </div>
         </div>
         <!-- Growth bar -->
-        <div class="col-lg-7">
+        <div class="col-12 col-lg-7">
           <div class="card rep-chart-card h-100">
             <div class="card-header">
               <span class="fw-semibold"><i class="bi bi-graph-up me-2 text-success"></i>Novi članovi (12 mj.)</span>
@@ -266,7 +266,7 @@
           <span class="fw-semibold"><i class="bi bi-diagram-3 me-2 text-primary"></i>Pregled po selekcijama</span>
         </div>
         <div class="table-responsive">
-          <table class="table table-hover mb-0">
+          <table class="table table-hover mb-0 table-mobile-cards">
             <thead><tr><th>Selekcija</th><th>Broj članova</th><th>Naplaćeno</th><th>Neplaćeno</th><th>Stopa naplate</th></tr></thead>
             <tbody id="selectionTable">
               <tr class="sk-row"><td colspan="5"><div class="skeleton" style="height:13px;"></div></td></tr>
@@ -281,7 +281,7 @@
           <span class="fw-semibold"><i class="bi bi-person-plus me-2 text-success"></i>Nedavni upisi (posljednjih 10)</span>
         </div>
         <div class="table-responsive">
-          <table class="table table-hover mb-0">
+          <table class="table table-hover mb-0 table-mobile-cards">
             <thead><tr><th>Član</th><th>Br. člana</th><th>Učlanjen</th><th>Status</th></tr></thead>
             <tbody id="joinsTable">
               <tr class="sk-row"><td colspan="4"><div class="skeleton" style="height:13px;"></div></td></tr>
@@ -328,7 +328,7 @@
           <span class="text-muted small" id="tCount"></span>
         </div>
         <div class="table-responsive">
-          <table class="table table-hover mb-0">
+          <table class="table table-hover mb-0 table-mobile-cards">
             <thead><tr><th>Datum</th><th>Naziv</th><th>Prisutni</th><th>Odsutni</th><th>Opravdano</th><th>% Prisustva</th></tr></thead>
             <tbody id="trainingTable">
               <tr class="sk-row"><td colspan="6"><div class="skeleton" style="height:13px;"></div></td></tr>
@@ -407,11 +407,11 @@
       const tot = c + o;
       const pct = tot > 0 ? Math.round(c / tot * 100) : 0;
       return `<tr>
-        <td class="fw-semibold">${monthLabel(m.month)}</td>
-        <td class="text-success fw-semibold">${fmt(c)}</td>
-        <td class="text-danger">${fmt(o)}</td>
-        <td>${m.total_fees}</td>
-        <td style="min-width:100px;">
+        <td data-label="Mjesec" class="fw-semibold">${monthLabel(m.month)}</td>
+        <td data-label="Naplaćeno" class="text-success fw-semibold">${fmt(c)}</td>
+        <td data-label="Neplaćeno" class="text-danger">${fmt(o)}</td>
+        <td data-label="Ukupno faktura">${m.total_fees}</td>
+        <td data-label="Udio" style="min-width:100px;">
           <div class="d-flex align-items-center gap-2">
             <div class="progress flex-grow-1" style="height:6px;border-radius:4px;">
               <div class="progress-bar bg-success" style="width:${pct}%"></div>
@@ -426,11 +426,11 @@
 
     document.getElementById('debtorsTable').innerHTML = debtors.length ? debtors.map((d, i) => `
       <tr>
-        <td><span class="badge bg-danger bg-opacity-15 text-danger fw-bold" style="min-width:24px;">${i+1}</span></td>
-        <td class="fw-semibold">${d.name}</td>
-        <td><span class="badge bg-secondary bg-opacity-10 text-secondary">${d.selection_name || '—'}</span></td>
-        <td>${d.fee_count}</td>
-        <td class="fw-bold text-danger">${fmt(d.total_owed)}</td>
+        <td data-label="#"><span class="badge bg-danger bg-opacity-15 text-danger fw-bold" style="min-width:24px;">${i+1}</span></td>
+        <td data-label="Član" class="fw-semibold">${d.name}</td>
+        <td data-label="Selekcija"><span class="badge bg-secondary bg-opacity-10 text-secondary">${d.selection_name || '-'}</span></td>
+        <td data-label="Br. faktura">${d.fee_count}</td>
+        <td data-label="Ukupan dug" class="fw-bold text-danger">${fmt(d.total_owed)}</td>
       </tr>
     `).join('') : '<tr><td colspan="5" class="text-center text-muted py-3"><i class="bi bi-check-circle text-success me-2"></i>Nema dužnika</td></tr>';
   }
@@ -501,11 +501,11 @@
       const tot = c + o;
       const r   = tot > 0 ? Math.round(c / tot * 100) : 0;
       return `<tr>
-        <td class="fw-semibold">${sel.name}</td>
-        <td><span class="badge bg-primary bg-opacity-15 text-primary fw-bold">${sel.member_count}</span></td>
-        <td class="text-success">${fmt(c)}</td>
-        <td class="text-danger">${fmt(o)}</td>
-        <td style="min-width:100px;">
+        <td data-label="Selekcija" class="fw-semibold">${sel.name}</td>
+        <td data-label="Broj članova"><span class="badge bg-primary bg-opacity-15 text-primary fw-bold">${sel.member_count}</span></td>
+        <td data-label="Naplaćeno" class="text-success">${fmt(c)}</td>
+        <td data-label="Neplaćeno" class="text-danger">${fmt(o)}</td>
+        <td data-label="Stopa naplate" style="min-width:100px;">
           <div class="d-flex align-items-center gap-2">
             <div class="progress flex-grow-1" style="height:6px;border-radius:4px;">
               <div class="progress-bar bg-success" style="width:${r}%"></div>
@@ -518,10 +518,10 @@
 
     document.getElementById('joinsTable').innerHTML = members.recentJoins.length ? members.recentJoins.map(m => `
       <tr>
-        <td class="fw-semibold">${m.name}</td>
-        <td><span class="text-muted small">${m.membership_number || '—'}</span></td>
-        <td>${formatDate(m.join_date)}</td>
-        <td>${statusBadge(m.status)}</td>
+        <td data-label="Član" class="fw-semibold">${m.name}</td>
+        <td data-label="Br. člana"><span class="text-muted small">${m.membership_number || '-'}</span></td>
+        <td data-label="Učlanjen">${formatDate(m.join_date)}</td>
+        <td data-label="Status">${statusBadge(m.status)}</td>
       </tr>
     `).join('') : '<tr><td colspan="4" class="text-center text-muted py-3">Nema podataka</td></tr>';
   }
@@ -592,7 +592,7 @@
 
     if (!rows.length) {
       document.getElementById('tTotal').textContent = 0;
-      ['tAvgPresent','tMaxPresent','tMinPresent'].forEach(id => document.getElementById(id).textContent = '—');
+      ['tAvgPresent','tMaxPresent','tMinPresent'].forEach(id => document.getElementById(id).textContent = '-');
       document.getElementById('trainingTable').innerHTML = '<tr><td colspan="6" class="text-center text-muted py-3">Nema podataka</td></tr>';
       return;
     }
@@ -609,12 +609,12 @@
       const pct = tot > 0 ? Math.round(parseInt(r.present||0) / tot * 100) : 0;
       const cls = pct >= 80 ? 'bg-success' : pct >= 60 ? 'bg-warning' : 'bg-danger';
       return `<tr>
-        <td class="text-muted small">${formatDate(r.session_date)}</td>
-        <td class="fw-semibold">${r.title || '—'}</td>
-        <td><span class="text-success fw-semibold">${r.present || 0}</span></td>
-        <td><span class="text-danger">${r.absent || 0}</span></td>
-        <td><span class="text-warning">${r.excused || 0}</span></td>
-        <td style="min-width:110px;">
+        <td data-label="Datum" class="text-muted small">${formatDate(r.session_date)}</td>
+        <td data-label="Naziv" class="fw-semibold">${r.title || '-'}</td>
+        <td data-label="Prisutni"><span class="text-success fw-semibold">${r.present || 0}</span></td>
+        <td data-label="Odsutni"><span class="text-danger">${r.absent || 0}</span></td>
+        <td data-label="Opravdano"><span class="text-warning">${r.excused || 0}</span></td>
+        <td data-label="% Prisustva" style="min-width:110px;">
           <div class="d-flex align-items-center gap-2">
             <div class="progress flex-grow-1" style="height:6px;border-radius:4px;">
               <div class="progress-bar ${cls}" style="width:${pct}%"></div>
@@ -664,7 +664,7 @@
   table{border-collapse:collapse;width:100%;}th,td{border:1px solid #ccc;padding:6px 10px;font-size:11pt;}
   th{background:#f0f4f8;font-weight:bold;}h2{font-size:13pt;margin-top:18px;}
 </style></head><body>
-<h1 style="font-size:15pt;">Izvještaj — Klavio</h1>
+<h1 style="font-size:15pt;">Izvještaj - Klavio</h1>
 <p style="font-size:10pt;color:#555;">Generisano: ${new Date().toLocaleDateString('bs-BA')}</p>
 <h2>Sažetak</h2>
 <table>
@@ -691,7 +691,7 @@
 
   function exportCSV() {
     function esc(v) { v=String(v); return (v.includes(',') || v.includes('"') || v.includes('\n')) ? '"'+v.replace(/"/g,'""')+'"' : v; }
-    const lines = ['IZVJEŠTAJ — KLAVIO', `Datum:,${new Date().toISOString().slice(0,10)}`, '',
+    const lines = ['IZVJEŠTAJ - KLAVIO', `Datum:,${new Date().toISOString().slice(0,10)}`, '',
       'SAŽETAK',
       `Naplaćeno,${document.getElementById('rCollected').textContent}`,
       `Zakašnjelo,${document.getElementById('rOverdue').textContent}`,

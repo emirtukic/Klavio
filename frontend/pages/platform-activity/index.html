@@ -41,7 +41,7 @@
 
     <div class="card table-card">
       <div class="table-responsive">
-        <table class="table table-hover table-sm mb-0">
+        <table class="table table-hover table-sm mb-0 table-mobile-cards">
           <thead><tr><th>Klub</th><th>Korisnik</th><th>Akcija</th><th>Entitet</th><th>Detalji</th><th>Datum</th></tr></thead>
           <tbody id="logTable">
             <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:80%;"></div></td><td><div class="skeleton" style="height:13px;width:70%;"></div></td><td><div class="skeleton" style="height:20px;width:90px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:13px;width:60%;"></div></td><td><div class="skeleton" style="height:13px;width:80%;"></div></td><td><div class="skeleton" style="height:13px;width:100px;"></div></td></tr>
@@ -89,12 +89,12 @@ function renderTable() {
   const clubMap = Object.fromEntries(clubs.map(c=>[c.id,c.name]));
   document.getElementById('logTable').innerHTML = rows.slice(0,PAGE).map(l=>`
     <tr>
-      <td class="small">${clubMap[l.club_id]||'-'}</td>
-      <td class="small fw-semibold">${l.user_name||'-'}</td>
-      <td class="small"><span class="badge bg-primary bg-opacity-10 text-primary">${l.action||'-'}</span></td>
-      <td class="small text-muted">${l.entity_type||''}${l.entity_id?' #'+l.entity_id:''}</td>
-      <td class="small text-muted" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.details||'-'}</td>
-      <td class="small text-muted">${new Date(l.created_at).toLocaleString('bs-BA')}</td>
+      <td data-label="Klub" class="small">${clubMap[l.club_id]||'-'}</td>
+      <td data-label="Korisnik" class="small fw-semibold">${l.user_name||'-'}</td>
+      <td data-label="Akcija" class="small"><span class="badge bg-primary bg-opacity-10 text-primary">${l.action||'-'}</span></td>
+      <td data-label="Entitet" class="small text-muted">${l.entity_type||''}${l.entity_id?' #'+l.entity_id:''}</td>
+      <td data-label="Detalji" class="small text-muted" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${l.details||'-'}</td>
+      <td data-label="Datum" class="small text-muted">${new Date(l.created_at).toLocaleString('bs-BA')}</td>
     </tr>`).join('')||'<tr><td colspan="6" class="text-center text-muted py-3">Nema podataka</td></tr>';
   document.getElementById('logCount').textContent=`Prikazano ${Math.min(rows.length,PAGE)} od ${rows.length} unosa`;
   document.getElementById('loadMoreBtn').style.display=rows.length>PAGE?'':'none';

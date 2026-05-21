@@ -41,7 +41,7 @@ exports.remove = async (req, res) => {
   } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
 };
 
-// Internal helper — called from other controllers
+// Internal helper - called from other controllers
 exports.createNotification = async (userId, clubId, title, message, type = 'info', link = null) => {
   try {
     await db.query(

@@ -131,10 +131,10 @@
     </div>
 
     <!-- ════════════════════════════════════════════════════ -->
-    <!-- SECTION: Platforma — ukupno (all-time)              -->
+    <!-- SECTION: Platforma - ukupno (all-time)              -->
     <!-- ════════════════════════════════════════════════════ -->
     <div class="sec-title">
-      <i class="bi bi-globe2 text-primary"></i>Platforma — sve vrijem
+      <i class="bi bi-globe2 text-primary"></i>Platforma - sve vrijem
     </div>
     <div class="row g-3 mb-3">
       <div class="col-6 col-md-3">
@@ -194,7 +194,7 @@
     <!-- Sub-health bar -->
     <div class="an-card p-3 mb-4">
       <div class="d-flex justify-content-between align-items-center mb-2">
-        <span class="small fw-semibold" style="color:#374151">Zdravlje pretplata</span>
+        <span class="small fw-semibold" style="color:var(--neutral-700)">Zdravlje pretplata</span>
         <div class="d-flex gap-3 small" id="subHealthLegend"></div>
       </div>
       <div class="sub-health-bar" id="subHealthBar"></div>
@@ -337,7 +337,7 @@
         <button class="btn btn-outline-secondary btn-export" onclick="exportChartCSV('revenue')"><i class="bi bi-filetype-csv me-1"></i>CSV</button>
       </div>
       <div class="table-responsive">
-        <table class="table an-table mb-0">
+        <table class="table an-table mb-0 table-mobile-cards">
           <thead><tr><th>Mjesec</th><th>Plaćeno</th><th>Neplaćeno</th><th class="text-center">Br. faktura</th><th>Stopa naplate</th><th>Vizualizacija</th></tr></thead>
           <tbody id="revTableBody">
             <tr class="sk-row"><td><div class="skeleton" style="height:13px;width:70px;"></div></td><td><div class="skeleton" style="height:13px;width:80px;"></div></td><td><div class="skeleton" style="height:13px;width:70px;"></div></td><td><div class="skeleton" style="height:13px;width:30px;"></div></td><td><div class="skeleton" style="height:13px;width:50px;"></div></td><td><div class="skeleton" style="height:6px;width:120px;border-radius:99px;"></div></td></tr>
@@ -448,7 +448,7 @@
       </div>
       <div class="card-body pb-2"><canvas id="topChart" style="max-height:260px;"></canvas></div>
       <div class="table-responsive">
-        <table class="table an-table mb-0">
+        <table class="table an-table mb-0 table-mobile-cards">
           <thead><tr>
             <th style="width:38px">#</th><th>Klub</th><th>Plan</th><th>Status</th>
             <th class="text-center">Članovi</th><th class="text-center">Treneri</th>
@@ -538,7 +538,7 @@ function applyCustomRange() {
 }
 function updatePeriodLabel() {
   const fmt = d => new Date(d).toLocaleDateString('bs-BA');
-  document.getElementById('periodLabel').textContent = `Period: ${fmt(currentFrom)} — ${fmt(currentTo)}`;
+  document.getElementById('periodLabel').textContent = `Period: ${fmt(currentFrom)} - ${fmt(currentTo)}`;
 }
 
 /* ── Chart factory ───────────────────────────────────────── */
@@ -711,12 +711,12 @@ async function loadRevenue() {
           const rFg    = rate >= 80 ? '#16a34a' : rate >= 50 ? '#ca8a04' : '#dc2626';
           const barW   = Math.round(total / maxPaid * 100);
           return `<tr>
-            <td class="fw-semibold">${monthLabel(r.month)}</td>
-            <td class="text-success fw-semibold">${fmtMoney(paid)}</td>
-            <td class="text-danger">${fmtMoney(unpaid)}</td>
-            <td class="text-center">${r.invoice_count}</td>
-            <td><span class="badge" style="background:${rBg};color:${rFg}">${fmtPct(rate)}</span></td>
-            <td style="min-width:120px;">
+            <td data-label="Mjesec" class="fw-semibold">${monthLabel(r.month)}</td>
+            <td data-label="Plaćeno" class="text-success fw-semibold">${fmtMoney(paid)}</td>
+            <td data-label="Neplaćeno" class="text-danger">${fmtMoney(unpaid)}</td>
+            <td data-label="Br. faktura" class="text-center">${r.invoice_count}</td>
+            <td data-label="Stopa naplate"><span class="badge" style="background:${rBg};color:${rFg}">${fmtPct(rate)}</span></td>
+            <td data-label="Vizualizacija" style="min-width:120px;">
               <div class="mini-bar"><div class="mini-bar-fill" style="width:${barW}%;background:${C.green};"></div></div>
             </td>
           </tr>`;
@@ -816,14 +816,14 @@ async function loadTopClubs() {
       const barW  = Math.round(values[i] / maxVal * 100);
       const rc    = rankColors[i] || '#e2e8f0';
       return `<tr>
-        <td><span class="rank-dot" style="background:${rc};color:#fff">${i + 1}</span></td>
-        <td class="fw-semibold">${esc(r.name)}</td>
-        <td><span class="badge" style="background:${PLAN_STYLE[r.plan] || '#e9ecef;color:#495057'};font-size:.68rem">${r.plan || '-'}</span></td>
-        <td><span class="badge" style="background:${STATUS_STYLE[r.sub_status] || '#e9ecef;color:#495057'};font-size:.68rem">${r.sub_status || '-'}</span></td>
-        <td class="text-center">${r.member_count || 0}</td>
-        <td class="text-center">${r.coach_count  || 0}</td>
-        <td class="fw-semibold text-success">${fmtMoney(r.club_revenue)}</td>
-        <td style="min-width:80px;">
+        <td data-label="#"><span class="rank-dot" style="background:${rc};color:#fff">${i + 1}</span></td>
+        <td data-label="Klub" class="fw-semibold">${esc(r.name)}</td>
+        <td data-label="Plan"><span class="badge" style="background:${PLAN_STYLE[r.plan] || '#e9ecef;color:#495057'};font-size:.68rem">${r.plan || '-'}</span></td>
+        <td data-label="Status"><span class="badge" style="background:${STATUS_STYLE[r.sub_status] || '#e9ecef;color:#495057'};font-size:.68rem">${r.sub_status || '-'}</span></td>
+        <td data-label="Članovi" class="text-center">${r.member_count || 0}</td>
+        <td data-label="Treneri" class="text-center">${r.coach_count  || 0}</td>
+        <td data-label="Prihod" class="fw-semibold text-success">${fmtMoney(r.club_revenue)}</td>
+        <td data-label="Udio" style="min-width:80px;">
           <div class="mini-bar"><div class="mini-bar-fill" style="width:${barW}%;background:${PALETTE[i % PALETTE.length]};"></div></div>
         </td>
       </tr>`;

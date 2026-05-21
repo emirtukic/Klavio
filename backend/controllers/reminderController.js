@@ -1,6 +1,34 @@
 const db = require('../config/db');
 const { createNotification } = require('./notificationController');
 
+exports.sendFeeReminder = async (req, res) => {
+  try {
+    const { feeId } = req.params;
+    const club_id = req.user.club_id;
+    const [[fee]] = await db.query(`
+      SELECT mf.*, u.id as user_id, u.name as member_name
+      FROM membership_fees mf
+      JOIN members m ON mf.member_id = m.id
+      JOIN users u ON m.user_id = u.id
+      WHERE mf.id = ? AND m.club_id = ?
+    `, [feeId, club_id]);
+    if (!fee) return res.status(404).json({ message: 'Članarina nije pronađena' });
+
+    const due = fee.due_date ? new Date(fee.due_date).toLocaleDateString('bs-BA') : '-';
+    const isOverdue = fee.status === 'overdue';
+    await createNotification(
+      fee.user_id, club_id,
+      isOverdue ? 'Članarina zakašnjela' : 'Podsjetnik: članarina',
+      `${isOverdue ? 'Vaša članarina' : 'Podsjetnik'} od ${fee.amount} KM (rok: ${due}) ${isOverdue ? 'je zakašnjela' : 'uskoro dospijeva'}.`,
+      isOverdue ? 'danger' : 'warning',
+      '/pages/fees/list.html'
+    );
+    res.json({ message: `Podsjetnik poslan za ${fee.member_name}` });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error', error: err.message });
+  }
+};
+
 // Check for overdue or upcoming fees and create notifications
 exports.checkFees = async (req, res) => {
   try {

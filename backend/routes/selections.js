@@ -2,14 +2,15 @@ const router = require('express').Router();
 const auth = require('../middleware/auth');
 const role = require('../middleware/roleCheck');
 const ctrl = require('../controllers/selectionController');
+const { log } = require('../controllers/activityController');
 
 const admin = role('super_admin', 'admin');
 
 router.get('/',                           auth, admin, ctrl.getAll);
-router.post('/',                          auth, admin, ctrl.create);
+router.post('/',                          auth, admin, log('create', 'Selekcija'), ctrl.create);
 router.get('/:id',                        auth, admin, ctrl.getOne);
-router.put('/:id',                        auth, admin, ctrl.update);
-router.delete('/:id',                     auth, admin, ctrl.remove);
+router.put('/:id',                        auth, admin, log('update', 'Selekcija'), ctrl.update);
+router.delete('/:id',                     auth, admin, log('delete', 'Selekcija'), ctrl.remove);
 router.get('/:id/members',                auth, admin, ctrl.getMembers);
 router.post('/:id/members',               auth, admin, ctrl.assignMember);
 router.delete('/:id/members/:memberId',   auth, admin, ctrl.removeMember);

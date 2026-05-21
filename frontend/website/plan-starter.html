@@ -3,8 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Starter Plan — Klavio | Besplatno za male klubove</title>
-  <meta name="description" content="Klavio Starter plan je potpuno besplatan. Idealan za male klubove koji žele digitalizovati upravljanje bez ikakvih troškova.">
+  <title>Starter Plan - Klavio | Besplatno za male klubove</title>
+  <meta name="description" content="Klavio Starter plan je potpuno besplatan za male fudbalske klubove. Do 25 članova, treninzi, utakmice, vizualna postava – bez kreditne kartice, zauvijek.">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "Je li Starter plan zaista besplatan?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Da, 100% besplatno i bez vremenskog ograničenja. Nema skrivenih naknada, nema potrebe za kreditnom karticom pri registraciji." } },
+      { "@type": "Question", "name": "Šta ako naš klub preraste Starter plan?",
+        "acceptedAnswer": { "@type": "Answer", "text": "U svakom trenutku možete nadograditi na Pro ili Klub plan. Svi vaši podaci ostaju netaknuti - nema migracije ni gubitka podataka." } },
+      { "@type": "Question", "name": "Zašto postoji limit od 25 članova?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Starter plan je namijenjen malim lokalnim klubovima koji tek počinju s digitalnim upravljanjem. Za veće klubove nudimo Pro i Klub planove s više kapaciteta." } },
+      { "@type": "Question", "name": "Mogu li dodati više trenera?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Da, broj trenera nije ograničen ni u jednom planu. Svaki trener dobija vlastiti pristup sa svojim ulogama i pravima." } },
+      { "@type": "Question", "name": "Ima li Starter plan reklame?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Ne, Klavio ne prikazuje reklame ni u jednom planu. Vaša privatnost i čisto korisničko iskustvo su nam prioritet." } }
+    ]
+  }
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
@@ -99,7 +117,7 @@
     .limit-lbl { font-size: 0.8rem; color: var(--muted); margin-top: 6px; }
 
     .compare-section { padding: 88px 0; background: #fff; }
-    .compare-table { width: 100%; border-collapse: collapse; margin-top: 48px; font-size: 0.88rem; }
+    .compare-table { width: 100%; min-width: 500px; border-collapse: collapse; margin-top: 48px; font-size: 0.88rem; }
     .compare-table th { padding: 14px 20px; text-align: center; font-weight: 800; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; background: var(--dark2); color: rgba(255,255,255,0.9); }
     .compare-table th:first-child { text-align: left; background: var(--dark3); }
     .compare-table th.highlight { background: var(--blue); }
@@ -112,7 +130,8 @@
     .compare-table .c-no { color: #cbd5e1; font-size: 1.1rem; }
     .compare-table .c-hl { background: rgba(37,99,235,0.04); }
     .compare-table .highlight-row { background: rgba(37,99,235,0.05); }
-    .tbl-wrap { overflow-x: auto; border-radius: 14px; border: 1.5px solid #e2e8f0; overflow: hidden; }
+    .tbl-wrap { overflow: hidden; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 14px; border: 1.5px solid #e2e8f0; }
+    .tbl-scroll-hint { display: none; text-align: center; font-size: 0.74rem; color: #94a3b8; margin-top: 10px; letter-spacing: 0.01em; }
 
     .faq-section { padding: 80px 0; background: var(--light); }
     .faq-list { max-width: 700px; margin: 40px auto 0; display: flex; flex-direction: column; gap: 14px; }
@@ -127,6 +146,22 @@
     .plan-cta-section { background: var(--dark); background-image: radial-gradient(ellipse 60% 60% at 50% 50%, rgba(100,116,139,0.18) 0%, transparent 70%); padding: 96px 0; text-align: center; }
     .plan-cta-section h2 { font-size: clamp(2rem, 4vw, 2.8rem); font-weight: 900; color: #fff; letter-spacing: -0.02em; margin-bottom: 14px; }
     .plan-cta-section p { color: rgba(255,255,255,0.48); font-size: 1rem; margin-bottom: 34px; }
+
+    @media(max-width:640px){
+      .plan-hero{padding:96px 0 44px}
+      .features-section,.compare-section{padding:52px 0}
+      .limits-section,.faq-section{padding:44px 0}
+      .plan-cta-section{padding:60px 0}
+      .tbl-scroll-hint{display:block}
+    }
+
+    .sticky-cta{display:none;position:fixed;bottom:0;left:0;right:0;z-index:800;background:#fff;border-top:1.5px solid #e2e8f0;padding:12px 20px;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 -4px 24px rgba(0,0,0,0.1);transform:translateY(100%);transition:transform 0.3s ease}
+    .sticky-cta.visible{transform:translateY(0)}
+    .sticky-cta-info{display:flex;flex-direction:column;line-height:1.2}
+    .sticky-cta-price{font-size:1.2rem;font-weight:900;color:#111827}
+    .sticky-cta-label{font-size:0.72rem;color:#64748b;margin-top:2px}
+    @media(max-width:640px){.sticky-cta{display:flex}}
+    @media(min-width:641px){.sticky-cta{display:none!important}}
   </style>
 </head>
 <body>
@@ -223,7 +258,7 @@
     <div style="text-align:center" class="reveal">
       <div class="tag tag-green">✅ Uključene funkcije</div>
       <h2 class="st">Sve što trebate za početak</h2>
-      <p class="ss" style="margin:12px auto 0;text-align:center">Starter plan pokriva osnove digitalnog upravljanja klubom — bez ikakvog plaćanja.</p>
+      <p class="ss" style="margin:12px auto 0;text-align:center">Starter plan pokriva osnove digitalnog upravljanja klubom - bez ikakvog plaćanja.</p>
     </div>
     <div class="feat-grid">
       <div class="feat-card reveal reveal-delay-1">
@@ -322,6 +357,7 @@
         </tbody>
       </table>
     </div>
+    <p class="tbl-scroll-hint">← Prevucite za poređenje →</p>
     <div style="display:flex;gap:14px;justify-content:center;margin-top:36px;flex-wrap:wrap">
       <a href="/website/plan-pro.html" class="btn btn-outline">Pogledaj Pro plan</a>
       <a href="/website/plan-klub.html" class="btn btn-outline">Pogledaj Klub plan</a>
@@ -364,7 +400,7 @@
 <!-- CTA -->
 <section class="plan-cta-section">
   <div class="container reveal">
-    <div class="tag tag-white" style="margin:0 auto 20px;">⭐ Starter — Besplatno zauvijek</div>
+    <div class="tag tag-white" style="margin:0 auto 20px;">⭐ Starter - Besplatno zauvijek</div>
     <h2>Registrujte klub danas.<br>Nema razloga čekati.</h2>
     <p>Starter plan ne ističe. Nema kreditne kartice. Registracija traje 2 minute.</p>
     <div class="plan-ctas">
@@ -385,9 +421,9 @@
         <p class="footer-tagline">Platforma za upravljanje fudbalskim klubovima u BiH i regiji.</p>
       </div>
       <div class="footer-col"><h4>Planovi</h4><ul>
-        <li><a href="/website/plan-starter.html">Starter — Besplatno</a></li>
-        <li><a href="/website/plan-pro.html">Pro — 40 KM/mj</a></li>
-        <li><a href="/website/plan-klub.html">Klub — 60 KM/mj</a></li>
+        <li><a href="/website/plan-starter.html">Starter - Besplatno</a></li>
+        <li><a href="/website/plan-pro.html">Pro - 40 KM/mj</a></li>
+        <li><a href="/website/plan-klub.html">Klub - 60 KM/mj</a></li>
       </ul></div>
       <div class="footer-col"><h4>Kompanija</h4><ul>
         <li><a href="/website/about.html">O nama</a></li>
@@ -409,6 +445,14 @@
   </div>
 </footer>
 
+<div class="sticky-cta" id="stickyCta">
+  <div class="sticky-cta-info">
+    <span class="sticky-cta-price">0 KM <span style="font-size:0.72rem;font-weight:500;color:#64748b">/mj</span></span>
+    <span class="sticky-cta-label">Starter · Besplatno zauvijek</span>
+  </div>
+  <a href="/website/register.html" class="btn btn-primary btn-sm">Počni besplatno →</a>
+</div>
+
 <script>
   const nav = document.getElementById('mainNav');
   window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 30), { passive: true });
@@ -427,6 +471,8 @@
     entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
   }, { threshold: 0.1 });
   document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  const stickyCta = document.getElementById('stickyCta');
+  window.addEventListener('scroll', () => stickyCta.classList.toggle('visible', window.scrollY > 320), { passive: true });
 </script>
 </body>
 </html>

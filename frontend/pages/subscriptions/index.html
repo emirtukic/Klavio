@@ -93,7 +93,7 @@
     <!-- Table -->
     <div class="card table-card">
       <div class="table-responsive">
-        <table class="table table-hover mb-0">
+        <table class="table table-hover mb-0 table-mobile-cards">
           <thead>
             <tr>
               <th>Klub</th>
@@ -133,9 +133,9 @@
           <div class="col-sm-6">
             <label class="form-label">Plan</label>
             <select class="form-select" id="subPlan" onchange="onPlanChange()">
-              <option value="starter">Starter — Besplatno (do 25 članova, 1 selekcija)</option>
-              <option value="pro">Pro — 40 KM/mj. (do 150 čl., obrazci, finansije)</option>
-              <option value="klub">Klub — 60 KM/mj. (neograničeno, sve funkcije)</option>
+              <option value="starter">Starter - Besplatno (do 25 članova, 1 selekcija)</option>
+              <option value="pro">Pro - 40 KM/mj. (do 150 čl., obrazci, finansije)</option>
+              <option value="klub">Klub - 60 KM/mj. (neograničeno, sve funkcije)</option>
             </select>
           </div>
           <div class="col-sm-6">
@@ -235,19 +235,19 @@ function renderTable() {
 
   document.getElementById('subsTable').innerHTML = rows.map(s => `
     <tr>
-      <td class="fw-semibold">
+      <td data-label="Klub" class="fw-semibold">
         ${s.logo_url ? `<img src="${s.logo_url}" height="22" class="me-2 rounded">` : ''}
         ${s.club_name}
         ${!s.is_active ? '<span class="badge bg-secondary ms-1">Neaktivan</span>' : ''}
       </td>
-      <td><span class="badge" style="background:${PLAN_COLORS[s.plan]||'#6c757d'}">${PLAN_LABEL[s.plan]||s.plan||'-'}</span></td>
-      <td>${STATUS_BADGE[s.status] || '<span class="badge bg-secondary">-</span>'}</td>
-      <td>${s.price ? fmt(s.price) : '-'}</td>
-      <td>${s.billing_cycle === 'monthly' ? 'Mj.' : s.billing_cycle === 'yearly' ? 'God.' : '-'}</td>
-      <td class="text-muted small">${fmtDate(s.current_period_end)}</td>
-      <td>${s.member_count || 0}</td>
-      <td class="text-muted small" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${s.notes||''}">${s.notes || '-'}</td>
-      <td>
+      <td data-label="Plan"><span class="badge" style="background:${PLAN_COLORS[s.plan]||'#6c757d'}">${PLAN_LABEL[s.plan]||s.plan||'-'}</span></td>
+      <td data-label="Status">${STATUS_BADGE[s.status] || '<span class="badge bg-secondary">-</span>'}</td>
+      <td data-label="Cijena">${s.price ? fmt(s.price) : '-'}</td>
+      <td data-label="Ciklus">${s.billing_cycle === 'monthly' ? 'Mj.' : s.billing_cycle === 'yearly' ? 'God.' : '-'}</td>
+      <td data-label="Period završava" class="text-muted small">${fmtDate(s.current_period_end)}</td>
+      <td data-label="Članovi">${s.member_count || 0}</td>
+      <td data-label="Napomene" class="text-muted small" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${s.notes||''}">${s.notes || '-'}</td>
+      <td data-label="Akcije">
         <button class="btn btn-sm btn-outline-primary" onclick="openSub(${s.club_id})">
           <i class="bi bi-pencil"></i>
         </button>

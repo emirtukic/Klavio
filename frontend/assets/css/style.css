@@ -11,7 +11,7 @@
   --sidebar-width: 255px;
   --topbar-height: 60px;
 
-  /* Per-club theming — overridden inline by applyBranding() */
+  /* Per-club theming - overridden inline by applyBranding() */
   --club-sidebar: #1e293b;
   --club-accent:  #3b82f6;
 
@@ -232,7 +232,7 @@ body {
   background: rgba(255,255,255,0.10);
   color: rgba(255,255,255,0.96);
   font-weight: var(--fw-semibold);
-  /* Inset left bar using box-shadow — no layout shift */
+  /* Inset left bar using box-shadow - no layout shift */
   box-shadow: inset -3px 0 0 0 transparent, -3px 0 0 0 rgba(255,255,255,0.75);
 }
 .sidebar-nav .nav-link.active i { color: rgba(255,255,255,0.96); }
@@ -325,7 +325,7 @@ body {
 }
 .stat-card:hover {
   box-shadow: var(--shadow-md) !important;
-  /* shadow only — no translateY */
+  /* shadow only - no translateY */
 }
 .stat-icon {
   width: 48px; height: 48px;
@@ -500,7 +500,7 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 .sidebar-overlay.active { display: block; }
 
 /* ══════════════════════════════════════════
-   RESPONSIVE — Tablet / Mobile
+   RESPONSIVE - Tablet / Mobile
 ══════════════════════════════════════════ */
 @media (max-width: 768px) {
   .sidebar {
@@ -531,7 +531,7 @@ textarea.form-control { resize: vertical; min-height: 100px; }
 
 /* ── Mobile stacked table cards ── */
 @media (max-width: 640px) {
-  .table-responsive { overflow-x: visible !important; }
+  .table-responsive:has(.table-mobile-cards) { overflow-x: visible !important; }
   .table-mobile-cards { table-layout: auto !important; width: 100% !important; }
   .table-mobile-cards, .table-mobile-cards tbody { display: block; width: 100%; }
   .table-mobile-cards thead { display: none !important; }
@@ -732,6 +732,22 @@ tbody tr { animation: rowFadeIn 0.2s ease both; }
 
 [data-theme="dark"] ::-webkit-scrollbar-thumb { background: var(--neutral-100); }
 [data-theme="dark"] ::-webkit-scrollbar-thumb:hover { background: var(--neutral-200); }
+
+/* Progress bar track */
+[data-theme="dark"] .progress { background-color: var(--neutral-200) !important; }
+
+/* Bootstrap .table-light override */
+[data-theme="dark"] .table-light {
+  --bs-table-color: var(--neutral-500);
+  --bs-table-bg: var(--neutral-50);
+  --bs-table-border-color: var(--neutral-100);
+}
+
+/* Bootstrap .badge.bg-warning keeps dark text readable in dark mode */
+[data-theme="dark"] .badge.bg-warning { color: #1e293b !important; }
+
+/* Hardcoded dark text fixes */
+[data-theme="dark"] #subModalTitle { color: #fbbf24 !important; }
 
 /* ══════════════════════════════════════════
    FILTER BAR

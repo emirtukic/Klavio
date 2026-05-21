@@ -113,7 +113,7 @@
 
     <!-- Charts row -->
     <div class="row g-3 mb-4">
-      <div class="col-lg-8">
+      <div class="col-12 col-lg-8">
         <div class="card chart-card h-100">
           <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
             <span class="fw-semibold">Prihod po mjesecu (KM)</span>
@@ -128,7 +128,7 @@
           </div>
         </div>
       </div>
-      <div class="col-lg-4">
+      <div class="col-12 col-lg-4">
         <div class="card chart-card h-100">
           <div class="card-header fw-semibold">Planovi pretplate</div>
           <div class="card-body d-flex align-items-center justify-content-center">
@@ -179,7 +179,7 @@
         </div>
       </div>
       <div class="table-responsive">
-        <table class="table table-hover mb-0">
+        <table class="table table-hover mb-0 table-mobile-cards">
           <thead>
             <tr>
               <th>Klub</th>
@@ -219,8 +219,8 @@
             <label class="form-label">Plan</label>
             <select class="form-select" id="subPlan" onchange="onSubPlanChange()">
               <option value="starter">Starter (Besplatno)</option>
-              <option value="pro">Pro — 40 KM/mj.</option>
-              <option value="klub">Klub — 60 KM/mj.</option>
+              <option value="pro">Pro - 40 KM/mj.</option>
+              <option value="klub">Klub - 60 KM/mj.</option>
             </select>
           </div>
           <div class="col-6">
@@ -350,18 +350,18 @@ function renderTable(clubs) {
   );
   document.getElementById('clubsTable').innerHTML = rows.map(c => `
     <tr>
-      <td class="fw-semibold">
+      <td data-label="Klub" class="fw-semibold">
         ${c.logo_url ? `<img src="${c.logo_url}" height="24" class="me-2 rounded">` : ''}
         ${c.name}
         ${!c.is_active ? '<span class="badge bg-secondary ms-1">Neaktivan</span>' : ''}
       </td>
-      <td><span class="badge" style="background:${PLAN_COLORS[c.plan]||'#6c757d'}">${PLAN_LABEL[c.plan]||c.plan||'-'}</span></td>
-      <td>${STATUS_BADGE[c.sub_status] || '<span class="badge bg-secondary">-</span>'}</td>
-      <td>${c.price ? fmt(c.price) : '-'}</td>
-      <td>${c.billing_cycle === 'monthly' ? 'Mj.' : c.billing_cycle === 'yearly' ? 'God.' : '-'}</td>
-      <td class="text-muted small">${c.sub_status === 'trial' ? fmtDate(c.trial_ends_at) : fmtDate(c.current_period_end)}</td>
-      <td>${c.member_count || 0}</td>
-      <td>
+      <td data-label="Plan"><span class="badge" style="background:${PLAN_COLORS[c.plan]||'#6c757d'}">${PLAN_LABEL[c.plan]||c.plan||'-'}</span></td>
+      <td data-label="Status">${STATUS_BADGE[c.sub_status] || '<span class="badge bg-secondary">-</span>'}</td>
+      <td data-label="Cijena">${c.price ? fmt(c.price) : '-'}</td>
+      <td data-label="Ciklus">${c.billing_cycle === 'monthly' ? 'Mj.' : c.billing_cycle === 'yearly' ? 'God.' : '-'}</td>
+      <td data-label="Kraj perioda" class="text-muted small">${c.sub_status === 'trial' ? fmtDate(c.trial_ends_at) : fmtDate(c.current_period_end)}</td>
+      <td data-label="Članovi">${c.member_count || 0}</td>
+      <td data-label="Akcije">
         <div class="d-flex gap-1">
           <button class="btn btn-sm btn-outline-primary" onclick="openSub(${c.id})" title="Uredi pretplatu"><i class="bi bi-credit-card"></i></button>
           <button class="btn btn-sm btn-primary" onclick="switchToClub(${c.id})" title="Pristupi klubu"><i class="bi bi-box-arrow-in-right"></i></button>

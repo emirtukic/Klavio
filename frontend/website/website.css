@@ -165,3 +165,8 @@ footer { background:var(--dark); border-top:1px solid rgba(255,255,255,0.06); pa
 .reveal-delay-4 { transition-delay:0.4s; }
 .reveal-delay-5 { transition-delay:0.5s; }
 .reveal-delay-6 { transition-delay:0.6s; }
+
+@media(max-width:640px){
+  .section { padding: 56px 0; }
+  .container { padding: 0 16px; }
+}

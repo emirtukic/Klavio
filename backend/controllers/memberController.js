@@ -76,7 +76,7 @@ exports.create = async (req, res) => {
     const clubName = clubRows[0]?.name || 'Klavio';
     sendMail({
       to: email,
-      subject: `Dobrodošli u ${clubName} — Aktivirajte nalog`,
+      subject: `Dobrodošli u ${clubName} - Aktivirajte nalog`,
       text: `Pozdrav ${name},\n\nAdministrator kluba "${clubName}" je kreirao vaš članski nalog na Klavio platformi.\n\nKliknite na link ispod da postavite lozinku i aktivirate nalog:\n\n${link}\n\nLink je valjan 7 dana.\n\n© 2026 Klavio · klavio.app`,
       html: inviteEmailHtml(name, 'member', clubName, link),
     }).catch(err => console.error('Welcome mail error:', err.message));

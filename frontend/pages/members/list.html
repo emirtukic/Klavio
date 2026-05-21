@@ -63,25 +63,37 @@
     </div>
 
     <div class="card table-card">
-      <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
-        <div class="d-flex gap-2 flex-wrap align-items-center">
-          <input type="text" class="form-control form-control-sm" id="search" style="width:220px"
-            autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly')"
-            placeholder="Pretraži ime, email, broj..." oninput="renderTable()">
-          <select class="form-select form-select-sm" id="fStatus" style="width:140px" onchange="renderTable()">
-            <option value="">Svi statusi</option>
-            <option value="active">Aktivan</option>
-            <option value="inactive">Neaktivan</option>
-            <option value="suspended">Suspendovan</option>
-          </select>
-          <select class="form-select form-select-sm" id="fSelection" style="width:160px" onchange="renderTable()">
-            <option value="">Sve selekcije</option>
-          </select>
-          <input type="date" class="form-control form-control-sm" id="fJoinFrom" style="width:145px" title="Učlanjen od" onchange="renderTable()">
-          <input type="date" class="form-control form-control-sm" id="fJoinTo" style="width:145px" title="Učlanjen do" onchange="renderTable()">
-          <button class="btn btn-outline-secondary btn-sm" onclick="resetFilters()" title="Resetuj"><i class="bi bi-x-lg"></i></button>
+      <div class="card-header">
+        <div class="row g-2 align-items-center">
+          <div class="col-12 col-sm-6 col-lg">
+            <input type="text" class="form-control form-control-sm" id="search"
+              autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly')"
+              placeholder="Pretraži ime, email, broj..." oninput="renderTable()">
+          </div>
+          <div class="col-6 col-sm-auto">
+            <select class="form-select form-select-sm" id="fStatus" style="min-width:130px" onchange="renderTable()">
+              <option value="">Svi statusi</option>
+              <option value="active">Aktivan</option>
+              <option value="inactive">Neaktivan</option>
+              <option value="suspended">Suspendovan</option>
+            </select>
+          </div>
+          <div class="col-6 col-sm-auto">
+            <select class="form-select form-select-sm" id="fSelection" style="min-width:150px" onchange="renderTable()">
+              <option value="">Sve selekcije</option>
+            </select>
+          </div>
+          <div class="col-6 col-sm-auto">
+            <input type="date" class="form-control form-control-sm" id="fJoinFrom" title="Učlanjen od" onchange="renderTable()">
+          </div>
+          <div class="col-6 col-sm-auto">
+            <input type="date" class="form-control form-control-sm" id="fJoinTo" title="Učlanjen do" onchange="renderTable()">
+          </div>
+          <div class="col-auto d-flex align-items-center gap-2">
+            <button class="btn btn-outline-secondary btn-sm" onclick="resetFilters()" title="Resetuj"><i class="bi bi-x-lg"></i></button>
+            <span class="text-muted small" id="memberCount"></span>
+          </div>
         </div>
-        <span class="text-muted small" id="memberCount"></span>
       </div>
       <div class="table-responsive">
         <table class="table table-hover mb-0 table-mobile-cards">
@@ -112,6 +124,54 @@
       <div class="card-footer d-flex justify-content-between align-items-center flex-wrap gap-2 py-2">
         <span class="text-muted small" id="pageInfo"></span>
         <nav><ul class="pagination pagination-sm mb-0" id="pagination"></ul></nav>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick-edit modal -->
+<div class="modal fade" id="memberEditModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:14px;overflow:hidden;">
+      <div class="modal-header border-0 pb-1">
+        <h5 class="modal-title fw-bold"><i class="bi bi-pencil me-2"></i>Brza izmjena člana</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="editMemberId">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">Ime i prezime</label>
+            <input type="text" class="form-control" id="editMemberName">
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label">E-mail</label>
+            <input type="email" class="form-control" id="editMemberEmail">
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label">Telefon</label>
+            <input type="tel" class="form-control" id="editMemberPhone">
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label">Status</label>
+            <select class="form-select" id="editMemberStatus">
+              <option value="active">Aktivan</option>
+              <option value="inactive">Neaktivan</option>
+              <option value="suspended">Suspendiran</option>
+            </select>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label">Selekcija</label>
+            <select class="form-select" id="editMemberSelection"></select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-1">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
+        <button type="button" class="btn btn-primary" id="saveMemberEditBtn" onclick="saveQuickEditMember()">
+          <span id="editMemberSpinner" class="spinner-border spinner-border-sm d-none me-1"></span>
+          Sačuvaj
+        </button>
       </div>
     </div>
   </div>
@@ -188,7 +248,7 @@
 
     const colCount = canEdit ? 9 : 8;
     document.getElementById('tableBody').innerHTML = page.length ? page.map(m => {
-      const selName = allSelections.find(s => s.id === m.selection_id)?.name || '—';
+      const selName = allSelections.find(s => s.id === m.selection_id)?.name || '-';
       const checked = selectedIds.has(m.id) ? 'checked' : '';
       const rowSel  = selectedIds.has(m.id) ? 'row-selected' : '';
       return `<tr class="${rowSel}" id="row-${m.id}">
@@ -203,11 +263,20 @@
         <td>
           <a href="detail.html?id=${m.id}" class="btn btn-sm btn-outline-secondary me-1" title="Profil"><i class="bi bi-eye"></i></a>
           <a href="../players/stats.html?id=${m.id}&name=${encodeURIComponent(m.name)}" class="btn btn-sm btn-outline-primary me-1" title="Statistike"><i class="bi bi-bar-chart-line"></i></a>
+          ${canEdit ? `<button class="btn btn-sm btn-outline-secondary me-1" onclick="quickEditMember(${m.id})" title="Brza izmjena"><i class="bi bi-pencil"></i></button>` : ''}
           ${canEdit ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteMember(${m.id})"><i class="bi bi-trash"></i></button>` : ''}
         </td>
       </tr>`;
     }).join('') :
-    `<tr><td colspan="${colCount}" class="text-center py-5 text-muted"><i class="bi bi-inbox fs-2 d-block mb-2"></i>Nema pronađenih članova</td></tr>`;
+    (() => {
+      const anyFilter = q || st || sl || fr || to;
+      return `<tr><td colspan="${colCount}" class="text-center py-5">
+        <i class="bi bi-${anyFilter ? 'search' : 'people'} fs-2 d-block mb-2 text-muted opacity-25"></i>
+        <div class="fw-semibold text-muted mb-1">${anyFilter ? 'Nema pronađenih članova' : 'Još nema članova'}</div>
+        <div class="small text-muted">${anyFilter ? 'Prilagodite filtere za pretragu.' : 'Dodajte prvog člana kluba.'}</div>
+        ${!anyFilter && canEdit ? '<a href="add.html" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg me-1"></i>Dodaj prvog člana</a>' : ''}
+      </td></tr>`;
+    })();
 
     renderPagination(pages);
     syncSelectAll();
@@ -310,6 +379,45 @@
       try { await apiDelete('/members/' + id); showToast('Član obrisan'); load(); }
       catch(e) { showToast(e.message, 'error'); }
     });
+  }
+
+  /* ── Quick edit member ── */
+  function quickEditMember(id) {
+    const m = allMembers.find(m => m.id === id);
+    if (!m) return;
+    document.getElementById('editMemberId').value    = id;
+    document.getElementById('editMemberName').value  = m.name  || '';
+    document.getElementById('editMemberEmail').value = m.email || '';
+    document.getElementById('editMemberPhone').value = m.phone || '';
+    document.getElementById('editMemberStatus').value = m.status || 'active';
+    const sel = document.getElementById('editMemberSelection');
+    sel.innerHTML = '<option value="">Bez selekcije</option>';
+    allSelections.forEach(s => {
+      const o = document.createElement('option');
+      o.value = s.id; o.textContent = s.name;
+      if (s.id === m.selection_id) o.selected = true;
+      sel.appendChild(o);
+    });
+    new bootstrap.Modal(document.getElementById('memberEditModal')).show();
+  }
+
+  async function saveQuickEditMember() {
+    const id  = document.getElementById('editMemberId').value;
+    const btn = document.getElementById('saveMemberEditBtn');
+    const sp  = document.getElementById('editMemberSpinner');
+    btn.disabled = true; sp.classList.remove('d-none');
+    try {
+      await apiPut('/members/' + id, {
+        name:         document.getElementById('editMemberName').value.trim(),
+        email:        document.getElementById('editMemberEmail').value.trim(),
+        phone:        document.getElementById('editMemberPhone').value.trim(),
+        status:       document.getElementById('editMemberStatus').value,
+        selection_id: document.getElementById('editMemberSelection').value || null,
+      });
+      bootstrap.Modal.getInstance(document.getElementById('memberEditModal')).hide();
+      showToast('Član ažuriran', 'success'); load();
+    } catch(e) { showToast(e.message, 'error'); }
+    finally { btn.disabled = false; sp.classList.add('d-none'); }
   }
 
   load();

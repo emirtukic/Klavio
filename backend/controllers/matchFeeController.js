@@ -48,7 +48,7 @@ exports.create = async (req, res) => {
   if (!match_id || !amount) return res.status(400).json({ message: 'match_id i amount su obavezni' });
 
   try {
-    // Bulk create — array of member IDs
+    // Bulk create - array of member IDs
     if (Array.isArray(member_ids) && member_ids.length > 0) {
       const values = member_ids.map(mid => [req.user.club_id, mid, match_id, amount, 'pending', notes || null]);
       await db.query(

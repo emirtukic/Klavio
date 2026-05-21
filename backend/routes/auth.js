@@ -5,6 +5,9 @@ const role = require('../middleware/roleCheck');
 
 router.post('/login', ctrl.login);
 router.post('/register', ctrl.register);
+router.post('/forgot-password', ctrl.forgotPassword);
+router.get('/validate-reset', ctrl.validateResetToken);
+router.post('/reset-password', ctrl.resetPassword);
 router.get('/verify-email', ctrl.verifyEmail);
 router.get('/set-password', ctrl.validateSetPasswordToken);
 router.post('/set-password', ctrl.setPassword);

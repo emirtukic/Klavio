@@ -83,14 +83,19 @@
     <div class="row g-4">
 
       <!-- Left: Player stats -->
-      <div class="col-lg-8">
+      <div class="col-12 col-lg-8">
         <div class="card table-card mb-4">
           <div class="card-header d-flex justify-content-between align-items-center">
             <span class="fw-semibold"><i class="bi bi-people me-2 text-primary"></i>Statistike igrača</span>
-            <span class="text-muted small" id="psCount"></span>
+            <div class="d-flex align-items-center gap-2">
+              <span class="text-muted small" id="psCount"></span>
+              <button class="btn btn-sm btn-primary d-none" id="addStatBtn" onclick="openStatModal()">
+                <i class="bi bi-plus-lg me-1"></i>Unesi statistike
+              </button>
+            </div>
           </div>
           <div class="table-responsive">
-            <table class="table table-hover mb-0">
+            <table class="table table-hover mb-0 table-mobile-cards">
               <thead>
                 <tr>
                   <th>Igrač</th>
@@ -120,7 +125,7 @@
       </div>
 
       <!-- Right: Info + lineup -->
-      <div class="col-lg-4">
+      <div class="col-12 col-lg-4">
 
         <!-- Match info -->
         <div class="card mb-4">
@@ -152,7 +157,7 @@
         <div class="card" id="notesCard">
           <div class="card-header fw-semibold"><i class="bi bi-journal-text me-2 text-secondary"></i>Napomene</div>
           <div class="card-body">
-            <p class="mb-0 text-muted small" id="notesContent" style="white-space:pre-line;">—</p>
+            <p class="mb-0 text-muted small" id="notesContent" style="white-space:pre-line;">-</p>
           </div>
         </div>
 
@@ -160,6 +165,99 @@
     </div>
   </div>
 </div>
+
+<!-- Player stats modal -->
+<div class="modal fade" id="statModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header border-0 pb-1">
+        <h5 class="modal-title fw-bold"><i class="bi bi-bar-chart-line me-2 text-primary"></i>Statistike igrača</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+
+        <!-- Player search/select -->
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Igrač</label>
+          <select class="form-select" id="statMemberId">
+            <option value="">— Odaberite igrača —</option>
+          </select>
+        </div>
+
+        <!-- Stats row 1 -->
+        <div class="row g-2 mb-2">
+          <div class="col-4">
+            <label class="form-label small">Golovi</label>
+            <input type="number" class="form-control" id="statGoals" min="0" value="0">
+          </div>
+          <div class="col-4">
+            <label class="form-label small">Asistencije</label>
+            <input type="number" class="form-control" id="statAssists" min="0" value="0">
+          </div>
+          <div class="col-4">
+            <label class="form-label small">Minuti</label>
+            <input type="number" class="form-control" id="statMinutes" min="0" max="120" value="90">
+          </div>
+        </div>
+
+        <!-- Stats row 2 -->
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label small"><span class="badge bg-warning text-dark me-1">Žuti</span>kartoni</label>
+            <input type="number" class="form-control" id="statYellow" min="0" max="2" value="0">
+          </div>
+          <div class="col-6">
+            <label class="form-label small"><span class="badge bg-danger me-1">Crveni</span>kartoni</label>
+            <input type="number" class="form-control" id="statRed" min="0" max="1" value="0">
+          </div>
+        </div>
+
+        <!-- Starter toggle -->
+        <div class="form-check form-switch mb-1">
+          <input class="form-check-input" type="checkbox" id="statStarter" checked>
+          <label class="form-check-label" for="statStarter">Startna postava</label>
+        </div>
+
+        <!-- Hint: existing stats -->
+        <div id="statExistingHint" class="alert alert-info py-2 small d-none mt-2">
+          <i class="bi bi-info-circle me-1"></i>Postoje statistike za ovog igrača — bit će prepisane.
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-1">
+        <button class="btn btn-light" data-bs-dismiss="modal">Odustani</button>
+        <button class="btn btn-primary" onclick="saveStatModal()"><i class="bi bi-check-lg me-1"></i>Sačuvaj</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Floating action button (mobile only) -->
+<style>
+  .stat-fab {
+    display: none;
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    z-index: 1050;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    font-size: 1.4rem;
+    align-items: center;
+    justify-content: center;
+    background: var(--club-accent, #3b82f6);
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    transition: transform .15s, box-shadow .15s;
+  }
+  .stat-fab:active { transform: scale(0.94); }
+  @media (max-width: 640px) { .stat-fab { display: flex; } }
+</style>
+<button class="stat-fab d-none" id="statFab" title="Unesi statistike" onclick="openStatModal()">
+  <i class="bi bi-bar-chart-line"></i>
+</button>
 
 <!-- Edit result modal -->
 <div class="modal fade" id="editModal" tabindex="-1">
@@ -236,9 +334,13 @@
       renderPlayerStats(stats);
       renderTopPerformers(stats);
       renderLineup(lineup);
-      document.getElementById('notesContent').textContent = match.notes || '—';
+      document.getElementById('notesContent').textContent = match.notes || '-';
       document.getElementById('pageTitle').textContent = `vs ${match.opponent}`;
-      if (canEdit) document.getElementById('editBtnWrap').classList.remove('d-none');
+      if (canEdit) {
+        document.getElementById('editBtnWrap').classList.remove('d-none');
+        document.getElementById('addStatBtn').classList.remove('d-none');
+        document.getElementById('statFab').classList.remove('d-none');
+      }
     } catch(e) {
       showToast('Greška pri učitavanju: ' + e.message, 'error');
     }
@@ -248,7 +350,7 @@
     const clubName = getClub()?.name || 'Naš tim';
     document.getElementById('heroTeamLabel').textContent = clubName;
     document.getElementById('heroOpponentLabel').textContent = m.opponent;
-    document.getElementById('heroDate').textContent = m.match_date ? new Date(m.match_date).toLocaleString('bs-BA', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+    document.getElementById('heroDate').textContent = m.match_date ? new Date(m.match_date).toLocaleString('bs-BA', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '-';
     document.getElementById('heroLocation').textContent = m.location ? '📍 ' + m.location : '';
     document.getElementById('heroBadgeType').textContent = MATCH_TYPE[m.match_type] || m.match_type;
     document.getElementById('heroBadgeHA').textContent   = HOME_AWAY[m.home_away]   || m.home_away;
@@ -270,12 +372,12 @@
 
   function renderInfo(m) {
     const rows = [
-      ['Datum i vrijeme', m.match_date ? new Date(m.match_date).toLocaleString('bs-BA', {weekday:'long',day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—'],
-      ['Lokacija', m.location || '—'],
+      ['Datum i vrijeme', m.match_date ? new Date(m.match_date).toLocaleString('bs-BA', {weekday:'long',day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '-'],
+      ['Lokacija', m.location || '-'],
       ['Vrsta utakmice', MATCH_TYPE[m.match_type] || m.match_type],
       ['Domaćin/Gost', HOME_AWAY[m.home_away] || m.home_away],
-      ['Selekcija', m.selection_name || '—'],
-      ['Formacija', m.formation || '—'],
+      ['Selekcija', m.selection_name || '-'],
+      ['Formacija', m.formation || '-'],
     ];
     document.getElementById('infoTable').innerHTML = rows.map(([k,v]) =>
       `<tr><td class="text-muted small" style="width:45%">${k}</td><td class="fw-medium small">${v}</td></tr>`
@@ -292,19 +394,19 @@
     }
     const sorted = [...arr].sort((a,b) => (b.is_starter||0) - (a.is_starter||0));
     tbody.innerHTML = sorted.map(p => `<tr>
-      <td>
+      <td data-label="Igrač">
         <div class="d-flex align-items-center gap-2">
-          <span class="fw-semibold small">${p.name || '—'}</span>
+          <span class="fw-semibold small">${p.name || '-'}</span>
           ${p.jersey_number ? `<span class="badge bg-secondary bg-opacity-15 text-secondary" style="font-size:.65rem;">#${p.jersey_number}</span>` : ''}
         </div>
         <div class="text-muted" style="font-size:.7rem;">${p.position || ''}</div>
       </td>
-      <td class="text-center">${p.started || p.is_starter ? '<i class="bi bi-play-circle-fill text-success"></i>' : '<i class="bi bi-dash text-muted"></i>'}</td>
-      <td class="text-center fw-bold text-success">${p.goals || 0}</td>
-      <td class="text-center text-primary">${p.assists || 0}</td>
-      <td class="text-center"><span class="badge bg-warning text-dark">${p.yellow_cards || 0}</span></td>
-      <td class="text-center"><span class="badge bg-danger">${p.red_cards || 0}</span></td>
-      <td class="text-center text-muted small">${p.minutes_played || 0}'</td>
+      <td data-label="Starter" class="text-center">${p.started || p.is_starter ? '<i class="bi bi-play-circle-fill text-success"></i>' : '<i class="bi bi-dash text-muted"></i>'}</td>
+      <td data-label="Golovi" class="text-center fw-bold text-success">${p.goals || 0}</td>
+      <td data-label="Asistencije" class="text-center text-primary">${p.assists || 0}</td>
+      <td data-label="Žuti" class="text-center"><span class="badge bg-warning text-dark">${p.yellow_cards || 0}</span></td>
+      <td data-label="Crveni" class="text-center"><span class="badge bg-danger">${p.red_cards || 0}</span></td>
+      <td data-label="Min" class="text-center text-muted small">${p.minutes_played || 0}'</td>
     </tr>`).join('');
   }
 
@@ -334,7 +436,7 @@
   function renderLineup(data) {
     const players   = data.players || [];
     const formation = data.formation;
-    document.getElementById('formationBadge').textContent = formation || '—';
+    document.getElementById('formationBadge').textContent = formation || '-';
 
     const el        = document.getElementById('lineupContent');
     if (!players.length) { el.innerHTML = '<div class="text-muted small text-center py-2">Postava nije unesena</div>'; return; }
@@ -347,7 +449,7 @@
       <div class="d-flex flex-column gap-1">
         ${arr.map(p => `<div class="lineup-spot ${p.is_starter?'starter':''}">
           <span class="num">${p.jersey_number || '#'}</span>
-          <span class="small fw-medium flex-grow-1">${p.name || '—'}</span>
+          <span class="small fw-medium flex-grow-1">${p.name || '-'}</span>
           ${p.position ? `<span style="font-size:.68rem;color:#94a3b8;">${p.position}</span>` : ''}
         </div>`).join('')}
       </div>`;
@@ -363,6 +465,89 @@
     document.getElementById('eResult').value       = matchData.result || 'pending';
     document.getElementById('eNotes').value        = matchData.notes || '';
     editModal.show();
+  }
+
+  /* ── Player stats modal ── */
+  let statModal = null;
+  let allMembers = [];
+  let currentStats = [];
+
+  async function openStatModal() {
+    if (!statModal) statModal = new bootstrap.Modal(document.getElementById('statModal'));
+
+    // Load members for this match's selection (or all club members)
+    if (!allMembers.length) {
+      try {
+        const sel = matchData?.selection_id ? `?selection_id=${matchData.selection_id}` : '';
+        allMembers = await apiGet('/members' + sel).catch(() => []);
+      } catch(_) { allMembers = []; }
+    }
+
+    // Populate player dropdown
+    const sel = document.getElementById('statMemberId');
+    sel.innerHTML = '<option value="">— Odaberite igrača —</option>';
+    allMembers.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.id;
+      opt.textContent = `${m.name}${m.jersey_number ? ' (#'+m.jersey_number+')' : ''}${m.position ? ' · '+m.position : ''}`;
+      sel.appendChild(opt);
+    });
+
+    // Reload current stats for hint detection
+    try { currentStats = await apiGet('/stats/match/' + matchId); } catch(_) { currentStats = []; }
+
+    // Reset form
+    document.getElementById('statGoals').value   = 0;
+    document.getElementById('statAssists').value = 0;
+    document.getElementById('statMinutes').value = 90;
+    document.getElementById('statYellow').value  = 0;
+    document.getElementById('statRed').value     = 0;
+    document.getElementById('statStarter').checked = true;
+    document.getElementById('statExistingHint').classList.add('d-none');
+
+    // On player change — pre-fill if stats already exist
+    sel.onchange = () => {
+      const mid = parseInt(sel.value);
+      const existing = currentStats.find(s => s.member_id === mid);
+      const hint = document.getElementById('statExistingHint');
+      if (existing) {
+        document.getElementById('statGoals').value   = existing.goals || 0;
+        document.getElementById('statAssists').value = existing.assists || 0;
+        document.getElementById('statMinutes').value = existing.minutes_played || 90;
+        document.getElementById('statYellow').value  = existing.yellow_cards || 0;
+        document.getElementById('statRed').value     = existing.red_cards || 0;
+        document.getElementById('statStarter').checked = !!(existing.started || existing.is_starter);
+        hint.classList.remove('d-none');
+      } else {
+        hint.classList.add('d-none');
+      }
+    };
+
+    statModal.show();
+  }
+
+  async function saveStatModal() {
+    const memberId = parseInt(document.getElementById('statMemberId').value);
+    if (!memberId) { showToast('Odaberite igrača', 'warning'); return; }
+    const body = {
+      member_id:      memberId,
+      goals:          parseInt(document.getElementById('statGoals').value)   || 0,
+      assists:        parseInt(document.getElementById('statAssists').value) || 0,
+      minutes_played: parseInt(document.getElementById('statMinutes').value) || 90,
+      yellow_cards:   parseInt(document.getElementById('statYellow').value)  || 0,
+      red_cards:      parseInt(document.getElementById('statRed').value)     || 0,
+      started:        document.getElementById('statStarter').checked,
+    };
+    try {
+      await apiPost('/stats/match/' + matchId, body);
+      statModal.hide();
+      showToast('Statistike sačuvane');
+      allMembers = []; // force reload members on next open
+      // Refresh stats table
+      const stats = await apiGet('/stats/match/' + matchId).catch(() => []);
+      renderPlayerStats(stats);
+      renderTopPerformers(stats);
+    } catch(e) { showToast(e.message, 'error'); }
   }
 
   async function saveEdit() {

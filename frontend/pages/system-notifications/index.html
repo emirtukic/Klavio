@@ -25,7 +25,7 @@
 
     <div class="card table-card">
       <div class="table-responsive">
-        <table class="table table-hover mb-0">
+        <table class="table table-hover mb-0 table-mobile-cards">
           <thead><tr><th>Tip</th><th>Naslov</th><th>Poruka</th><th>Status</th><th>Datum</th><th></th></tr></thead>
           <tbody id="notifTable">
             <tr class="sk-row"><td><div class="skeleton" style="height:20px;width:90px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:13px;width:60%;"></div></td><td><div class="skeleton" style="height:13px;width:80%;"></div></td><td><div class="skeleton" style="height:20px;width:65px;border-radius:999px;"></div></td><td><div class="skeleton" style="height:13px;width:70px;"></div></td><td><div class="skeleton" style="height:28px;width:60px;border-radius:6px;"></div></td></tr>
@@ -92,13 +92,13 @@ async function load() {
   const rows = await apiGet('/system-notifications');
   document.getElementById('notifTable').innerHTML = rows.map(n=>`
     <tr class="${n.is_active?'':'table-secondary opacity-75'}">
-      <td><span class="badge bg-${TYPE_COLOR[n.type]||'secondary'}">${TYPE_ICON[n.type]||''} ${TYPE_LABEL[n.type]||n.type}</span></td>
-      <td class="fw-semibold">${n.title}</td>
-      <td class="text-muted small" style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${n.body}</td>
-      <td>${n.is_active
+      <td data-label="Tip"><span class="badge bg-${TYPE_COLOR[n.type]||'secondary'}">${TYPE_ICON[n.type]||''} ${TYPE_LABEL[n.type]||n.type}</span></td>
+      <td data-label="Naslov" class="fw-semibold">${n.title}</td>
+      <td data-label="Poruka" class="text-muted small" style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${n.body}</td>
+      <td data-label="Status">${n.is_active
         ? '<span class="badge bg-success">Aktivna</span>'
         : '<span class="badge bg-secondary">Neaktivna</span>'}</td>
-      <td class="small text-muted">${new Date(n.created_at).toLocaleDateString('bs-BA')}</td>
+      <td data-label="Datum" class="small text-muted">${new Date(n.created_at).toLocaleDateString('bs-BA')}</td>
       <td>
         <div class="d-flex gap-1">
           <button class="btn btn-sm btn-outline-secondary" onclick="toggle(${n.id})" title="${n.is_active?'Deaktiviraj':'Aktiviraj'}">

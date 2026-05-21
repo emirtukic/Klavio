@@ -166,7 +166,7 @@ function buildSidebar() {
   else if (user.role === 'coach') items = NAV.coach;
   else items = NAV.member;
 
-  // Determine active path — match section folder, not just exact file
+  // Determine active path - match section folder, not just exact file
   const path = window.location.pathname;
   const hasExactMatch = items.some(i => i.href === path);
   function isActive(href) {
@@ -296,7 +296,7 @@ function expandSection(collapsible) {
   if (icon) { icon.classList.replace('bi-chevron-down','bi-chevron-up'); }
 }
 
-/* ── Branding (CSS vars only — no topbar badge) ── */
+/* ── Branding (CSS vars only - no topbar badge) ── */
 function applyBranding() {
   const club = getClub();
   if (!club) return;
@@ -347,7 +347,7 @@ function initMobileSidebar() {
   }
 
   overlay.addEventListener('click', close);
-  // Event delegation — works even after sidebar is rebuilt
+  // Event delegation - works even after sidebar is rebuilt
   sidebar.addEventListener('click', e => {
     if (e.target.closest('.nav-link') && window.innerWidth <= 768) close();
   });
@@ -787,7 +787,7 @@ function showAccessBlock(data) {
 /* ── Boot ── */
 document.addEventListener('DOMContentLoaded', () => {
   applyTheme();            // apply dark/light mode before render
-  buildSidebar();          // must be first — renders the nav
+  buildSidebar();          // must be first - renders the nav
   applyBranding();         // CSS vars + topbar badge
   renderSuperAdminBanner();
   initMobileSidebar();     // after buildSidebar so the DOM exists

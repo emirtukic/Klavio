@@ -20,7 +20,7 @@ router.post('/', async (req, res) => {
     await sendMail({
       to: process.env.MAIL_USER || 'klavio.app@gmail.com',
       replyTo: `${name} <${email}>`,
-      subject: `[Klavio Kontakt] ${subjectLabel} — ${name}`,
+      subject: `[Klavio Kontakt] ${subjectLabel} - ${name}`,
       text: `Nova kontakt poruka\n\nIme: ${name}\nE-mail: ${email}\nPredmet: ${subjectLabel}\n\n${message}`,
       html: `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:24px;">
         <h2 style="color:#111827;border-bottom:2px solid #e2e8f0;padding-bottom:8px;">Nova kontakt poruka</h2>

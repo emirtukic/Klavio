@@ -25,7 +25,7 @@ db.query(`
   )
 `).catch(err => console.error('[form_history] table init:', err.message));
 
-// POST /api/forms/history — save a fill event
+// POST /api/forms/history - save a fill event
 router.post('/history', auth, role('admin', 'super_admin'), async (req, res) => {
   try {
     const { form_type, form_name, summary } = req.body;
@@ -39,7 +39,7 @@ router.post('/history', auth, role('admin', 'super_admin'), async (req, res) => 
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
-// GET /api/forms/history — list fill history for club
+// GET /api/forms/history - list fill history for club
 router.get('/history', auth, role('admin', 'super_admin'), async (req, res) => {
   try {
     const [rows] = await db.query(

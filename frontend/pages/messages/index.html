@@ -25,7 +25,7 @@
 
     <div class="card table-card">
       <div class="table-responsive">
-        <table class="table table-hover mb-0">
+        <table class="table table-hover mb-0 table-mobile-cards">
           <thead>
             <tr><th>Tip</th><th>Naslov</th><th>Odgovori</th><th>Posljednja aktivnost</th><th></th></tr>
           </thead>
@@ -83,17 +83,17 @@ function renderTable() {
     const lastActivity = m.last_reply_at || m.created_at;
     return `
     <tr style="cursor:pointer;" onclick="openThread(${m.id})">
-      <td>
+      <td data-label="Tip">
         ${m.type === 'broadcast'
           ? '<span class="badge bg-primary">Broadcast</span>'
           : '<span class="badge bg-info text-dark">Direktna</span>'}
       </td>
-      <td>
+      <td data-label="Naslov">
         ${hasNewReply ? '<i class="bi bi-circle-fill text-primary me-1" style="font-size:0.45rem;vertical-align:middle;"></i>' : ''}
         <span class="${hasNewReply ? 'fw-semibold' : ''}">${m.subject}</span>
       </td>
-      <td class="text-center text-muted small">${m.reply_count || 0}</td>
-      <td class="small text-muted">${new Date(lastActivity).toLocaleString('bs-BA')}</td>
+      <td data-label="Odgovori" class="text-center text-muted small">${m.reply_count || 0}</td>
+      <td data-label="Aktivnost" class="small text-muted">${new Date(lastActivity).toLocaleString('bs-BA')}</td>
       <td><i class="bi bi-chevron-right text-muted"></i></td>
     </tr>`;
   }).join('') || '<tr><td colspan="5" class="text-center text-muted py-3">Nema poruka</td></tr>';

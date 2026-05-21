@@ -121,7 +121,7 @@
             placeholder="Pretraži..." oninput="renderMembers()">
         </div>
         <div class="table-responsive">
-          <table class="table table-hover mb-0">
+          <table class="table table-hover mb-0 table-mobile-cards">
             <thead><tr><th>#</th><th>Ime</th><th>Broj dresa</th><th>Pozicija</th><th>Status</th><th>Akcije</th></tr></thead>
             <tbody id="membersBody"></tbody>
           </table>
@@ -141,7 +141,7 @@
       <div class="card">
         <div class="card-header fw-semibold small py-2">Treneri selekcije</div>
         <div class="table-responsive">
-          <table class="table table-hover mb-0">
+          <table class="table table-hover mb-0 table-mobile-cards">
             <thead><tr><th>Ime</th><th>Specijalizacija</th><th>E-mail</th><th>Telefon</th><th>Akcije</th></tr></thead>
             <tbody id="coachesBody"></tbody>
           </table>
@@ -188,7 +188,7 @@
           <span class="text-muted small" id="trainingCount"></span>
         </div>
         <div class="table-responsive">
-          <table class="table table-hover mb-0">
+          <table class="table table-hover mb-0 table-mobile-cards">
             <thead><tr><th>Datum</th><th>Naziv</th><th>Trener</th><th>Lokacija</th><th>Status</th><th>Sudionici</th></tr></thead>
             <tbody id="trainingsBody"></tbody>
           </table>
@@ -237,7 +237,7 @@
           <span class="text-muted small" id="matchCount"></span>
         </div>
         <div class="table-responsive">
-          <table class="table table-hover mb-0">
+          <table class="table table-hover mb-0 table-mobile-cards">
             <thead><tr><th>Datum</th><th>Protivnik</th><th>Vrsta</th><th>H/G</th><th>Rezultat</th><th>Ishod</th></tr></thead>
             <tbody id="matchesBody"></tbody>
           </table>
@@ -260,7 +260,7 @@
           <div class="card h-100">
             <div class="card-header fw-semibold small py-2"><i class="bi bi-award me-2"></i>Strijelci selekcije</div>
             <div class="table-responsive">
-              <table class="table table-hover mb-0">
+              <table class="table table-hover mb-0 table-mobile-cards">
                 <thead><tr><th>#</th><th>Igrač</th><th>Golovi</th><th>Asistencije</th><th>Utakmice</th><th>Žuti</th><th>Crveni</th></tr></thead>
                 <tbody id="scorersBody"></tbody>
               </table>
@@ -415,15 +415,15 @@ function renderMembers() {
   document.getElementById('membersBody').innerHTML = rows.length
     ? rows.map((m, i) => `
       <tr>
-        <td class="text-muted small">${i + 1}</td>
-        <td>
+        <td data-label="#" class="text-muted small">${i + 1}</td>
+        <td data-label="Ime">
           <a href="../members/detail.html?id=${m.id}" class="fw-semibold text-decoration-none">${m.name}</a>
           <div class="text-muted" style="font-size:0.72rem">${m.membership_number || '-'}</div>
         </td>
-        <td>${m.jersey_number ? `<code>#${m.jersey_number}</code>` : '-'}</td>
-        <td>${m.position || '-'}</td>
-        <td>${statusBadge(m.status)}</td>
-        <td><button class="btn btn-sm btn-outline-danger" onclick="removeMember(${m.id})"><i class="bi bi-x-lg"></i></button></td>
+        <td data-label="Broj dresa">${m.jersey_number ? `<code>#${m.jersey_number}</code>` : '-'}</td>
+        <td data-label="Pozicija">${m.position || '-'}</td>
+        <td data-label="Status">${statusBadge(m.status)}</td>
+        <td data-label="Akcije"><button class="btn btn-sm btn-outline-danger" onclick="removeMember(${m.id})"><i class="bi bi-x-lg"></i></button></td>
       </tr>`).join('')
     : `<tr><td colspan="6" class="text-center text-muted py-4"><i class="bi bi-people fs-3 d-block mb-2"></i>Nema igrača</td></tr>`;
 }
@@ -432,11 +432,11 @@ function renderCoaches() {
   document.getElementById('coachesBody').innerHTML = selCoaches.length
     ? selCoaches.map(c => `
       <tr>
-        <td class="fw-semibold">${c.name}</td>
-        <td>${c.specialization || '-'}</td>
-        <td class="text-muted small">${c.email || '-'}</td>
-        <td class="text-muted small">${c.phone || '-'}</td>
-        <td><button class="btn btn-sm btn-outline-danger" onclick="removeCoach(${c.id})"><i class="bi bi-x-lg"></i></button></td>
+        <td data-label="Ime" class="fw-semibold">${c.name}</td>
+        <td data-label="Specijalizacija">${c.specialization || '-'}</td>
+        <td data-label="E-mail" class="text-muted small">${c.email || '-'}</td>
+        <td data-label="Telefon" class="text-muted small">${c.phone || '-'}</td>
+        <td data-label="Akcije"><button class="btn btn-sm btn-outline-danger" onclick="removeCoach(${c.id})"><i class="bi bi-x-lg"></i></button></td>
       </tr>`).join('')
     : `<tr><td colspan="5" class="text-center text-muted py-4"><i class="bi bi-person-badge fs-3 d-block mb-2"></i>Nema trenera</td></tr>`;
 }
@@ -459,12 +459,12 @@ function renderTrainings() {
   document.getElementById('trainingsBody').innerHTML = rows.length
     ? rows.map(t => `
       <tr>
-        <td>${formatDate(t.session_date)}</td>
-        <td class="fw-semibold">${t.title}</td>
-        <td>${t.coach_name || '-'}</td>
-        <td>${t.location || '-'}</td>
-        <td>${trainingStatusBadge(t.status)}</td>
-        <td class="text-muted small">${t.participant_count || 0} / ${t.max_participants || '-'}</td>
+        <td data-label="Datum">${formatDate(t.session_date)}</td>
+        <td data-label="Naziv" class="fw-semibold">${t.title}</td>
+        <td data-label="Trener">${t.coach_name || '-'}</td>
+        <td data-label="Lokacija">${t.location || '-'}</td>
+        <td data-label="Status">${trainingStatusBadge(t.status)}</td>
+        <td data-label="Sudionici" class="text-muted small">${t.participant_count || 0} / ${t.max_participants || '-'}</td>
       </tr>`).join('')
     : `<tr><td colspan="6" class="text-center text-muted py-4"><i class="bi bi-calendar3 fs-3 d-block mb-2"></i>Nema treninga</td></tr>`;
 }
@@ -491,12 +491,12 @@ function renderMatches() {
         const score = (m.goals_for != null && m.goals_against != null) ? `${m.goals_for}:${m.goals_against}` : '-';
         const haLabel = { home:'Domaćin', away:'Gost', neutral:'Neutral' }[m.home_away] || m.home_away;
         return `<tr>
-          <td class="text-muted small">${formatDate(m.match_date)}</td>
-          <td class="fw-semibold">${m.opponent}</td>
-          <td>${matchTypeBadge(m.match_type)}</td>
-          <td class="text-muted small">${haLabel}</td>
-          <td class="fw-bold">${score}</td>
-          <td>${matchResultBadge(m.result)}</td>
+          <td data-label="Datum" class="text-muted small">${formatDate(m.match_date)}</td>
+          <td data-label="Protivnik" class="fw-semibold">${m.opponent}</td>
+          <td data-label="Vrsta">${matchTypeBadge(m.match_type)}</td>
+          <td data-label="H/G" class="text-muted small">${haLabel}</td>
+          <td data-label="Rezultat" class="fw-bold">${score}</td>
+          <td data-label="Ishod">${matchResultBadge(m.result)}</td>
         </tr>`;
       }).join('')
     : `<tr><td colspan="6" class="text-center text-muted py-4"><i class="bi bi-trophy fs-3 d-block mb-2"></i>Nema utakmica</td></tr>`;
@@ -546,18 +546,20 @@ async function addMember() {
 }
 
 async function removeMember(memberId) {
-  try {
-    await apiDelete('/selections/' + selId + '/members/' + memberId);
-    showToast('Igrač uklonjen', 'success');
-    [sel, selMembers, allMembers] = await Promise.all([
-      apiGet('/selections/' + selId),
-      apiGet('/selections/' + selId + '/members'),
-      apiGet('/members')
-    ]);
-    renderStatCards();
-    renderMembers();
-    populateAddDropdowns();
-  } catch(e) { showToast(e.message, 'error'); }
+  confirmDelete(async () => {
+    try {
+      await apiDelete('/selections/' + selId + '/members/' + memberId);
+      showToast('Igrač uklonjen', 'success');
+      [sel, selMembers, allMembers] = await Promise.all([
+        apiGet('/selections/' + selId),
+        apiGet('/selections/' + selId + '/members'),
+        apiGet('/members')
+      ]);
+      renderStatCards();
+      renderMembers();
+      populateAddDropdowns();
+    } catch(e) { showToast(e.message, 'error'); }
+  }, 'Ukloniti ovog igrača iz selekcije?');
 }
 
 async function addCoach() {
@@ -629,13 +631,13 @@ function renderScorers() {
   document.getElementById('scorersBody').innerHTML = scorers.length
     ? scorers.map((s, i) => `
       <tr>
-        <td class="text-muted small">${i + 1}</td>
-        <td class="fw-semibold">${s.name}</td>
-        <td><span class="badge bg-success">${s.goals}</span></td>
-        <td>${s.assists}</td>
-        <td class="text-muted small">${s.matches}</td>
-        <td>${s.yellow_cards > 0 ? `<span class="badge" style="background:#eab308">${s.yellow_cards}</span>` : '-'}</td>
-        <td>${s.red_cards > 0 ? `<span class="badge bg-danger">${s.red_cards}</span>` : '-'}</td>
+        <td data-label="#" class="text-muted small">${i + 1}</td>
+        <td data-label="Igrač" class="fw-semibold">${s.name}</td>
+        <td data-label="Golovi"><span class="badge bg-success">${s.goals}</span></td>
+        <td data-label="Asistencije">${s.assists}</td>
+        <td data-label="Utakmice" class="text-muted small">${s.matches}</td>
+        <td data-label="Žuti">${s.yellow_cards > 0 ? `<span class="badge" style="background:#eab308">${s.yellow_cards}</span>` : '-'}</td>
+        <td data-label="Crveni">${s.red_cards > 0 ? `<span class="badge bg-danger">${s.red_cards}</span>` : '-'}</td>
       </tr>`).join('')
     : `<tr><td colspan="7" class="text-center text-muted py-4">Nema podataka o statistikama</td></tr>`;
 }
