@@ -1,4 +1,4 @@
-/* ── Storage helpers ── */
+﻿/* ── Storage helpers ── */
 function saveAuth(token, user, club, selection) {
   localStorage.setItem('token', token);
   localStorage.setItem('user', JSON.stringify(user));
@@ -168,13 +168,16 @@ function buildSidebar() {
 
   // Determine active path — match section folder, not just exact file
   const path = window.location.pathname;
+  const hasExactMatch = items.some(i => i.href === path);
   function isActive(href) {
     if (path === href) return true;
-    const hrefFolder = href.replace(/\/[^/]+$/, ''); // /pages/members
+    if (href.includes('/dashboard/')) return false;
+    const hrefFolder = href.replace(/\/[^/]+$/, '');
     const pathFolder = path.replace(/\/[^/]+$/, '');
-    // Don't mark dashboard as active for sub-pages
-    if (href.includes('/dashboard/')) return path === href;
-    return hrefFolder === pathFolder;
+    if (hrefFolder !== pathFolder) return false;
+    // If current page is directly in the nav, don't also activate sibling links
+    if (hasExactMatch) return false;
+    return true;
   }
 
   // Subscription plan hierarchy
@@ -236,7 +239,7 @@ function buildSidebar() {
 
   let brandHtml;
   if (isSA) {
-    brandHtml = `<img src="/assets/img/klavio-icon.svg" alt="Klavio" style="width:100%;height:auto;display:block;">`;
+    brandHtml = `<img src="/assets/img/klavio-icon.png" alt="Klavio" style="width:100%;height:auto;display:block;">`;
   } else if (club && club.logo_url) {
     brandHtml = `
       <img src="${club.logo_url}?t=${Date.now()}" style="width:36px;height:36px;border-radius:8px;object-fit:contain;flex-shrink:0;" alt="">
@@ -249,7 +252,7 @@ function buildSidebar() {
 
   const klavioWatermark = isSA ? '' : `
     <div style="padding:8px 16px;text-align:center;">
-      <img src="/assets/img/klavio-icon.svg" alt="Klavio" style="height:52px;opacity:0.55;">
+      <img src="/assets/img/klavio-icon.png" alt="Klavio" style="height:52px;opacity:0.55;">
     </div>`;
 
   sidebar.innerHTML = `
@@ -757,7 +760,7 @@ function showAccessBlock(data) {
 
   el.innerHTML = `
     <div id="_accessBlockCard" style="max-width:520px;width:100%;text-align:center;cursor:default;">
-      <img src="/assets/img/klavio-icon.svg" alt="Klavio" style="height:56px;margin-bottom:32px;opacity:0.9;">
+      <img src="/assets/img/klavio-icon.png" alt="Klavio" style="height:56px;margin-bottom:32px;opacity:0.9;">
       <div style="background:#0f172a;border:1px solid #1e293b;border-radius:24px;padding:52px 48px;">
         <div style="width:80px;height:80px;border-radius:50%;background:${iconColor}18;border:1.5px solid ${iconColor}40;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;">
           <i class="bi bi-${icon}" style="font-size:2rem;color:${iconColor};"></i>
