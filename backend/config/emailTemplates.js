@@ -117,20 +117,14 @@ function emailWrap(previewText, content) {
         </td></tr>
       </table>
 
-      <!-- Logo -->
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" width="600" style="max-width:600px;margin:0 auto 6px;">
-        <tr><td align="center">
-          <a href="https://klavio.app" style="text-decoration:none;display:inline-block;">
-            ${logoImg(160, 52)}
-          </a>
-        </td></tr>
-      </table>
-
       <!-- Tagline -->
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" width="600" style="max-width:600px;margin:0 auto 32px;">
         <tr><td align="center">
-          <p style="margin:0;font-size:10px;font-weight:600;color:#374151;letter-spacing:0.18em;text-transform:uppercase;font-family:${FONT};">
-            Sports Club Management Platform
+          <p style="margin:0;font-size:14px;font-weight:700;color:#e2e8f0;letter-spacing:0.05em;font-family:${FONT};">
+            KLAVIO
+          </p>
+          <p style="margin:4px 0 0;font-size:10px;font-weight:600;color:#374151;letter-spacing:0.18em;text-transform:uppercase;font-family:${FONT};">
+            Platforma za upravljanje fudbalskim klubom
           </p>
         </td></tr>
       </table>
@@ -151,14 +145,12 @@ function emailWrap(previewText, content) {
         <tr>
           <td style="padding:0;">
 
-            <!-- Logo + social row -->
+            <!-- Footer brand row -->
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
               <tr>
                 <td valign="middle">
-                  <a href="https://klavio.app" style="text-decoration:none;display:inline-block;">
-                    ${logoImg(110, 36)}
-                  </a>
-                  <p style="margin:5px 0 0;font-size:9px;color:#1f2937;letter-spacing:0.14em;text-transform:uppercase;font-family:${FONT};">Sports Club Management Platform</p>
+                  <p style="margin:0;font-size:13px;font-weight:700;color:#e2e8f0;font-family:${FONT};">KLAVIO</p>
+                  <p style="margin:3px 0 0;font-size:9px;color:#1f2937;letter-spacing:0.14em;text-transform:uppercase;font-family:${FONT};">Platforma za upravljanje fudbalskim klubom</p>
                 </td>
                 <td align="right" valign="middle">
                   <a href="https://klavio.app"
@@ -179,11 +171,8 @@ function emailWrap(previewText, content) {
             <!-- Copyright -->
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:16px;">
               <tr><td align="center">
-                <p style="margin:0 0 5px;font-size:12px;color:#374151;font-family:${FONT};">
+                <p style="margin:0;font-size:12px;color:#374151;font-family:${FONT};">
                   &copy; 2026 Klavio. Sva prava zadr&#382;ana.
-                </p>
-                <p style="margin:0;font-size:12px;color:#1f2937;font-family:${FONT};">
-                  Klavio d.o.o.&nbsp;&bull;&nbsp;<a href="mailto:info@klavio.app" style="color:#374151;text-decoration:none;">info@klavio.app</a>
                 </p>
               </td></tr>
             </table>
