@@ -257,6 +257,10 @@ function buildSidebar() {
     <nav class="sidebar-nav">${navHtml}</nav>
     ${klavioWatermark}
     <div class="sidebar-footer">
+      <div style="display:flex;gap:14px;justify-content:center;padding:10px 0 12px;">
+        <a href="https://www.instagram.com/klavio_app/" target="_blank" rel="noopener" title="Instagram" style="color:var(--text-muted,#94a3b8);font-size:1.1rem;text-decoration:none;transition:color .15s;" onmouseover="this.style.color='#e1306c'" onmouseout="this.style.color='var(--text-muted,#94a3b8)'"><i class="bi bi-instagram"></i></a>
+        <a href="https://www.facebook.com/people/Klavio/61590365125679/" target="_blank" rel="noopener" title="Facebook" style="color:var(--text-muted,#94a3b8);font-size:1.1rem;text-decoration:none;transition:color .15s;" onmouseover="this.style.color='#1877f2'" onmouseout="this.style.color='var(--text-muted,#94a3b8)'"><i class="bi bi-facebook"></i></a>
+      </div>
       <a class="nav-link" href="#" onclick="logout()"><i class="bi bi-box-arrow-left me-2"></i> Odjava</a>
     </div>`;
 

@@ -155,9 +155,9 @@ function emailWrap(previewText, content) {
                 <td align="right" valign="middle">
                   <a href="https://klavio.app"
                      style="display:inline-block;margin-left:8px;text-decoration:none;color:#4b5563;font-size:17px;line-height:1;">&#127760;</a>
-                  <a href="https://instagram.com"
+                  <a href="https://www.instagram.com/klavio_app/"
                      style="display:inline-block;margin-left:10px;text-decoration:none;color:#4b5563;font-size:17px;line-height:1;">&#128247;</a>
-                  <a href="https://facebook.com"
+                  <a href="https://www.facebook.com/people/Klavio/61590365125679/"
                      style="display:inline-block;margin-left:10px;text-decoration:none;color:#4b5563;font-size:17px;line-height:1;">&#128441;</a>
                 </td>
               </tr>
