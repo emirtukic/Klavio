@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /website/
+Disallow: /pages/
+Disallow: /api/
+Disallow: /assets/js/
+Disallow: /index.html
+
+Sitemap: https://klavio.ba/website/sitemap.xml
