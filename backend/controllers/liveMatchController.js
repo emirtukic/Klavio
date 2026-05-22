@@ -196,6 +196,10 @@ async function endMatch(req, res) {
       type: 'ended', result,
       score_for: m.goals_for, score_against: m.goals_against, events
     });
+
+    // Auto-generate player_stats from match_events
+    autoStats(matchId, club_id).catch(() => {});
+
     res.json({ ok: true, result });
   } catch (e) { res.status(500).json({ message: e.message }); }
 }
@@ -207,7 +211,7 @@ async function addEvent(req, res) {
     const { club_id } = req.user;
     const {
       event_type, minute = 0, extra_minute = 0,
-      member_id, member_id_2, is_opponent = false, notes
+      member_id, member_id_2, is_opponent = false, notes, member_name
     } = req.body;
 
     const [[m]] = await db.query(
@@ -223,6 +227,8 @@ async function addEvent(req, res) {
         `SELECT u.name AS n FROM members m JOIN users u ON u.id = m.user_id WHERE m.id=? AND m.club_id=?`,
         [member_id, club_id]);
       name1 = mem ? mem.n : null;
+    } else if (member_name) {
+      name1 = String(member_name).trim().slice(0, 100) || null;
     }
     if (member_id_2) {
       const [[mem]] = await db.query(
@@ -280,6 +286,49 @@ async function deleteEvent(req, res) {
     });
     res.json({ ok: true, score_for: gf, score_against: ga });
   } catch (e) { res.status(500).json({ message: e.message }); }
+}
+
+/* ─── helper: auto-generate player_stats from match_events ────────── */
+async function autoStats(matchId, clubId) {
+  const [events] = await db.query(
+    `SELECT * FROM match_events WHERE match_id = ? AND is_opponent = 0`, [matchId]);
+
+  const statsMap = {};
+
+  for (const e of events) {
+    if (!e.member_id) continue;
+    if (!statsMap[e.member_id]) statsMap[e.member_id] = { goals: 0, yellow_cards: 0, red_cards: 0, started: 0, subbed_off_at: null, subbed_on_at: null };
+    const s = statsMap[e.member_id];
+    if (e.event_type === 'goal' || e.event_type === 'penalty') s.goals++;
+    if (e.event_type === 'yellow_card') s.yellow_cards++;
+    if (e.event_type === 'red_card')    s.red_cards++;
+    if (e.event_type === 'substitution') s.subbed_off_at = e.minute;
+    if (e.event_type === 'substitution' && e.member_id_2) {
+      if (!statsMap[e.member_id_2]) statsMap[e.member_id_2] = { goals: 0, yellow_cards: 0, red_cards: 0, started: 0, subbed_off_at: null, subbed_on_at: null };
+      statsMap[e.member_id_2].subbed_on_at = e.minute;
+    }
+  }
+
+  // Mark starters from lineup if exists
+  const [lineup] = await db.query(`SELECT member_id, is_starter FROM match_lineup WHERE match_id = ?`, [matchId]);
+  for (const l of lineup) {
+    if (!statsMap[l.member_id]) statsMap[l.member_id] = { goals: 0, yellow_cards: 0, red_cards: 0, started: 0, subbed_off_at: null, subbed_on_at: null };
+    if (l.is_starter) statsMap[l.member_id].started = 1;
+  }
+
+  for (const [memberId, s] of Object.entries(statsMap)) {
+    let mins = 90;
+    if (s.subbed_off_at !== null) mins = s.subbed_off_at;
+    else if (s.subbed_on_at !== null) mins = Math.max(1, 90 - s.subbed_on_at);
+
+    await db.query(`
+      INSERT INTO player_stats (member_id, match_id, club_id, goals, assists, yellow_cards, red_cards, minutes_played, started)
+      VALUES (?,?,?,?,0,?,?,?,?)
+      ON DUPLICATE KEY UPDATE
+        goals=VALUES(goals), yellow_cards=VALUES(yellow_cards),
+        red_cards=VALUES(red_cards), minutes_played=VALUES(minutes_played), started=VALUES(started)
+    `, [memberId, matchId, clubId, s.goals, s.yellow_cards, s.red_cards, mins, s.started]);
+  }
 }
 
 /* ─── helper: load player list for a match ────────────────────────── */

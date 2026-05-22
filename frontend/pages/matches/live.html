@@ -188,6 +188,66 @@
   </div>
 </div>
 
+<!-- Half-time Modal -->
+<div class="modal fade" id="modalHalfTime" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content border-0 shadow-lg" style="border-radius:16px;overflow:hidden;">
+      <div class="modal-header border-0 pb-0" style="background:linear-gradient(135deg,#f59e0b,#d97706);padding:20px 24px 0;">
+        <div>
+          <h5 class="modal-title fw-bold text-white mb-0"><i class="bi bi-pause-circle-fill me-2"></i>Poluvrijeme</h5>
+          <p class="text-white small mb-0 mt-1" style="opacity:.75;">Kraj prvog poluvremena</p>
+        </div>
+        <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center py-4">
+        <div class="display-4 fw-black mb-2" id="htScore" style="font-weight:900;letter-spacing:-0.04em;">0:0</div>
+        <p class="text-muted small mb-0">Rezultat prvog poluvremena</p>
+      </div>
+      <div class="modal-footer border-0 pt-0 gap-2">
+        <button type="button" class="btn btn-light flex-fill" data-bs-dismiss="modal">Odustani</button>
+        <button type="button" class="btn flex-fill fw-bold text-dark" style="background:#f59e0b;" onclick="confirmPause()">
+          <i class="bi bi-pause-fill me-1"></i>Potvrdi poluvrijeme
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- End Match Modal -->
+<div class="modal fade" id="modalEndMatch" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg" style="border-radius:16px;overflow:hidden;">
+      <div class="modal-header border-0 pb-0" style="background:linear-gradient(135deg,#0f172a,#1e293b);padding:20px 24px 0;">
+        <div>
+          <h5 class="modal-title fw-bold text-white mb-0"><i class="bi bi-flag-fill me-2 text-danger"></i>Kraj utakmice</h5>
+          <p class="text-white small mb-0 mt-1" style="opacity:.6;">Finalni rezultat i statistike</p>
+        </div>
+        <button type="button" class="btn-close btn-close-white ms-auto" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body py-4">
+        <div class="text-center mb-4">
+          <div class="display-3 fw-black mb-2" id="emScore" style="font-weight:900;letter-spacing:-0.04em;">0:0</div>
+          <span id="emResultBadge" class="badge fs-6 px-4 py-2">Remi</span>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold small">Finalna minuta</label>
+          <input type="number" class="form-control" id="emMinute" value="90" min="80" max="130" style="max-width:120px;">
+        </div>
+        <div class="p-3 rounded-3 small text-muted" style="background:#f8fafc;border:1px solid #e2e8f0;">
+          <i class="bi bi-info-circle text-primary me-1"></i>
+          Statistike igrača (golovi, kartoni, izmjene) biće automatski ažurirane iz evidencije događaja.
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-0 gap-2">
+        <button type="button" class="btn btn-light flex-fill" data-bs-dismiss="modal">Odustani</button>
+        <button type="button" class="btn btn-danger flex-fill fw-bold" onclick="confirmEnd()">
+          <i class="bi bi-stop-fill me-1"></i>Završi utakmicu
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../../assets/js/auth.js"></script>
 <script src="../../assets/js/api.js"></script>
@@ -483,7 +543,7 @@ function renderPanel() {
             </div>
 
             <div class="row g-2 mb-3">
-              <!-- Primary player -->
+              <!-- Primary player (our team) -->
               <div class="col-sm-6" id="player1Wrap">
                 <label class="form-label form-label-sm fw-semibold">Igrač</label>
                 <select class="form-select form-select-sm" id="evPlayer1">
@@ -491,9 +551,15 @@ function renderPanel() {
                   ${matchState.players.map(p=>`<option value="${p.member_id}">${p.jersey_number?p.jersey_number+'. ':''}${p.name}${p.position?' ('+p.position+')':''}</option>`).join('')}
                 </select>
               </div>
-              <!-- Second player (substitution in / assist) -->
+              <!-- Opponent player name (free text, shown when isOpponent) -->
+              <div class="col-sm-6 d-none" id="oppNameWrap">
+                <label class="form-label form-label-sm fw-semibold">Igrač protivnika</label>
+                <input type="text" class="form-control form-control-sm" id="evOpponentName"
+                  placeholder="Ime i prezime..." maxlength="100" autocomplete="off">
+              </div>
+              <!-- Second player (substitution) -->
               <div class="col-sm-6 d-none" id="player2Wrap">
-                <label class="form-label form-label-sm fw-semibold" id="player2Label">Umjesto</label>
+                <label class="form-label form-label-sm fw-semibold" id="player2Label">Ulazi</label>
                 <select class="form-select form-select-sm" id="evPlayer2">
                   <option value="">-- Odaberi --</option>
                   ${matchState.players.map(p=>`<option value="${p.member_id}">${p.jersey_number?p.jersey_number+'. ':''}${p.name}</option>`).join('')}
@@ -650,16 +716,17 @@ function toggleOpponent() {
 function updateEventFormVisibility() {
   const p1w = document.getElementById('player1Wrap');
   const p2w = document.getElementById('player2Wrap');
-  const p2l = document.getElementById('player2Label');
+  const oppNameWrap = document.getElementById('oppNameWrap');
   if (!p1w) return;
 
-  const hidePlayer = isOpponent && ['goal','penalty','own_goal','yellow_card','red_card'].includes(selectedType);
+  // own_goal is always YOUR player (even if labeled opponent event)
+  const showOppName = isOpponent && selectedType !== 'own_goal' && selectedType !== 'substitution';
 
-  p1w.classList.toggle('d-none', hidePlayer && selectedType !== 'own_goal');
+  if (oppNameWrap) oppNameWrap.classList.toggle('d-none', !showOppName);
+  p1w.classList.toggle('d-none', showOppName);
 
   if (selectedType === 'substitution') {
     p2w.classList.remove('d-none');
-    if (p2l) p2l.textContent = 'Ulazi';
   } else {
     p2w.classList.add('d-none');
   }
@@ -690,12 +757,18 @@ async function doStart() {
   } catch(e) { showToast(e.message, 'error'); }
 }
 
-async function doPause() {
-  if (!currentMatchId) return;
-  if (!confirm('Potvrdite poluvrijeme?')) return;
+function doPause() {
+  if (!currentMatchId || !matchState) return;
+  const m = matchState.match;
+  document.getElementById('htScore').textContent = m.goals_for + ':' + m.goals_against;
+  new bootstrap.Modal(document.getElementById('modalHalfTime')).show();
+}
+
+async function confirmPause() {
+  bootstrap.Modal.getInstance(document.getElementById('modalHalfTime'))?.hide();
   try {
     await api('/live-match/' + currentMatchId + '/pause', { method:'POST', body:{} });
-    showToast('Poluvrijeme', 'info');
+    showToast('Poluvrijeme označeno', 'info');
     loadMatchList();
   } catch(e) { showToast(e.message, 'error'); }
 }
@@ -704,15 +777,29 @@ async function doResume() {
   if (!currentMatchId) return;
   try {
     await api('/live-match/' + currentMatchId + '/resume', { method:'POST', body:{} });
-    showToast('Nastavak utakmice', 'success');
+    showToast('Nastavak utakmice – 2. poluvrijeme', 'success');
     loadMatchList();
   } catch(e) { showToast(e.message, 'error'); }
 }
 
-async function doEnd() {
-  if (!currentMatchId) return;
-  if (!confirm('Završiti utakmicu?')) return;
-  const minute = parseInt(document.getElementById('evMinute')?.value) || 90;
+function doEnd() {
+  if (!currentMatchId || !matchState) return;
+  const m = matchState.match;
+  const gf = m.goals_for, ga = m.goals_against;
+  document.getElementById('emScore').textContent = gf + ':' + ga;
+  const badge = document.getElementById('emResultBadge');
+  if (gf > ga)      { badge.textContent = '🏆 Pobjeda'; badge.className = 'badge fs-6 px-3 py-2 bg-success'; }
+  else if (gf < ga) { badge.textContent = '❌ Poraz';   badge.className = 'badge fs-6 px-3 py-2 bg-danger'; }
+  else              { badge.textContent = '🤝 Remi';    badge.className = 'badge fs-6 px-3 py-2 bg-warning text-dark'; }
+  const clockEl = document.getElementById('liveClock');
+  const clockMins = clockEl ? parseInt(clockEl.textContent) || 90 : 90;
+  document.getElementById('emMinute').value = Math.max(90, clockMins);
+  new bootstrap.Modal(document.getElementById('modalEndMatch')).show();
+}
+
+async function confirmEnd() {
+  bootstrap.Modal.getInstance(document.getElementById('modalEndMatch'))?.hide();
+  const minute = parseInt(document.getElementById('emMinute')?.value) || 90;
   try {
     const r = await api('/live-match/' + currentMatchId + '/end', { method:'POST', body:{ minute } });
     showToast('Utakmica završena · ' + ({ win:'Pobjeda', loss:'Poraz', draw:'Remi' }[r.result]||''), 'success');
@@ -730,11 +817,14 @@ async function submitEvent() {
 
   if (!selectedType) return showToast('Odaberite tip događaja', 'error');
 
+  const member_name = (isOpponent && selectedType !== 'own_goal')
+    ? (document.getElementById('evOpponentName')?.value.trim() || null) : null;
+
   try {
     await apiPost('/live-match/' + currentMatchId + '/events', {
       event_type: selectedType, minute, extra_minute: extraMin,
       member_id: member_id || null, member_id_2: member_id_2 || null,
-      is_opponent: isOpponent, notes
+      member_name, is_opponent: isOpponent, notes
     });
     // Reset form
     document.getElementById('evNotes').value = '';
@@ -742,6 +832,8 @@ async function submitEvent() {
     document.getElementById('evExtraMin').value = '0';
     document.getElementById('evPlayer1').value = '';
     document.getElementById('evPlayer2').value = '';
+    const oppN = document.getElementById('evOpponentName');
+    if (oppN) oppN.value = '';
   } catch(e) { showToast(e.message || 'Greška', 'error'); }
 }
 
