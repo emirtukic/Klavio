@@ -193,7 +193,7 @@
 <script src="../../assets/js/api.js"></script>
 <script src="../../assets/js/utils.js"></script>
 <script>
-const user = requireRole('super_admin', 'admin', 'coach');
+const user = requireAuth();
 setUserInfo(user); buildSidebar();
 
 /* ── State ──────────────────────────────────────────────────────── */
@@ -379,12 +379,20 @@ function updateClock() {
   const el = document.getElementById('liveClock');
   if (!el || !matchState) return;
   const m = matchState.match;
-  if (m.status === 'paused') { el.textContent = "45'"; el.className = 'live-clock paused'; return; }
+  if (m.status === 'paused') {
+    el.textContent = "45'"; el.className = 'live-clock paused';
+    const mEl = document.getElementById('evMinute');
+    if (mEl && document.activeElement !== mEl) mEl.value = 45;
+    return;
+  }
   if (m.status === 'finished') { el.textContent = "FT"; el.className = 'live-clock finished'; return; }
   if (!m.started_at) { el.textContent = "0'"; return; }
-  const mins = Math.floor((Date.now() - new Date(m.started_at).getTime()) / 60000);
-  el.textContent = Math.max(0, mins) + "'";
+  const mins = Math.max(0, Math.floor((Date.now() - new Date(m.started_at).getTime()) / 60000));
+  el.textContent = mins + "'";
   el.className = 'live-clock';
+  // Sync minute input unless user is editing it
+  const mEl = document.getElementById('evMinute');
+  if (mEl && document.activeElement !== mEl) mEl.value = mins;
 }
 
 /* ── Rendering ──────────────────────────────────────────────────── */
@@ -468,11 +476,11 @@ function renderPanel() {
             </div>
 
             <!-- Opponent toggle -->
-            <label class="opp-toggle${isOpponent?' active':''}" id="oppToggleWrap" onclick="toggleOpponent()">
-              <input type="checkbox" id="oppToggle" ${isOpponent?'checked':''}>
+            <div class="opp-toggle${isOpponent?' active':''}" id="oppToggleWrap" onclick="toggleOpponent()" style="cursor:pointer;user-select:none;">
+              <input type="checkbox" id="oppToggle" ${isOpponent?'checked':''} style="pointer-events:none;">
               <span style="font-size:0.85rem;font-weight:600;">Događaj protivnika</span>
               <span style="font-size:0.75rem;color:var(--neutral-500);margin-left:auto;">npr. gol protivnika</span>
-            </label>
+            </div>
 
             <div class="row g-2 mb-3">
               <!-- Primary player -->

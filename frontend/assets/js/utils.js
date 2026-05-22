@@ -218,7 +218,7 @@ function confirmDelete(onConfirm, message = 'Jeste li sigurni? Ova radnja je nep
           <div id="_lwLastEvt" style="color:rgba(255,255,255,0.6);font-size:0.8rem;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
           <!-- Link -->
           <a id="_lwLink" href="/pages/matches/live.html" style="color:#60a5fa;font-size:0.78rem;font-weight:600;text-decoration:none;flex-shrink:0;white-space:nowrap;">
-            Upravljaj <i class="bi bi-arrow-right"></i>
+            Prati uživo <i class="bi bi-arrow-right"></i>
           </a>
           <button onclick="_lwDismiss()" style="background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;padding:2px 6px;font-size:0.9rem;flex-shrink:0;" title="Zatvori">✕</button>
         </div>
@@ -235,7 +235,11 @@ function confirmDelete(onConfirm, message = 'Jeste li sigurni? Ova radnja je nep
     document.getElementById('_lwTeam2').textContent = match.opponent;
     document.getElementById('_lwScore').textContent = match.goals_for + ':' + match.goals_against;
     const link = document.getElementById('_lwLink');
-    if (link) link.href = '/pages/matches/live.html?id=' + match.id;
+    if (link) {
+      link.href = '/pages/matches/live.html?id=' + match.id;
+      const canManage = typeof user !== 'undefined' && ['super_admin','admin','coach'].includes(user.role);
+      link.innerHTML = (canManage ? 'Upravljaj' : 'Prati uživo') + ' <i class="bi bi-arrow-right"></i>';
+    }
     _widget.style.maxHeight = '60px';
     _widget.style.pointerEvents = 'auto';
     _updateClock(match);

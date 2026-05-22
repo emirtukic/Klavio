@@ -138,6 +138,7 @@ const NAV = {
     { href:'/pages/calendar/index.html',       icon:'calendar2-week', label:'Kalendar' },
     { href:'/pages/training/schedule.html',    icon:'calendar3',      label:'Treninzi' },
     { href:'/pages/matches/list.html',         icon:'trophy',         label:'Utakmice' },
+    { href:'/pages/matches/live.html',         icon:'broadcast',      label:'Live utakmica', highlight: true },
     { href:'/pages/appointments/list.html',    icon:'calendar-check', label:'Termini' },
     { href:'/pages/statistics/index.html',     icon:'graph-up',       label:'Moje statistike' },
     { href:'/pages/announcements/list.html',   icon:'megaphone',      label:'Oglasna tabla' },
