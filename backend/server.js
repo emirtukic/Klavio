@@ -45,6 +45,7 @@ app.use('/api/support-tickets', require('./routes/support-tickets'));
 app.use('/api/analytics',      require('./routes/analytics'));
 app.use('/api/contact',        require('./routes/contact'));
 app.use('/api/search',         require('./routes/search'));
+app.use('/api/live-match',     require('./routes/liveMatch'));
 app.use('/api/members/:memberId/documents', require('./routes/member-documents'));
 
 app.get('*splat', (req, res) => {

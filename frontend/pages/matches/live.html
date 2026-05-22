@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live utakmica | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+  <style>
+    /* ── Live header ─────────────────────────────────────────────── */
+    .live-header {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      border-radius: 14px; padding: 20px 24px; margin-bottom: 20px;
+      border: 1px solid #334155; position: relative; overflow: hidden;
+    }
+    .live-header::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(ellipse 60% 80% at 50% -20%, rgba(239,68,68,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .live-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.35);
+      color: #f87171; font-size: 0.7rem; font-weight: 800;
+      letter-spacing: 0.1em; padding: 3px 10px; border-radius: 20px;
+      text-transform: uppercase;
+    }
+    .live-badge .dot {
+      width: 7px; height: 7px; background: #ef4444; border-radius: 50%;
+      animation: livePulse 1.4s ease-in-out infinite;
+    }
+    .live-badge.paused  { background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.35); color: #fbbf24; }
+    .live-badge.paused .dot { background: #f59e0b; }
+    .live-badge.finished { background: rgba(100,116,139,0.15); border-color: rgba(100,116,139,0.35); color: #94a3b8; }
+    .live-badge.finished .dot { background: #64748b; animation: none; }
+    .live-badge.scheduled { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.35); color: #60a5fa; }
+    .live-badge.scheduled .dot { background: #3b82f6; animation: none; }
+
+    .score-display {
+      display: flex; align-items: center; justify-content: center; gap: 24px;
+      margin: 12px 0;
+    }
+    .score-team { color: rgba(255,255,255,0.85); font-size: 0.95rem; font-weight: 600; flex: 1; }
+    .score-team.right { text-align: right; }
+    .score-num {
+      font-size: 3.2rem; font-weight: 900; color: #fff; letter-spacing: -0.04em;
+      line-height: 1; min-width: 44px; text-align: center;
+    }
+    .score-sep { font-size: 2rem; font-weight: 700; color: rgba(255,255,255,0.3); }
+    .live-clock { font-size: 1.1rem; font-weight: 700; color: #f87171; font-variant-numeric: tabular-nums; }
+    .live-clock.paused  { color: #fbbf24; }
+    .live-clock.finished{ color: #94a3b8; }
+
+    /* ── Timeline ────────────────────────────────────────────────── */
+    .timeline { position: relative; }
+    .tl-event {
+      display: flex; gap: 10px; align-items: flex-start;
+      padding: 7px 0; border-bottom: 1px solid var(--neutral-100);
+      animation: rowFadeIn 0.3s ease;
+    }
+    .tl-event:last-child { border-bottom: none; }
+    .tl-event.opponent { flex-direction: row-reverse; }
+    .tl-event.opponent .tl-text { text-align: right; }
+    .tl-minute {
+      width: 36px; flex-shrink: 0; font-size: 0.73rem; font-weight: 700;
+      color: var(--neutral-500); text-align: center; padding-top: 2px;
+    }
+    .tl-icon {
+      width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 0.85rem;
+    }
+    .tl-text { flex: 1; }
+    .tl-name { font-size: 0.86rem; font-weight: 600; color: var(--neutral-800); }
+    .tl-sub-name { font-size: 0.76rem; color: var(--neutral-500); }
+    .tl-score { font-size: 0.73rem; font-weight: 700; color: var(--neutral-500); }
+
+    .tl-divider {
+      text-align: center; padding: 6px 0; font-size: 0.72rem; font-weight: 700;
+      color: var(--neutral-400); letter-spacing: 0.08em; text-transform: uppercase;
+      position: relative;
+    }
+    .tl-divider::before, .tl-divider::after {
+      content: ''; position: absolute; top: 50%; width: 40%;
+      height: 1px; background: var(--neutral-100);
+    }
+    .tl-divider::before { left: 0; }
+    .tl-divider::after  { right: 0; }
+
+    .tl-empty { color: var(--neutral-400); font-size: 0.85rem; text-align: center; padding: 24px 0; }
+
+    /* Event icon colours */
+    .ev-goal    { background: rgba(34,197,94,0.15); color: #16a34a; }
+    .ev-own     { background: rgba(239,68,68,0.12); color: #dc2626; }
+    .ev-yellow  { background: #fef9c3; color: #854d0e; }
+    .ev-red     { background: rgba(239,68,68,0.15); color: #dc2626; }
+    .ev-sub     { background: rgba(59,130,246,0.12); color: #2563eb; }
+    .ev-penalty { background: rgba(34,197,94,0.15); color: #15803d; }
+    .ev-missed  { background: rgba(239,68,68,0.1); color: #b91c1c; }
+    .ev-var     { background: rgba(99,102,241,0.12); color: #4f46e5; }
+    .ev-marker  { background: var(--neutral-100); color: var(--neutral-500); }
+
+    [data-theme="dark"] .tl-name  { color: var(--neutral-700); }
+    [data-theme="dark"] .tl-score { color: var(--neutral-600); }
+    [data-theme="dark"] .ev-yellow { background: rgba(234,179,8,0.15); color: #facc15; }
+
+    /* ── Control panel ────────────────────────────────────────────── */
+    .event-type-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 14px;
+    }
+    .ev-type-btn {
+      border: 1.5px solid var(--neutral-200); background: var(--surface);
+      border-radius: 10px; padding: 9px 6px; text-align: center; cursor: pointer;
+      transition: all 0.12s; font-size: 0.78rem; font-weight: 600; color: var(--neutral-700);
+    }
+    .ev-type-btn:hover { border-color: #3b82f6; background: #eff6ff; color: #1d4ed8; }
+    .ev-type-btn.selected { border-color: #3b82f6; background: #eff6ff; color: #1d4ed8; box-shadow: 0 0 0 3px rgba(59,130,246,0.18); }
+    .ev-type-btn .ev-emoji { font-size: 1.2rem; display: block; margin-bottom: 3px; }
+    [data-theme="dark"] .ev-type-btn { color: var(--neutral-600); }
+    [data-theme="dark"] .ev-type-btn.selected { background: rgba(59,130,246,0.15); color: #93c5fd; border-color: #3b82f6; }
+
+    .opp-toggle {
+      display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+      background: var(--neutral-50); border-radius: 8px; margin-bottom: 12px; cursor: pointer;
+      border: 1.5px solid var(--neutral-100); transition: all 0.12s;
+    }
+    .opp-toggle.active { background: rgba(239,68,68,0.06); border-color: rgba(239,68,68,0.3); }
+    .opp-toggle input { pointer-events: none; }
+
+    /* ── No-match state ───────────────────────────────────────────── */
+    .no-match-state {
+      text-align: center; padding: 64px 24px;
+      color: var(--neutral-400);
+    }
+    .no-match-state .nms-icon { font-size: 3rem; margin-bottom: 16px; opacity: 0.5; }
+    .no-match-state h5 { color: var(--neutral-600); }
+
+    /* ── Minute badge ─────────────────────────────────────────────── */
+    .undo-btn {
+      background: none; border: 1px solid var(--neutral-200); color: var(--neutral-500);
+      border-radius: 6px; padding: 2px 8px; font-size: 0.7rem; cursor: pointer;
+      transition: all 0.12s; flex-shrink: 0;
+    }
+    .undo-btn:hover { background: #fef2f2; border-color: #fca5a5; color: #dc2626; }
+
+    @media (max-width: 768px) {
+      .event-type-grid { grid-template-columns: repeat(3, 1fr); }
+      .score-num { font-size: 2.4rem; }
+    }
+  </style>
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Live utakmica</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-primary" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+  <div class="page-body">
+
+    <!-- Page header: match selector -->
+    <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-2">
+      <div>
+        <h4>Live utakmica</h4>
+        <p class="text-muted mb-0">Upravljajte utakmicom uživo – golovi, kartoni, izmjene.</p>
+      </div>
+      <div class="d-flex gap-2 align-items-center flex-wrap">
+        <select class="form-select form-select-sm" id="matchSelector" style="min-width:240px;" onchange="selectMatch()">
+          <option value="">-- Odaberite utakmicu --</option>
+        </select>
+        <button class="btn btn-sm btn-outline-secondary" onclick="loadMatchList()">
+          <i class="bi bi-arrow-clockwise"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main live panel -->
+    <div id="livePanel">
+      <div class="no-match-state">
+        <div class="nms-icon"><i class="bi bi-broadcast"></i></div>
+        <h5>Nema aktivne utakmice</h5>
+        <p class="small">Odaberite utakmicu iz liste ili pokrenite novu.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+const user = requireRole('super_admin', 'admin', 'coach');
+setUserInfo(user); buildSidebar();
+
+/* ── State ──────────────────────────────────────────────────────── */
+let currentMatchId = null;
+let matchState     = null;   // { match, events, players }
+let sseReader      = null;
+let clockInterval  = null;
+let selectedType   = 'goal';
+let isOpponent     = false;
+
+const EVENT_META = {
+  goal:           { emoji: '⚽', label: 'Gol',        cls: 'ev-goal',    icon: '⚽' },
+  own_goal:       { emoji: '🔴', label: 'Autogol',    cls: 'ev-own',     icon: '🔴' },
+  yellow_card:    { emoji: '🟨', label: 'Žuti karton',cls: 'ev-yellow',  icon: '🟨' },
+  red_card:       { emoji: '🟥', label: 'Crveni',     cls: 'ev-red',     icon: '🟥' },
+  substitution:   { emoji: '🔄', label: 'Izmjena',    cls: 'ev-sub',     icon: '🔄' },
+  penalty:        { emoji: '⚽', label: 'Penal (gol)', cls: 'ev-penalty', icon: '🎯' },
+  missed_penalty: { emoji: '❌', label: 'Penal (promaš.)',cls:'ev-missed',icon: '❌' },
+  var:            { emoji: '📺', label: 'VAR',         cls: 'ev-var',     icon: '📺' },
+  half_time:      { emoji: '⏸',  label: 'Poluvrijeme', cls: 'ev-marker', icon: '⏸' },
+  full_time:      { emoji: '🏁', label: 'Kraj utakmice',cls:'ev-marker', icon: '🏁' },
+};
+
+/* ── Bootstrap ────────────────────────────────────────────────────── */
+async function loadMatchList() {
+  try {
+    // Load all scheduled + live matches for today and near future
+    const all = await apiGet('/matches?limit=50');
+    const sel = document.getElementById('matchSelector');
+    const prev = sel.value;
+    sel.innerHTML = '<option value="">-- Odaberite utakmicu --</option>';
+
+    const statOrder = { live:0, paused:1, scheduled:2, finished:3 };
+    all.sort((a, b) => (statOrder[a.status||'scheduled']||2) - (statOrder[b.status||'scheduled']||2));
+
+    all.forEach(m => {
+      const statusLabel = { live:'🔴 LIVE', paused:'⏸ Pauza', scheduled:'⏳', finished:'✅ Završeno' };
+      const d = new Date(m.match_date).toLocaleDateString('bs-BA');
+      const opt = document.createElement('option');
+      opt.value = m.id;
+      opt.textContent = `${statusLabel[m.status]||'⏳'} ${d} – ${m.selection_name||'?'} vs ${m.opponent}`;
+      if (m.status === 'live' || m.status === 'paused') opt.style.fontWeight = '700';
+      sel.appendChild(opt);
+    });
+
+    if (prev) sel.value = prev;
+
+    // Auto-select first live match if none selected
+    if (!sel.value) {
+      const liveOpt = [...sel.options].find(o => o.textContent.startsWith('🔴'));
+      if (liveOpt) { sel.value = liveOpt.value; selectMatch(); }
+    }
+  } catch(e) { showToast('Greška pri učitavanju utakmica', 'error'); }
+}
+
+async function selectMatch() {
+  const id = document.getElementById('matchSelector').value;
+  if (!id) { clearLivePanel(); return; }
+  if (id === String(currentMatchId)) return;
+  closeSse();
+  currentMatchId = parseInt(id);
+  await loadMatchState();
+}
+
+async function loadMatchState() {
+  if (!currentMatchId) return;
+  try {
+    matchState = await apiGet('/live-match/' + currentMatchId);
+    renderPanel();
+    if (['live','paused'].includes(matchState.match.status)) {
+      openSse();
+    }
+  } catch(e) {
+    if (e.message && e.message.includes('404')) {
+      // Match not yet started – fetch base match info
+      try {
+        const m = await apiGet('/matches/' + currentMatchId);
+        matchState = { match: { ...m, status: m.status || 'scheduled', goals_for: 0, goals_against: 0 }, events: [], players: [] };
+        // Also load players
+        try {
+          const players = await apiGet('/live-match/' + currentMatchId);
+          matchState.players = players.players || [];
+        } catch(_) {}
+        renderPanel();
+      } catch(_) { showToast('Greška pri učitavanju utakmice', 'error'); }
+    } else {
+      showToast(e.message || 'Greška', 'error');
+    }
+  }
+}
+
+/* ── SSE ────────────────────────────────────────────────────────── */
+function openSse() {
+  closeSse();
+  const token = getToken();
+  fetch('/api/live-match/' + currentMatchId + '/stream', {
+    headers: { 'Authorization': 'Bearer ' + token }
+  }).then(response => {
+    if (!response.ok) return;
+    sseReader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    function read() {
+      sseReader.read().then(({ done, value }) => {
+        if (done) return;
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop();
+        lines.forEach(line => {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              handleSseEvent(data);
+            } catch(_) {}
+          }
+        });
+        read();
+      }).catch(() => {});
+    }
+    read();
+  }).catch(() => {});
+}
+
+function closeSse() {
+  if (sseReader) { try { sseReader.cancel(); } catch(_) {} sseReader = null; }
+  stopClock();
+}
+
+function handleSseEvent(data) {
+  if (!matchState) return;
+  switch (data.type) {
+    case 'init':
+      matchState.match  = data.match;
+      matchState.events = data.events;
+      renderPanel(); break;
+    case 'started':
+      matchState.match  = data.match;
+      matchState.events = [];
+      renderPanel(); startClock(); break;
+    case 'paused':
+      matchState.match.status  = 'paused';
+      matchState.events = data.events;
+      matchState.match.goals_for     = data.score_for;
+      matchState.match.goals_against = data.score_against;
+      renderPanel(); stopClock(); break;
+    case 'resumed':
+      matchState.match.status = 'live';
+      renderPanel(); startClock(); break;
+    case 'ended':
+      matchState.match.status        = 'finished';
+      matchState.match.result        = data.result;
+      matchState.events              = data.events;
+      matchState.match.goals_for     = data.score_for;
+      matchState.match.goals_against = data.score_against;
+      renderPanel(); stopClock(); break;
+    case 'event':
+      matchState.events.push(data.event);
+      matchState.match.goals_for     = data.score_for;
+      matchState.match.goals_against = data.score_against;
+      renderScore(); renderTimeline(); break;
+    case 'event_deleted':
+      matchState.events = data.events;
+      matchState.match.goals_for     = data.score_for;
+      matchState.match.goals_against = data.score_against;
+      renderScore(); renderTimeline(); break;
+    case 'status':
+      matchState.match.status = data.status;
+      if (data.started_at) matchState.match.started_at = data.started_at;
+      renderPanel(); break;
+  }
+}
+
+/* ── Live clock ─────────────────────────────────────────────────── */
+function startClock() {
+  stopClock();
+  clockInterval = setInterval(updateClock, 1000);
+  updateClock();
+}
+function stopClock() {
+  if (clockInterval) { clearInterval(clockInterval); clockInterval = null; }
+}
+function updateClock() {
+  const el = document.getElementById('liveClock');
+  if (!el || !matchState) return;
+  const m = matchState.match;
+  if (m.status === 'paused') { el.textContent = "45'"; el.className = 'live-clock paused'; return; }
+  if (m.status === 'finished') { el.textContent = "FT"; el.className = 'live-clock finished'; return; }
+  if (!m.started_at) { el.textContent = "0'"; return; }
+  const mins = Math.floor((Date.now() - new Date(m.started_at).getTime()) / 60000);
+  el.textContent = Math.max(0, mins) + "'";
+  el.className = 'live-clock';
+}
+
+/* ── Rendering ──────────────────────────────────────────────────── */
+function renderPanel() {
+  if (!matchState) return clearLivePanel();
+  const { match } = matchState;
+  const status = match.status || 'scheduled';
+
+  const isLiveOrPaused = status === 'live' || status === 'paused';
+  const canManage = ['super_admin','admin','coach'].includes(user.role);
+
+  let badge = '';
+  if      (status === 'live')      badge = '<span class="live-badge"><span class="dot"></span>LIVE</span>';
+  else if (status === 'paused')    badge = '<span class="live-badge paused"><span class="dot"></span>POLUVRIJEME</span>';
+  else if (status === 'finished')  badge = '<span class="live-badge finished"><span class="dot"></span>ZAVRŠENO</span>';
+  else                             badge = '<span class="live-badge scheduled"><span class="dot"></span>ZAKAZANO</span>';
+
+  const matchDate = new Date(match.match_date).toLocaleDateString('bs-BA', { day:'2-digit', month:'2-digit', year:'numeric' });
+  const matchType = { league:'Liga', cup:'Kup', friendly:'Prijateljska' }[match.match_type] || match.match_type;
+  const ha        = { home:'Domaćin', away:'Gost', neutral:'Neutral' }[match.home_away] || '';
+  const selName   = match.selection_name || '';
+
+  // My club name or default
+  const club = getClub();
+  const myTeam = club ? club.name : 'Naš tim';
+
+  const panel = document.getElementById('livePanel');
+  panel.innerHTML = `
+    <!-- Header -->
+    <div class="live-header">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-2">
+        <div class="d-flex align-items-center gap-2">
+          ${badge}
+          <span class="text-muted small" id="liveClock" style="font-variant-numeric:tabular-nums;">--</span>
+          <span class="badge bg-secondary">${matchType}</span>
+          <span class="badge bg-secondary">${ha}</span>
+          ${selName ? `<span class="badge bg-primary">${selName}</span>` : ''}
+        </div>
+        <span style="color:rgba(255,255,255,0.4);font-size:0.8rem;">${matchDate}</span>
+      </div>
+
+      <div class="score-display">
+        <div class="score-team">${myTeam}</div>
+        <div class="score-num" id="scoreFor">${match.goals_for}</div>
+        <div class="score-sep">:</div>
+        <div class="score-num" id="scoreAgainst">${match.goals_against}</div>
+        <div class="score-team right">${match.opponent}</div>
+      </div>
+
+      ${canManage ? renderControls(status) : ''}
+    </div>
+
+    <!-- Two-column layout -->
+    <div class="row g-3">
+      <!-- Timeline -->
+      <div class="col-12 col-lg-5">
+        <div class="card h-100">
+          <div class="card-header d-flex justify-content-between align-items-center py-2">
+            <span class="fw-semibold small"><i class="bi bi-list-ol me-1 text-primary"></i>Tok utakmice</span>
+          </div>
+          <div class="card-body p-3" id="timeline" style="max-height:480px;overflow-y:auto;">
+            <div class="tl-empty">Nema događaja</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Event form (only when live/paused) -->
+      ${canManage && isLiveOrPaused ? `
+      <div class="col-12 col-lg-7">
+        <div class="card">
+          <div class="card-header py-2">
+            <span class="fw-semibold small"><i class="bi bi-plus-circle me-1 text-success"></i>Dodaj događaj</span>
+          </div>
+          <div class="card-body">
+            <!-- Event type selector -->
+            <div class="event-type-grid" id="evTypeGrid">
+              ${Object.entries(EVENT_META).filter(([k])=>!['half_time','full_time'].includes(k)).map(([k,v])=>`
+                <div class="ev-type-btn${k===selectedType?' selected':''}" onclick="selectEventType('${k}')">
+                  <span class="ev-emoji">${v.emoji}</span>${v.label}
+                </div>`).join('')}
+            </div>
+
+            <!-- Opponent toggle -->
+            <label class="opp-toggle${isOpponent?' active':''}" id="oppToggleWrap" onclick="toggleOpponent()">
+              <input type="checkbox" id="oppToggle" ${isOpponent?'checked':''}>
+              <span style="font-size:0.85rem;font-weight:600;">Događaj protivnika</span>
+              <span style="font-size:0.75rem;color:var(--neutral-500);margin-left:auto;">npr. gol protivnika</span>
+            </label>
+
+            <div class="row g-2 mb-3">
+              <!-- Primary player -->
+              <div class="col-sm-6" id="player1Wrap">
+                <label class="form-label form-label-sm fw-semibold">Igrač</label>
+                <select class="form-select form-select-sm" id="evPlayer1">
+                  <option value="">-- Odaberi --</option>
+                  ${matchState.players.map(p=>`<option value="${p.member_id}">${p.jersey_number?p.jersey_number+'. ':''}${p.name}${p.position?' ('+p.position+')':''}</option>`).join('')}
+                </select>
+              </div>
+              <!-- Second player (substitution in / assist) -->
+              <div class="col-sm-6 d-none" id="player2Wrap">
+                <label class="form-label form-label-sm fw-semibold" id="player2Label">Umjesto</label>
+                <select class="form-select form-select-sm" id="evPlayer2">
+                  <option value="">-- Odaberi --</option>
+                  ${matchState.players.map(p=>`<option value="${p.member_id}">${p.jersey_number?p.jersey_number+'. ':''}${p.name}</option>`).join('')}
+                </select>
+              </div>
+              <!-- Minute -->
+              <div class="col-sm-3">
+                <label class="form-label form-label-sm fw-semibold">Minuta</label>
+                <input type="number" class="form-control form-control-sm" id="evMinute" min="0" max="120" value="${currentLiveMinute()}" placeholder="0">
+              </div>
+              <div class="col-sm-3">
+                <label class="form-label form-label-sm fw-semibold">+</label>
+                <input type="number" class="form-control form-control-sm" id="evExtraMin" min="0" max="15" value="0" placeholder="0">
+              </div>
+              <!-- Notes -->
+              <div class="col-12">
+                <input type="text" class="form-control form-control-sm" id="evNotes" placeholder="Bilješka (opciono)" maxlength="200">
+              </div>
+            </div>
+
+            <button class="btn btn-success w-100" onclick="submitEvent()">
+              <i class="bi bi-plus-lg me-1"></i>Dodaj događaj
+            </button>
+          </div>
+        </div>
+      </div>` : ''}
+    </div>
+  `;
+
+  renderTimeline();
+
+  if (status === 'live')     { startClock(); }
+  else if (status === 'paused') { updateClock(); stopClock(); }
+  else                          { stopClock(); updateClock(); }
+
+  updateEventFormVisibility();
+}
+
+function renderControls(status) {
+  if (status === 'scheduled') {
+    return `<div class="mt-3 d-flex gap-2 flex-wrap">
+      <button class="btn btn-danger btn-sm" onclick="doStart()">
+        <i class="bi bi-broadcast me-1"></i>Pokreni utakmicu
+      </button>
+    </div>`;
+  }
+  if (status === 'live') {
+    return `<div class="mt-3 d-flex gap-2 flex-wrap">
+      <button class="btn btn-warning btn-sm text-dark" onclick="doPause()">
+        <i class="bi bi-pause-fill me-1"></i>Poluvrijeme
+      </button>
+      <button class="btn btn-outline-danger btn-sm" onclick="doEnd()">
+        <i class="bi bi-stop-fill me-1"></i>Kraj utakmice
+      </button>
+    </div>`;
+  }
+  if (status === 'paused') {
+    return `<div class="mt-3 d-flex gap-2 flex-wrap">
+      <button class="btn btn-success btn-sm" onclick="doResume()">
+        <i class="bi bi-play-fill me-1"></i>Nastavi (2. poluvrijeme)
+      </button>
+      <button class="btn btn-outline-danger btn-sm" onclick="doEnd()">
+        <i class="bi bi-stop-fill me-1"></i>Kraj utakmice
+      </button>
+    </div>`;
+  }
+  return '';
+}
+
+function renderScore() {
+  if (!matchState) return;
+  const sfEl = document.getElementById('scoreFor');
+  const saEl = document.getElementById('scoreAgainst');
+  if (sfEl) sfEl.textContent = matchState.match.goals_for;
+  if (saEl) saEl.textContent = matchState.match.goals_against;
+}
+
+function renderTimeline() {
+  const el = document.getElementById('timeline');
+  if (!el || !matchState) return;
+  const events = matchState.events || [];
+  if (!events.length) { el.innerHTML = '<div class="tl-empty">Nema događaja još</div>'; return; }
+
+  const canManage = ['super_admin','admin','coach'].includes(user.role);
+  const isActive  = ['live','paused'].includes(matchState.match.status);
+
+  el.innerHTML = events.map(e => {
+    const meta    = EVENT_META[e.event_type] || { icon:'•', cls:'ev-marker', label: e.event_type };
+    const isOpp   = !!e.is_opponent;
+    const minTxt  = e.extra_minute > 0 ? `${e.minute}+${e.extra_minute}'` : `${e.minute}'`;
+    const undoBtn = (canManage && isActive && !['half_time','full_time'].includes(e.event_type))
+      ? `<button class="undo-btn" onclick="undoEvent(${e.id})" title="Poništi"><i class="bi bi-arrow-counterclockwise"></i></button>`
+      : '';
+
+    // Dividers
+    if (e.event_type === 'half_time') {
+      return `<div class="tl-divider">— Poluvrijeme — ${e.score_for}:${e.score_against} —</div>`;
+    }
+    if (e.event_type === 'full_time') {
+      return `<div class="tl-divider">— Kraj — ${e.score_for}:${e.score_against} —</div>`;
+    }
+
+    let subLine = '';
+    if (e.event_type === 'substitution') {
+      subLine = `<div class="tl-sub-name">↑ ${e.member_name_2_cache || '?'}</div>`;
+    }
+
+    return `<div class="tl-event${isOpp?' opponent':''}">
+      <div class="tl-minute">${minTxt}</div>
+      <div class="tl-icon ${meta.cls}">${meta.icon}</div>
+      <div class="tl-text">
+        <div class="tl-name">${isOpp && e.event_type==='goal' ? matchState.match.opponent : (e.member_name_cache||'–')}</div>
+        ${subLine}
+        <div class="tl-score">${e.score_for}:${e.score_against}</div>
+      </div>
+      ${undoBtn}
+    </div>`;
+  }).join('');
+
+  // Scroll to bottom
+  el.scrollTop = el.scrollHeight;
+}
+
+function clearLivePanel() {
+  document.getElementById('livePanel').innerHTML = `
+    <div class="no-match-state">
+      <div class="nms-icon"><i class="bi bi-broadcast"></i></div>
+      <h5>Nema aktivne utakmice</h5>
+      <p class="small">Odaberite utakmicu iz liste.</p>
+    </div>`;
+  stopClock();
+}
+
+/* ── Event form helpers ─────────────────────────────────────────── */
+function selectEventType(type) {
+  selectedType = type;
+  document.querySelectorAll('.ev-type-btn').forEach(b => b.classList.remove('selected'));
+  const btns = document.querySelectorAll('.ev-type-btn');
+  const keys  = Object.keys(EVENT_META).filter(k => !['half_time','full_time'].includes(k));
+  const idx   = keys.indexOf(type);
+  if (btns[idx]) btns[idx].classList.add('selected');
+  updateEventFormVisibility();
+}
+
+function toggleOpponent() {
+  isOpponent = !isOpponent;
+  const wrap = document.getElementById('oppToggleWrap');
+  const cb   = document.getElementById('oppToggle');
+  if (wrap) wrap.classList.toggle('active', isOpponent);
+  if (cb)   cb.checked = isOpponent;
+  updateEventFormVisibility();
+}
+
+function updateEventFormVisibility() {
+  const p1w = document.getElementById('player1Wrap');
+  const p2w = document.getElementById('player2Wrap');
+  const p2l = document.getElementById('player2Label');
+  if (!p1w) return;
+
+  const hidePlayer = isOpponent && ['goal','penalty','own_goal','yellow_card','red_card'].includes(selectedType);
+
+  p1w.classList.toggle('d-none', hidePlayer && selectedType !== 'own_goal');
+
+  if (selectedType === 'substitution') {
+    p2w.classList.remove('d-none');
+    if (p2l) p2l.textContent = 'Ulazi';
+  } else {
+    p2w.classList.add('d-none');
+  }
+}
+
+function currentLiveMinute() {
+  if (!matchState || !matchState.match.started_at) return 0;
+  const status = matchState.match.status;
+  if (status === 'paused')   return 45;
+  if (status === 'finished') return 90;
+  return Math.min(120, Math.max(0, Math.floor((Date.now() - new Date(matchState.match.started_at).getTime()) / 60000)));
+}
+
+/* ── Actions ────────────────────────────────────────────────────── */
+async function doStart() {
+  if (!currentMatchId) return;
+  try {
+    await api('/live-match/' + currentMatchId + '/start', { method:'POST', body:{} });
+    showToast('Utakmica pokrenuta!', 'success');
+    matchState.match.status = 'live';
+    matchState.match.started_at = new Date().toISOString();
+    matchState.match.goals_for = 0;
+    matchState.match.goals_against = 0;
+    matchState.events = [];
+    renderPanel();
+    openSse();
+    loadMatchList();
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function doPause() {
+  if (!currentMatchId) return;
+  if (!confirm('Potvrdite poluvrijeme?')) return;
+  try {
+    await api('/live-match/' + currentMatchId + '/pause', { method:'POST', body:{} });
+    showToast('Poluvrijeme', 'info');
+    loadMatchList();
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function doResume() {
+  if (!currentMatchId) return;
+  try {
+    await api('/live-match/' + currentMatchId + '/resume', { method:'POST', body:{} });
+    showToast('Nastavak utakmice', 'success');
+    loadMatchList();
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function doEnd() {
+  if (!currentMatchId) return;
+  if (!confirm('Završiti utakmicu?')) return;
+  const minute = parseInt(document.getElementById('evMinute')?.value) || 90;
+  try {
+    const r = await api('/live-match/' + currentMatchId + '/end', { method:'POST', body:{ minute } });
+    const data = await r.json();
+    showToast('Utakmica završena · ' + ({ win:'Pobjeda', loss:'Poraz', draw:'Remi' }[data.result]||''), 'success');
+    loadMatchList();
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function submitEvent() {
+  if (!currentMatchId) return;
+  const minute     = parseInt(document.getElementById('evMinute')?.value)    || 0;
+  const extraMin   = parseInt(document.getElementById('evExtraMin')?.value)  || 0;
+  const member_id  = document.getElementById('evPlayer1')?.value || null;
+  const member_id_2= document.getElementById('evPlayer2')?.value || null;
+  const notes      = document.getElementById('evNotes')?.value   || null;
+
+  if (!selectedType) return showToast('Odaberite tip događaja', 'error');
+
+  try {
+    await apiPost('/live-match/' + currentMatchId + '/events', {
+      event_type: selectedType, minute, extra_minute: extraMin,
+      member_id: member_id || null, member_id_2: member_id_2 || null,
+      is_opponent: isOpponent, notes
+    });
+    // Reset form
+    document.getElementById('evNotes').value = '';
+    document.getElementById('evMinute').value = currentLiveMinute();
+    document.getElementById('evExtraMin').value = '0';
+    document.getElementById('evPlayer1').value = '';
+    document.getElementById('evPlayer2').value = '';
+  } catch(e) { showToast(e.message || 'Greška', 'error'); }
+}
+
+async function undoEvent(eventId) {
+  if (!currentMatchId) return;
+  if (!confirm('Poništiti ovaj događaj?')) return;
+  try {
+    await apiDelete('/live-match/' + currentMatchId + '/events/' + eventId);
+    showToast('Događaj poništen', 'success');
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+/* ── Init ────────────────────────────────────────────────────────── */
+loadMatchList();
+
+// Auto-load from URL param
+const urlId = new URLSearchParams(location.search).get('id');
+if (urlId) {
+  document.getElementById('matchSelector').value = urlId;
+  currentMatchId = parseInt(urlId);
+  loadMatchState();
+}
+</script>
+</body>
+</html>

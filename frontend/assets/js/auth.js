@@ -89,6 +89,7 @@ const NAV = {
     { href:'/pages/finances/index.html',      icon:'wallet2',        label:'Finansije',        plan:'pro' },
     { href:'/pages/training/schedule.html',   icon:'calendar3',      label:'Treninzi' },
     { href:'/pages/matches/list.html',        icon:'trophy',         label:'Utakmice' },
+    { href:'/pages/matches/live.html',        icon:'broadcast',      label:'Live utakmica', highlight: true },
     { href:'/pages/calendar/index.html',      icon:'calendar2-week', label:'Kalendar' },
     { section:'Analitika' },
     { href:'/pages/statistics/index.html',    icon:'graph-up',       label:'Statistike',       plan:'pro' },
@@ -118,6 +119,7 @@ const NAV = {
     { href:'/pages/calendar/index.html',       icon:'calendar2-week',    label:'Kalendar' },
     { href:'/pages/training/schedule.html',    icon:'calendar3',         label:'Treninzi' },
     { href:'/pages/matches/list.html',         icon:'trophy',            label:'Utakmice' },
+    { href:'/pages/matches/live.html',         icon:'broadcast',         label:'Live utakmica', highlight: true },
     { href:'/pages/members/list.html',         icon:'people',            label:'Igrači' },
     { href:'/pages/lineup/index.html',         icon:'grid-3x3-gap',      label:'Postava' },
     { href:'/pages/statistics/index.html',     icon:'graph-up',          label:'Statistike' },
@@ -220,7 +222,9 @@ function buildSidebar() {
       if (!inUl && !inCollapsible) { navHtml += '<ul class="nav flex-column">'; inUl = true; }
       const active = isActive(item.href) ? ' active' : '';
       if (planAllowed(item.plan)) {
-        navHtml += `<li class="nav-item"><a class="nav-link${active}" href="${item.href}"><i class="bi bi-${item.icon}"></i> ${item.label}</a></li>`;
+        const hlStyle = item.highlight ? ' style="color:#f87171!important;font-weight:700;"' : '';
+        const liveDot = item.highlight ? ' <span style="display:inline-block;width:6px;height:6px;background:#ef4444;border-radius:50%;margin-left:4px;vertical-align:middle;animation:livePulse 1.4s ease-in-out infinite;"></span>' : '';
+        navHtml += `<li class="nav-item"><a class="nav-link${active}"${hlStyle} href="${item.href}"><i class="bi bi-${item.icon}"></i> ${item.label}${liveDot}</a></li>`;
       } else {
         const badge = PLAN_LABEL[item.plan] || item.plan;
         navHtml += `<li class="nav-item">

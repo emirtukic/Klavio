@@ -780,6 +780,19 @@ tbody tr { animation: rowFadeIn 0.2s ease both; }
 /* ══════════════════════════════════════════
    SKELETON LOADERS
 ══════════════════════════════════════════ */
+@keyframes livePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.4; transform: scale(1.5); }
+}
+
+/* Live match widget bar */
+#liveMatchBar {
+  --sidebar-w: var(--sidebar-width, 255px);
+}
+@media (max-width: 768px) {
+  #liveMatchBar { left: 0 !important; }
+}
+
 @keyframes shimmer {
   0%   { background-position: 200% 0; }
   100% { background-position: -200% 0; }

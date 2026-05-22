@@ -177,3 +177,205 @@ function confirmAction(message, onConfirm, { title = 'Potvrda', btnLabel = 'Potv
 function confirmDelete(onConfirm, message = 'Jeste li sigurni? Ova radnja je nepovratna.') {
   confirmAction(message, onConfirm, { title: 'Obriši', btnLabel: 'Obriši', btnClass: 'btn-danger' });
 }
+
+/* ══ Live Match Widget ═══════════════════════════════════════════════
+   Call initLiveWidget() from any dashboard page.
+   Polls /api/live-match/active every 12s; on find, opens SSE stream.
+════════════════════════════════════════════════════════════════════ */
+(function () {
+  const POLL_MS   = 12000;
+  const EVT_ICONS = {
+    goal:'⚽', own_goal:'🔴', yellow_card:'🟨', red_card:'🟥',
+    substitution:'🔄', penalty:'🎯', missed_penalty:'❌',
+    half_time:'⏸', full_time:'🏁', var:'📺'
+  };
+  let _widget = null, _matchId = null, _sseReader = null, _pollTimer = null, _clockTimer = null;
+
+  function _ensureWidget() {
+    if (_widget) return;
+    const html = `
+      <div id="liveMatchBar" style="
+        position:fixed;top:56px;left:var(--sidebar-w,240px);right:0;z-index:600;
+        background:#0f172a;border-bottom:2px solid rgba(239,68,68,0.4);
+        padding:0;max-height:0;overflow:hidden;
+        transition:max-height 0.35s cubic-bezier(0.4,0,0.2,1);pointer-events:none;">
+        <div style="padding:8px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+          <!-- Badge + clock -->
+          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+            <span style="display:flex;align-items:center;gap:5px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#f87171;font-size:0.68rem;font-weight:800;letter-spacing:0.1em;padding:2px 9px;border-radius:20px;text-transform:uppercase;">
+              <span id="_lwDot" style="width:6px;height:6px;background:#ef4444;border-radius:50%;display:inline-block;animation:livePulse 1.4s ease-in-out infinite;"></span>
+              LIVE
+            </span>
+            <span id="_lwClock" style="color:#f87171;font-size:0.85rem;font-weight:700;font-variant-numeric:tabular-nums;min-width:30px;"></span>
+          </div>
+          <!-- Score -->
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+            <span id="_lwTeam1" style="color:rgba(255,255,255,0.85);font-size:0.85rem;font-weight:600;"></span>
+            <span id="_lwScore" style="color:#fff;font-size:1.15rem;font-weight:900;letter-spacing:-0.02em;background:rgba(255,255,255,0.08);padding:1px 10px;border-radius:8px;"></span>
+            <span id="_lwTeam2" style="color:rgba(255,255,255,0.55);font-size:0.85rem;font-weight:600;"></span>
+          </div>
+          <!-- Last event -->
+          <div id="_lwLastEvt" style="color:rgba(255,255,255,0.6);font-size:0.8rem;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+          <!-- Link -->
+          <a id="_lwLink" href="/pages/matches/live.html" style="color:#60a5fa;font-size:0.78rem;font-weight:600;text-decoration:none;flex-shrink:0;white-space:nowrap;">
+            Upravljaj <i class="bi bi-arrow-right"></i>
+          </a>
+          <button onclick="_lwDismiss()" style="background:none;border:none;color:rgba(255,255,255,0.3);cursor:pointer;padding:2px 6px;font-size:0.9rem;flex-shrink:0;" title="Zatvori">✕</button>
+        </div>
+      </div>`;
+    document.body.insertAdjacentHTML('afterbegin', html);
+    _widget = document.getElementById('liveMatchBar');
+  }
+
+  function _show(match) {
+    _ensureWidget();
+    const club = typeof getClub === 'function' ? getClub() : null;
+    const myTeam = club ? club.name : 'Naš tim';
+    document.getElementById('_lwTeam1').textContent = myTeam;
+    document.getElementById('_lwTeam2').textContent = match.opponent;
+    document.getElementById('_lwScore').textContent = match.goals_for + ':' + match.goals_against;
+    const link = document.getElementById('_lwLink');
+    if (link) link.href = '/pages/matches/live.html?id=' + match.id;
+    _widget.style.maxHeight = '60px';
+    _widget.style.pointerEvents = 'auto';
+    _updateClock(match);
+    _updateLastEvent(match);
+    _startClock(match);
+  }
+
+  function _hide() {
+    if (_widget) { _widget.style.maxHeight = '0'; _widget.style.pointerEvents = 'none'; }
+    _stopClock();
+  }
+
+  window._lwDismiss = function() { _hide(); _stopPoll(); closeSseWidget(); _matchId = null; };
+
+  function _updateScore(gf, ga) {
+    const el = document.getElementById('_lwScore');
+    if (el) el.textContent = gf + ':' + ga;
+  }
+
+  function _updateLastEvent(match) {
+    const el = document.getElementById('_lwLastEvt');
+    if (!el) return;
+    const type = match.last_event_type;
+    if (!type || ['half_time','full_time'].includes(type)) { el.textContent = ''; return; }
+    const icon   = EVT_ICONS[type] || '•';
+    const name   = match.last_event_player || '';
+    const minute = match.last_event_minute != null ? match.last_event_minute + "'" : '';
+    const opp    = match.last_event_opponent ? '(protivnik) ' : '';
+    el.textContent = icon + ' ' + minute + ' ' + opp + name;
+  }
+
+  function _updateLastEventFromEvt(event) {
+    const el = document.getElementById('_lwLastEvt');
+    if (!el || !event) return;
+    if (['half_time','full_time'].includes(event.event_type)) { el.textContent = ''; return; }
+    const icon   = EVT_ICONS[event.event_type] || '•';
+    const name   = event.member_name_cache || '';
+    const minute = event.minute != null ? event.minute + "'" : '';
+    const opp    = event.is_opponent ? '(protivnik) ' : '';
+    el.textContent = icon + ' ' + minute + ' ' + opp + name;
+  }
+
+  function _startClock(match) {
+    _stopClock();
+    _clockTimer = setInterval(() => _updateClock(match), 1000);
+    _updateClock(match);
+  }
+  function _stopClock() { if (_clockTimer) { clearInterval(_clockTimer); _clockTimer = null; } }
+
+  function _updateClock(match) {
+    const el = document.getElementById('_lwClock');
+    if (!el) return;
+    const status = match.status;
+    if (status === 'paused')   { el.textContent = "HT"; return; }
+    if (status === 'finished') { el.textContent = "FT"; return; }
+    if (!match.started_at)     { el.textContent = "0'"; return; }
+    const mins = Math.max(0, Math.floor((Date.now() - new Date(match.started_at).getTime()) / 60000));
+    el.textContent = mins + "'";
+  }
+
+  // SSE for widget
+  function openSseWidget(matchId) {
+    closeSseWidget();
+    const token = typeof getToken === 'function' ? getToken() : null;
+    if (!token) return;
+    fetch('/api/live-match/' + matchId + '/stream', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    }).then(r => {
+      if (!r.ok) return;
+      _sseReader = r.body.getReader();
+      const dec = new TextDecoder();
+      let buf = '';
+      let activeMatch = null;
+      function read() {
+        _sseReader.read().then(({ done, value }) => {
+          if (done) return;
+          buf += dec.decode(value, { stream: true });
+          const lines = buf.split('\n'); buf = lines.pop();
+          lines.forEach(line => {
+            if (!line.startsWith('data: ')) return;
+            try {
+              const d = JSON.parse(line.slice(6));
+              if (d.type === 'init' || d.type === 'started') {
+                activeMatch = d.match;
+                _show(activeMatch);
+              } else if (d.type === 'event' && activeMatch) {
+                activeMatch.goals_for     = d.score_for;
+                activeMatch.goals_against = d.score_against;
+                _updateScore(d.score_for, d.score_against);
+                _updateLastEventFromEvt(d.event);
+              } else if (d.type === 'event_deleted' && activeMatch) {
+                activeMatch.goals_for     = d.score_for;
+                activeMatch.goals_against = d.score_against;
+                _updateScore(d.score_for, d.score_against);
+              } else if (d.type === 'paused' && activeMatch) {
+                activeMatch.status = 'paused';
+                document.getElementById('_lwClock').textContent = "HT";
+              } else if (d.type === 'resumed' && activeMatch) {
+                activeMatch.status = 'live';
+              } else if (d.type === 'ended') {
+                closeSseWidget();
+                _stopPoll();
+                setTimeout(_hide, 6000);
+                const cl = document.getElementById('_lwClock');
+                if (cl) cl.textContent = 'FT';
+              }
+            } catch (_) {}
+          });
+          read();
+        }).catch(() => {});
+      }
+      read();
+    }).catch(() => {});
+  }
+
+  function closeSseWidget() {
+    if (_sseReader) { try { _sseReader.cancel(); } catch (_) {} _sseReader = null; }
+  }
+
+  function _stopPoll() { if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; } }
+
+  async function _poll() {
+    try {
+      const rows = await apiGet('/live-match/active');
+      if (!rows || !rows.length) {
+        if (_matchId) { _hide(); closeSseWidget(); _matchId = null; }
+        return;
+      }
+      const m = rows[0];
+      if (m.id !== _matchId) {
+        _matchId = m.id;
+        _show(m);
+        openSseWidget(m.id);
+      }
+    } catch (_) {}
+  }
+
+  window.initLiveWidget = function () {
+    _ensureWidget();
+    _poll();
+    _pollTimer = setInterval(_poll, POLL_MS);
+  };
+})();

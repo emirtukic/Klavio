@@ -374,6 +374,7 @@ function renderTable() {
         <a href="detail.html?id=${m.id}" class="btn btn-sm btn-outline-secondary me-1" title="Detalji">
           <i class="bi bi-eye"></i>
         </a>
+        ${liveBtn(m)}
         ${canEdit ? `
           <button class="btn btn-sm btn-primary me-1" onclick="openResultModal(${m.id})" title="Unesi rezultat">
             <i class="bi bi-pencil-square"></i>
@@ -554,6 +555,18 @@ async function setRsvp(matchId, status, btnEl) {
 }
 
 function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function liveBtn(m) {
+  if (!canEdit) return '';
+  const st = m.status || 'scheduled';
+  if (st === 'live' || st === 'paused') {
+    return `<a href="live.html?id=${m.id}" class="btn btn-sm btn-danger me-1" title="Live utakmica" style="animation:livePulse 1.4s ease-in-out infinite;"><i class="bi bi-broadcast-pin"></i></a>`;
+  }
+  if ((st === 'scheduled' || !m.status) && (!m.result || m.result === 'pending')) {
+    return `<a href="live.html?id=${m.id}" class="btn btn-sm btn-outline-success me-1" title="Pokreni live praćenje"><i class="bi bi-broadcast"></i></a>`;
+  }
+  return '';
+}
 
 load();
 </script>
