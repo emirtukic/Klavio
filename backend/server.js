@@ -78,6 +78,8 @@ cron.schedule('0 0 * * *', async () => {
   }
 });
 
+console.log('[boot] liveMatch controller version: 2 (uses users.name)');
+
 async function runMigrations() {
   try {
     await db.query(`
