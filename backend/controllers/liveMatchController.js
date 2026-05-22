@@ -220,13 +220,13 @@ async function addEvent(req, res) {
     let name1 = null, name2 = null;
     if (member_id) {
       const [[mem]] = await db.query(
-        `SELECT CONCAT(first_name,' ',last_name) AS n FROM members WHERE id=? AND club_id=?`,
+        `SELECT u.name AS n FROM members m JOIN users u ON u.id = m.user_id WHERE m.id=? AND m.club_id=?`,
         [member_id, club_id]);
       name1 = mem ? mem.n : null;
     }
     if (member_id_2) {
       const [[mem]] = await db.query(
-        `SELECT CONCAT(first_name,' ',last_name) AS n FROM members WHERE id=? AND club_id=?`,
+        `SELECT u.name AS n FROM members m JOIN users u ON u.id = m.user_id WHERE m.id=? AND m.club_id=?`,
         [member_id_2, club_id]);
       name2 = mem ? mem.n : null;
     }
@@ -286,20 +286,22 @@ async function deleteEvent(req, res) {
 async function loadPlayers(matchId, selectionId, clubId) {
   if (!selectionId) return [];
   const [lineup] = await db.query(`
-    SELECT ml.member_id, CONCAT(m.first_name,' ',m.last_name) AS name,
+    SELECT ml.member_id, u.name,
            ml.position, ml.is_starter, ml.jersey_number
-    FROM match_lineup ml JOIN members m ON m.id = ml.member_id
+    FROM match_lineup ml
+    JOIN members m ON m.id = ml.member_id
+    JOIN users u ON u.id = m.user_id
     WHERE ml.match_id = ?
-    ORDER BY ml.is_starter DESC, m.first_name`, [matchId]);
+    ORDER BY ml.is_starter DESC, u.name`, [matchId]);
 
   if (lineup.length) return lineup;
 
   const [all] = await db.query(`
-    SELECT id AS member_id, CONCAT(first_name,' ',last_name) AS name,
+    SELECT m.id AS member_id, u.name,
            NULL AS position, 1 AS is_starter, NULL AS jersey_number
-    FROM members
-    WHERE selection_id=? AND club_id=? AND status='active'
-    ORDER BY first_name`, [selectionId, clubId]);
+    FROM members m JOIN users u ON u.id = m.user_id
+    WHERE m.selection_id=? AND m.club_id=? AND m.status='active'
+    ORDER BY u.name`, [selectionId, clubId]);
   return all;
 }
 
