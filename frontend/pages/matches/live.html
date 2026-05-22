@@ -707,8 +707,7 @@ async function doEnd() {
   const minute = parseInt(document.getElementById('evMinute')?.value) || 90;
   try {
     const r = await api('/live-match/' + currentMatchId + '/end', { method:'POST', body:{ minute } });
-    const data = await r.json();
-    showToast('Utakmica završena · ' + ({ win:'Pobjeda', loss:'Poraz', draw:'Remi' }[data.result]||''), 'success');
+    showToast('Utakmica završena · ' + ({ win:'Pobjeda', loss:'Poraz', draw:'Remi' }[r.result]||''), 'success');
     loadMatchList();
   } catch(e) { showToast(e.message, 'error'); }
 }

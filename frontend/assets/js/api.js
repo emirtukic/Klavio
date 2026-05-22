@@ -4,13 +4,15 @@ async function api(path, options = {}) {
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      'Accept': 'application/json',
       ...(token ? { Authorization: 'Bearer ' + token } : {}),
       ...options.headers
     },
     body: options.body ? JSON.stringify(options.body) : undefined
   });
   if (res.status === 401) { logout(); return; }
-  const data = await res.json();
+  let data;
+  try { data = await res.json(); } catch { throw new Error('Server error (' + res.status + ')'); }
   if (res.status === 403 && data.code) { showAccessBlock(data); return; }
   if (!res.ok) throw new Error(data.message || 'Request failed');
   return data;
