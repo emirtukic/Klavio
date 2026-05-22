@@ -803,6 +803,7 @@ async function confirmEnd() {
   try {
     const r = await api('/live-match/' + currentMatchId + '/end', { method:'POST', body:{ minute } });
     showToast('Utakmica završena · ' + ({ win:'Pobjeda', loss:'Poraz', draw:'Remi' }[r.result]||''), 'success');
+    if (r.statsErr) showToast('Statistike nisu ažurirane: ' + r.statsErr, 'warning');
     loadMatchList();
   } catch(e) { showToast(e.message, 'error'); }
 }

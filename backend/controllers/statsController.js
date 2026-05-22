@@ -37,7 +37,8 @@ exports.getClubStats = async (req, res) => {
     if (selId) scorerParams.push(selId);
     const [topScorers] = await db.query(`
       SELECT u.name, m.id as member_id, SUM(ps.goals) as goals, SUM(ps.assists) as assists,
-             SUM(ps.yellow_cards) as yellow_cards, SUM(ps.red_cards) as red_cards, COUNT(*) as matches,
+             SUM(ps.yellow_cards) as yellow_cards, SUM(ps.red_cards) as red_cards,
+             SUM(ps.minutes_played) as minutes_played, COUNT(*) as matches,
              s.name AS selection_name
       FROM player_stats ps
       JOIN members m ON ps.member_id = m.id

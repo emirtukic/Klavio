@@ -198,9 +198,15 @@ async function endMatch(req, res) {
     });
 
     // Auto-generate player_stats from match_events
-    autoStats(matchId, club_id).catch(() => {});
+    let statsErr = null;
+    try {
+      await autoStats(matchId, club_id);
+    } catch (err) {
+      statsErr = err.message;
+      console.error('[autoStats] Failed for match', matchId, ':', err.message);
+    }
 
-    res.json({ ok: true, result });
+    res.json({ ok: true, result, statsErr });
   } catch (e) { res.status(500).json({ message: e.message }); }
 }
 
@@ -290,6 +296,7 @@ async function deleteEvent(req, res) {
 
 /* ─── helper: auto-generate player_stats from match_events ────────── */
 async function autoStats(matchId, clubId) {
+  console.log(`[autoStats] Running for match=${matchId} club=${clubId}`);
   const [events] = await db.query(
     `SELECT * FROM match_events WHERE match_id = ? AND is_opponent = 0`, [matchId]);
 
@@ -316,7 +323,9 @@ async function autoStats(matchId, clubId) {
     if (l.is_starter) statsMap[l.member_id].started = 1;
   }
 
-  for (const [memberId, s] of Object.entries(statsMap)) {
+  const entries = Object.entries(statsMap);
+  console.log(`[autoStats] Upserting stats for ${entries.length} player(s)`);
+  for (const [memberId, s] of entries) {
     let mins = 90;
     if (s.subbed_off_at !== null) mins = s.subbed_off_at;
     else if (s.subbed_on_at !== null) mins = Math.max(1, 90 - s.subbed_on_at);
@@ -329,6 +338,7 @@ async function autoStats(matchId, clubId) {
         red_cards=VALUES(red_cards), minutes_played=VALUES(minutes_played), started=VALUES(started)
     `, [memberId, matchId, clubId, s.goals, s.yellow_cards, s.red_cards, mins, s.started]);
   }
+  console.log(`[autoStats] Done for match=${matchId}`);
 }
 
 /* ─── helper: load player list for a match ────────────────────────── */
