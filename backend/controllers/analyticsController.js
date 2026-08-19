@@ -60,7 +60,7 @@ exports.summary = async (req, res) => {
       },
       new_members: parseInt(members.total || 0),
     });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.revenue = async (req, res) => {
@@ -78,7 +78,7 @@ exports.revenue = async (req, res) => {
       ORDER BY month
     `, [from, to]);
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.clubsGrowth = async (req, res) => {
@@ -95,7 +95,7 @@ exports.clubsGrowth = async (req, res) => {
       ORDER BY month
     `, [from, to]);
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.subscriptions = async (req, res) => {
@@ -121,7 +121,7 @@ exports.subscriptions = async (req, res) => {
     `);
 
     res.json({ byPlan, byStatus, byCycle });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.topClubs = async (req, res) => {
@@ -152,7 +152,7 @@ exports.topClubs = async (req, res) => {
       LIMIT ?
     `, [from, to, limit]);
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.membersGrowth = async (req, res) => {
@@ -168,7 +168,7 @@ exports.membersGrowth = async (req, res) => {
       ORDER BY month
     `, [from, to]);
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.formsStats = async (req, res) => {
@@ -224,7 +224,7 @@ exports.formsStats = async (req, res) => {
       by_club: byClub.map(r => ({ club_id: r.club_id, club_name: r.club_name, fills: +r.fills })),
       monthly: monthly.map(r => ({ month: r.month, fills: +r.fills })),
     });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.platformHealth = async (req, res) => {
@@ -266,5 +266,5 @@ exports.platformHealth = async (req, res) => {
         total: +invoiceTotals.total
       }
     });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };

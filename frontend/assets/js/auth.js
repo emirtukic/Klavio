@@ -99,7 +99,7 @@ const NAV = {
     { href:'/pages/notifications/index.html', icon:'bell',           label:'Obavijesti' },
     { href:'/pages/messages/index.html',      icon:'chat-dots',      label:'Poruke od Klavio' },
     { href:'/pages/announcements/list.html',  icon:'megaphone',      label:'Oglasna tabla' },
-    { section:'Klub', collapsible: true },
+    { section:'Klub' },
     { href:'/pages/coaches/list.html',        icon:'person-badge',   label:'Treneri' },
     { href:'/pages/appointments/list.html',   icon:'calendar-check', label:'Termini' },
     { href:'/pages/sponsors/list.html',       icon:'briefcase',      label:'Sponzori',         plan:'klub' },

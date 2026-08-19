@@ -15,7 +15,7 @@ exports.getLineup = async (req, res) => {
       [req.params.matchId, req.user.club_id]
     );
     res.json({ players: rows, formation: matchRow?.formation || null });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.saveLineup = async (req, res) => {
@@ -40,7 +40,7 @@ exports.saveLineup = async (req, res) => {
     res.json({ message: 'Postava sačuvana' });
   } catch (err) {
     await conn.rollback();
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   } finally { conn.release(); }
 };
 
@@ -49,5 +49,5 @@ exports.removePlayer = async (req, res) => {
     await db.query('DELETE FROM match_lineup WHERE match_id=? AND member_id=? AND club_id=?',
       [req.params.matchId, req.params.memberId, req.user.club_id]);
     res.json({ message: 'Igrač uklonjen iz postave' });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };

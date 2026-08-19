@@ -7,7 +7,7 @@ exports.getAll = async (req, res) => {
       [req.user.club_id]
     );
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.create = async (req, res) => {
@@ -19,7 +19,7 @@ exports.create = async (req, res) => {
       [req.user.club_id, req.user.id, title, content, pinned ? 1 : 0]
     );
     res.status(201).json({ id: result.insertId, title, content });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.update = async (req, res) => {
@@ -31,12 +31,12 @@ exports.update = async (req, res) => {
     );
     const [rows] = await db.query('SELECT a.*, u.name as author_name FROM announcements a JOIN users u ON a.author_id=u.id WHERE a.id=?', [req.params.id]);
     res.json(rows[0]);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.remove = async (req, res) => {
   try {
     await db.query('DELETE FROM announcements WHERE id=? AND club_id=?', [req.params.id, req.user.club_id]);
     res.json({ message: 'Obavještenje obrisano' });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };

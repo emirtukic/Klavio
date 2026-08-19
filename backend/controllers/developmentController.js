@@ -12,7 +12,7 @@ exports.getAll = async (req, res) => {
       WHERE pd.club_id = ? ORDER BY pd.updated_at DESC
     `, [req.user.club_id]);
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.getOne = async (req, res) => {
@@ -22,7 +22,7 @@ exports.getOne = async (req, res) => {
       [req.params.memberId, req.user.club_id]
     );
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.upsert = async (req, res) => {
@@ -37,12 +37,12 @@ exports.upsert = async (req, res) => {
       ON DUPLICATE KEY UPDATE goals=VALUES(goals), strengths=VALUES(strengths), improvements=VALUES(improvements), notes=VALUES(notes), rating=VALUES(rating), coach_id=VALUES(coach_id)
     `, [member_id, coach.id, req.user.club_id, season, goals||null, strengths||null, improvements||null, notes||null, rating||null]);
     res.json({ message: 'Plan ažuriran' });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.remove = async (req, res) => {
   try {
     await db.query('DELETE FROM player_development WHERE id=? AND club_id=?', [req.params.id, req.user.club_id]);
     res.json({ message: 'Plan obrisan' });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };

@@ -191,12 +191,20 @@ function confirmDelete(onConfirm, message = 'Jeste li sigurni? Ova radnja je nep
   };
   let _widget = null, _matchId = null, _sseReader = null, _pollTimer = null, _clockTimer = null;
 
+  function _barTop() {
+    // Sit right below the topbar (which is already pushed down by the
+    // fixed super-admin banner, if present, via .main-content's margin-top).
+    const topbar = document.querySelector('.topbar');
+    if (topbar) return Math.round(topbar.getBoundingClientRect().bottom) + 'px';
+    return '60px';
+  }
+
   function _ensureWidget() {
     if (_widget) return;
     const html = `
       <div id="liveMatchBar" style="
-        position:fixed;top:56px;left:var(--sidebar-w,240px);right:0;z-index:600;
-        background:#0f172a;border-bottom:2px solid rgba(239,68,68,0.4);
+        position:fixed;top:${_barTop()};left:var(--sidebar-w,240px);right:0;z-index:600;
+        background:#0f172a;border-bottom:0 solid rgba(239,68,68,0.4);
         padding:0;max-height:0;overflow:hidden;
         transition:max-height 0.35s cubic-bezier(0.4,0,0.2,1);pointer-events:none;">
         <div style="padding:8px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
@@ -225,6 +233,7 @@ function confirmDelete(onConfirm, message = 'Jeste li sigurni? Ova radnja je nep
       </div>`;
     document.body.insertAdjacentHTML('afterbegin', html);
     _widget = document.getElementById('liveMatchBar');
+    window.addEventListener('resize', () => { if (_widget) _widget.style.top = _barTop(); });
   }
 
   function _show(match) {
@@ -241,6 +250,7 @@ function confirmDelete(onConfirm, message = 'Jeste li sigurni? Ova radnja je nep
       link.innerHTML = (canManage ? 'Upravljaj' : 'Prati uživo') + ' <i class="bi bi-arrow-right"></i>';
     }
     _widget.style.maxHeight = '60px';
+    _widget.style.borderBottomWidth = '2px';
     _widget.style.pointerEvents = 'auto';
     _updateClock(match);
     _updateLastEvent(match);
@@ -248,7 +258,7 @@ function confirmDelete(onConfirm, message = 'Jeste li sigurni? Ova radnja je nep
   }
 
   function _hide() {
-    if (_widget) { _widget.style.maxHeight = '0'; _widget.style.pointerEvents = 'none'; }
+    if (_widget) { _widget.style.maxHeight = '0'; _widget.style.borderBottomWidth = '0'; _widget.style.pointerEvents = 'none'; }
     _stopClock();
   }
 

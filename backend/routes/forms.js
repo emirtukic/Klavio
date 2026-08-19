@@ -54,7 +54,7 @@ router.get('/history', auth, role('admin', 'super_admin'), async (req, res) => {
 // POST /api/forms/fill
 // Body: { template: "NSFBIH/Obrazac-spisak igrača...docx", data: { key: value, ... } }
 // Returns: filled .docx file as download
-router.post('/fill', (req, res) => {
+router.post('/fill', auth, (req, res) => {
   const { template, data } = req.body;
   if (!template) return res.status(400).json({ message: 'template required' });
 
@@ -87,7 +87,7 @@ router.post('/fill', (req, res) => {
     res.send(buf);
   } catch (err) {
     console.error('[forms/fill]', err.message);
-    res.status(500).json({ message: 'Greška pri popunjavanju obrasca', error: err.message });
+    res.status(500).json({ message: 'Greška pri popunjavanju obrasca' });
   }
 });
 

@@ -37,7 +37,7 @@ exports.exportJSON = async (req, res) => {
     res.setHeader('Content-Type', 'application/json');
     res.json(backup);
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -73,7 +73,7 @@ exports.importBackup = async (req, res) => {
           if (table !== 'member_availability' && 'club_id' in row) {
             row.club_id = clubId;
           }
-          const cols = Object.keys(row);
+          const cols = Object.keys(row).filter(c => /^[a-zA-Z0-9_]+$/.test(c));
           const vals = cols.map(c => row[c]);
           const [result] = await conn.query(
             `INSERT IGNORE INTO ${table} (${cols.map(c => `\`${c}\``).join(',')}) VALUES (${cols.map(() => '?').join(',')})`,
@@ -89,7 +89,7 @@ exports.importBackup = async (req, res) => {
     res.json({ message: 'Import završen', summary });
   } catch (err) {
     await conn.query('SET FOREIGN_KEY_CHECKS = 1').catch(() => {});
-    res.status(500).json({ message: 'Greška pri importu', error: err.message });
+    res.status(500).json({ message: 'Greška pri importu' });
   } finally {
     conn.release();
   }

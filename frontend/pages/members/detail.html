@@ -38,9 +38,9 @@
       </a>
       <h4 class="mb-0 flex-grow-1" id="pageTitle">Detalji člana</h4>
       <span id="pageStatusBadge"></span>
-      <a id="editBtn" href="#" class="btn btn-sm btn-primary">
+      <button id="editBtn" type="button" class="btn btn-sm btn-primary" onclick="openMemberEdit()">
         <i class="bi bi-pencil me-1"></i>Uredi
-      </a>
+      </button>
     </div>
 
     <!-- Profile card (full width) -->
@@ -401,6 +401,52 @@
   </div><!-- /page-body -->
 </div><!-- /main-content -->
 
+<div class="modal fade" id="memberEditModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:14px;overflow:hidden;">
+      <div class="modal-header border-0 pb-1">
+        <h5 class="modal-title fw-bold"><i class="bi bi-pencil me-2"></i>Izmjena člana</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">Ime i prezime</label>
+            <input type="text" class="form-control" id="editMemberName">
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label">E-mail</label>
+            <input type="email" class="form-control" id="editMemberEmail">
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label">Telefon</label>
+            <input type="tel" class="form-control" id="editMemberPhone">
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label">Status</label>
+            <select class="form-select" id="editMemberStatus">
+              <option value="active">Aktivan</option>
+              <option value="inactive">Neaktivan</option>
+              <option value="suspended">Suspendiran</option>
+            </select>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label">Selekcija</label>
+            <select class="form-select" id="editMemberSelection"></select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-1">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
+        <button type="button" class="btn btn-primary" id="saveMemberEditBtn" onclick="saveMemberEdit()">
+          <span id="editMemberSpinner" class="spinner-border spinner-border-sm d-none me-1"></span>
+          Sačuvaj
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="../../assets/js/auth.js"></script>
@@ -410,9 +456,49 @@
   const user = requireRole('admin', 'super_admin', 'coach');
   setUserInfo(user);
   buildSidebar();
+  const canEdit = ['super_admin', 'admin'].includes(user.role);
+  if (!canEdit) document.getElementById('editBtn').classList.add('d-none');
 
   const id = new URLSearchParams(location.search).get('id');
   if (!id) { window.location.href = 'list.html'; }
+
+  let allSelections = null;
+  async function openMemberEdit() {
+    if (!memberData) return;
+    if (!allSelections) allSelections = await apiGet('/selections').catch(() => []);
+    document.getElementById('editMemberName').value    = memberData.name  || '';
+    document.getElementById('editMemberEmail').value   = memberData.email || '';
+    document.getElementById('editMemberPhone').value   = memberData.phone || '';
+    document.getElementById('editMemberStatus').value  = memberData.status || 'active';
+    const sel = document.getElementById('editMemberSelection');
+    sel.innerHTML = '<option value="">Bez selekcije</option>';
+    allSelections.forEach(s => {
+      const o = document.createElement('option');
+      o.value = s.id; o.textContent = s.name;
+      if (s.id === memberData.selection_id) o.selected = true;
+      sel.appendChild(o);
+    });
+    new bootstrap.Modal(document.getElementById('memberEditModal')).show();
+  }
+
+  async function saveMemberEdit() {
+    const btn = document.getElementById('saveMemberEditBtn');
+    const sp  = document.getElementById('editMemberSpinner');
+    btn.disabled = true; sp.classList.remove('d-none');
+    try {
+      await apiPut('/members/' + id, {
+        name:         document.getElementById('editMemberName').value.trim(),
+        email:        document.getElementById('editMemberEmail').value.trim(),
+        phone:        document.getElementById('editMemberPhone').value.trim(),
+        status:       document.getElementById('editMemberStatus').value,
+        selection_id: document.getElementById('editMemberSelection').value || null,
+      });
+      bootstrap.Modal.getInstance(document.getElementById('memberEditModal')).hide();
+      showToast('Član ažuriran', 'success');
+      loadProfile();
+    } catch(e) { showToast(e.message, 'error'); }
+    finally { btn.disabled = false; sp.classList.add('d-none'); }
+  }
 
   /* ─────────────────────────────────────────────
      Track which tabs have already been loaded
@@ -435,7 +521,6 @@
       /* Page header */
       document.getElementById('pageTitle').textContent        = m.name;
       document.getElementById('pageStatusBadge').innerHTML    = statusBadge(m.status);
-      document.getElementById('editBtn').href                 = 'edit.html?id=' + id;
       document.getElementById('addFeeBtn').href               = '../fees/add.html?member_id=' + id;
 
       /* Profile card */

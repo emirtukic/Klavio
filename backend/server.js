@@ -52,6 +52,14 @@ app.get('*splat', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
+// Catch multer/fileFilter errors (and anything else passed to next(err))
+// so clients always get JSON instead of Express's default HTML error page.
+app.use((err, req, res, next) => {
+  if (!err) return next();
+  console.error(err);
+  res.status(400).json({ message: err.message || 'Greška pri obradi zahtjeva' });
+});
+
 // Daily 08:00 - send day-before match reminders
 const { sendDayBeforeReminders } = require('./services/matchNotificationService');
 cron.schedule('0 8 * * *', () => {
@@ -76,6 +84,12 @@ cron.schedule('0 0 * * *', async () => {
   } catch (err) {
     console.error('[cron] Subscription expiry check failed:', err.message);
   }
+});
+
+// Every 5 min - auto-end live matches nobody closed after 90 minutes
+const { autoEndStaleMatches } = require('./controllers/liveMatchController');
+cron.schedule('*/5 * * * *', () => {
+  autoEndStaleMatches();
 });
 
 console.log('[boot] liveMatch controller version: 2 (uses users.name)');
@@ -118,4 +132,5 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, async () => {
   console.log(`Server running on http://localhost:${PORT}`);
   await runMigrations();
+  autoEndStaleMatches();
 });

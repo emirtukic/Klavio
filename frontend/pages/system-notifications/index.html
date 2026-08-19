@@ -89,25 +89,27 @@ const TYPE_COLOR = { maintenance:'warning', feature:'success', pricing:'danger',
 const TYPE_LABEL = { maintenance:'Održavanje', feature:'Nova funkcija', pricing:'Promjena cijene', general:'Opća' };
 
 async function load() {
-  const rows = await apiGet('/system-notifications');
-  document.getElementById('notifTable').innerHTML = rows.map(n=>`
-    <tr class="${n.is_active?'':'table-secondary opacity-75'}">
-      <td data-label="Tip"><span class="badge bg-${TYPE_COLOR[n.type]||'secondary'}">${TYPE_ICON[n.type]||''} ${TYPE_LABEL[n.type]||n.type}</span></td>
-      <td data-label="Naslov" class="fw-semibold">${n.title}</td>
-      <td data-label="Poruka" class="text-muted small" style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${n.body}</td>
-      <td data-label="Status">${n.is_active
-        ? '<span class="badge bg-success">Aktivna</span>'
-        : '<span class="badge bg-secondary">Neaktivna</span>'}</td>
-      <td data-label="Datum" class="small text-muted">${new Date(n.created_at).toLocaleDateString('bs-BA')}</td>
-      <td>
-        <div class="d-flex gap-1">
-          <button class="btn btn-sm btn-outline-secondary" onclick="toggle(${n.id})" title="${n.is_active?'Deaktiviraj':'Aktiviraj'}">
-            <i class="bi bi-toggle-${n.is_active?'on text-success':'off'}"></i>
-          </button>
-          <button class="btn btn-sm btn-outline-danger" onclick="remove(${n.id})"><i class="bi bi-trash"></i></button>
-        </div>
-      </td>
-    </tr>`).join('') || '<tr><td colspan="6" class="text-center text-muted py-3">Nema obavijesti</td></tr>';
+  try {
+    const rows = await apiGet('/system-notifications');
+    document.getElementById('notifTable').innerHTML = rows.map(n=>`
+      <tr class="${n.is_active?'':'table-secondary opacity-75'}">
+        <td data-label="Tip"><span class="badge bg-${TYPE_COLOR[n.type]||'secondary'}">${TYPE_ICON[n.type]||''} ${TYPE_LABEL[n.type]||n.type}</span></td>
+        <td data-label="Naslov" class="fw-semibold">${n.title}</td>
+        <td data-label="Poruka" class="text-muted small" style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${n.body}</td>
+        <td data-label="Status">${n.is_active
+          ? '<span class="badge bg-success">Aktivna</span>'
+          : '<span class="badge bg-secondary">Neaktivna</span>'}</td>
+        <td data-label="Datum" class="small text-muted">${new Date(n.created_at).toLocaleDateString('bs-BA')}</td>
+        <td>
+          <div class="d-flex gap-1">
+            <button class="btn btn-sm btn-outline-secondary" onclick="toggle(${n.id})" title="${n.is_active?'Deaktiviraj':'Aktiviraj'}">
+              <i class="bi bi-toggle-${n.is_active?'on text-success':'off'}"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger" onclick="remove(${n.id})"><i class="bi bi-trash"></i></button>
+          </div>
+        </td>
+      </tr>`).join('') || '<tr><td colspan="6" class="text-center text-muted py-3">Nema obavijesti</td></tr>';
+  } catch(e) { showToast(e.message, 'error'); }
 }
 
 function openCreate() {

@@ -7,6 +7,7 @@ const crypto = require('crypto');
 const db = require('../config/db');
 const { send: sendMail } = require('../config/mailer');
 const { verifyEmailHtml, inviteEmailHtml } = require('../config/emailTemplates');
+const { imageFileFilter } = require('../middleware/imageUpload');
 
 const avatarStorage = multer.diskStorage({
   destination: path.join(__dirname, '../../frontend/assets/uploads/avatars'),
@@ -18,9 +19,7 @@ const avatarStorage = multer.diskStorage({
 exports.avatarUpload = multer({
   storage: avatarStorage,
   limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    cb(null, file.mimetype.startsWith('image/'));
-  }
+  fileFilter: imageFileFilter
 });
 
 exports.login = async (req, res) => {
@@ -84,7 +83,7 @@ exports.login = async (req, res) => {
       selection
     });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -153,7 +152,7 @@ exports.register = async (req, res) => {
     });
   } catch (err) {
     if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ message: 'Email već postoji' });
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -228,7 +227,7 @@ exports.createUser = async (req, res) => {
     res.status(201).json({ id: result.insertId, name, email, role, club_id });
   } catch (err) {
     if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ message: 'Email već postoji' });
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -246,7 +245,7 @@ exports.getProfile = async (req, res) => {
     }
     res.json(user);
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -268,7 +267,7 @@ exports.updateProfile = async (req, res) => {
     );
     res.json({ message: 'Profil ažuriran', user: rows[0] });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -279,7 +278,7 @@ exports.uploadAvatar = async (req, res) => {
     await db.query('UPDATE users SET avatar_url = ? WHERE id = ?', [avatarUrl, req.user.id]);
     res.json({ message: 'Avatar ažuriran', avatar_url: avatarUrl });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -293,7 +292,7 @@ exports.changePassword = async (req, res) => {
     await db.query('UPDATE users SET password_hash = ? WHERE id = ?', [hash, req.user.id]);
     res.json({ message: 'Lozinka uspješno promijenjena' });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -329,7 +328,7 @@ exports.forgotPassword = async (req, res) => {
     }).catch(e => console.error('Reset mail error:', e.message));
     res.json(successMsg);
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -344,7 +343,7 @@ exports.validateResetToken = async (req, res) => {
     if (!rows.length) return res.status(404).json({ message: 'Link nije validan ili je istekao' });
     res.json({ name: rows[0].name, email: rows[0].email });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -365,7 +364,7 @@ exports.resetPassword = async (req, res) => {
     );
     res.json({ message: 'Lozinka je uspješno resetovana. Možete se prijaviti.' });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -381,7 +380,7 @@ exports.updateClubBranding = async (req, res) => {
     const [rows] = await db.query('SELECT * FROM clubs WHERE id = ?', [clubId]);
     res.json(rows[0]);
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -396,7 +395,7 @@ exports.validateSetPasswordToken = async (req, res) => {
     if (!rows.length) return res.status(404).json({ message: 'Link nije validan ili je istekao' });
     res.json({ name: rows[0].name, email: rows[0].email });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -417,6 +416,6 @@ exports.setPassword = async (req, res) => {
     );
     res.json({ message: 'Lozinka je uspješno postavljena. Možete se prijaviti.' });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };

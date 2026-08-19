@@ -18,7 +18,7 @@ exports.getPlayerStats = async (req, res) => {
       matches: acc.matches + 1
     }), { goals: 0, assists: 0, yellow_cards: 0, red_cards: 0, minutes_played: 0, matches: 0 });
     res.json({ stats: rows, totals });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.getClubStats = async (req, res) => {
@@ -74,13 +74,17 @@ exports.getClubStats = async (req, res) => {
     `, matchParams);
 
     res.json({ topScorers, attendance, matchResults });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.upsertStats = async (req, res) => {
   const { member_id, goals, assists, yellow_cards, red_cards, minutes_played, started } = req.body;
   const match_id = req.params.matchId;
   try {
+    const [[match]] = await db.query('SELECT id FROM matches WHERE id=? AND club_id=?', [match_id, req.user.club_id]);
+    if (!match) return res.status(404).json({ message: 'Utakmica nije pronađena' });
+    const [[member]] = await db.query('SELECT id FROM members WHERE id=? AND club_id=?', [member_id, req.user.club_id]);
+    if (!member) return res.status(404).json({ message: 'Član nije pronađen' });
     await db.query(`
       INSERT INTO player_stats (member_id, match_id, club_id, goals, assists, yellow_cards, red_cards, minutes_played, started)
       VALUES (?,?,?,?,?,?,?,?,?)
@@ -88,7 +92,7 @@ exports.upsertStats = async (req, res) => {
         red_cards=VALUES(red_cards), minutes_played=VALUES(minutes_played), started=VALUES(started)
     `, [member_id, match_id, req.user.club_id, goals||0, assists||0, yellow_cards||0, red_cards||0, minutes_played||90, started??true]);
     res.json({ message: 'Statistika ažurirana' });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.getMatchStats = async (req, res) => {
@@ -101,7 +105,7 @@ exports.getMatchStats = async (req, res) => {
       WHERE ps.match_id = ? AND ps.club_id = ?
     `, [req.params.matchId, req.user.club_id]);
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.getOverview = async (req, res) => {
@@ -149,7 +153,7 @@ exports.getOverview = async (req, res) => {
       training_sessions:  parseInt(att.sessions || 0),
       avg_attendance_pct: tr > 0 ? Math.round(pr / tr * 100) : 0
     });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.getAttendanceStats = async (req, res) => {
@@ -182,5 +186,5 @@ exports.getAttendanceStats = async (req, res) => {
       GROUP BY m.id, s.name ORDER BY u.name
     `, params);
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };

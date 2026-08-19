@@ -12,7 +12,7 @@ exports.getAll = async (req, res) => {
     `, [req.user.club_id]);
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -37,7 +37,7 @@ exports.getMyAppointments = async (req, res) => {
     const [rows] = await db.query(query, params);
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -58,28 +58,53 @@ exports.create = async (req, res) => {
     );
     res.status(201).json({ id: result.insertId });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
+
+async function loadOwnedAppointment(req, res) {
+  const [[appt]] = await db.query(
+    `SELECT a.*, c.club_id AS coach_club_id, m.club_id AS member_club_id
+     FROM appointments a
+     LEFT JOIN coaches c ON a.coach_id = c.id
+     LEFT JOIN members m ON a.member_id = m.id
+     WHERE a.id = ?`,
+    [req.params.id]
+  );
+  const clubId = appt && (appt.coach_club_id ?? appt.member_club_id);
+  if (!appt || clubId !== req.user.club_id) { res.status(404).json({ message: 'Termin nije pronađen' }); return null; }
+  if (req.user.role === 'member') {
+    const [[m]] = await db.query('SELECT id FROM members WHERE user_id=? AND club_id=?', [req.user.id, req.user.club_id]);
+    if (!m || m.id !== appt.member_id) { res.status(403).json({ message: 'Nedozvoljen pristup' }); return null; }
+  } else if (req.user.role === 'coach') {
+    const [[c]] = await db.query('SELECT id FROM coaches WHERE user_id=? AND club_id=?', [req.user.id, req.user.club_id]);
+    if (!c || c.id !== appt.coach_id) { res.status(403).json({ message: 'Nedozvoljen pristup' }); return null; }
+  }
+  return appt;
+}
 
 exports.update = async (req, res) => {
   const { status, title, appointment_date, start_time, end_time, notes } = req.body;
   try {
+    const appt = await loadOwnedAppointment(req, res);
+    if (!appt) return;
     await db.query(
       'UPDATE appointments SET status=COALESCE(?,status), title=COALESCE(?,title), appointment_date=COALESCE(?,appointment_date), start_time=COALESCE(?,start_time), end_time=COALESCE(?,end_time), notes=COALESCE(?,notes) WHERE id=?',
       [status, title, appointment_date, start_time, end_time, notes, req.params.id]
     );
     res.json({ message: 'Termin ažuriran' });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
 exports.remove = async (req, res) => {
   try {
+    const appt = await loadOwnedAppointment(req, res);
+    if (!appt) return;
     await db.query('DELETE FROM appointments WHERE id = ?', [req.params.id]);
     res.json({ message: 'Termin obrisan' });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };

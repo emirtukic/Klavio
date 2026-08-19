@@ -28,7 +28,7 @@ exports.getAll = async (req, res) => {
     );
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -38,7 +38,7 @@ exports.getOne = async (req, res) => {
     if (!rows.length) return res.status(404).json({ message: 'Utakmica nije pronađena' });
     res.json(rows[0]);
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -61,7 +61,7 @@ exports.create = async (req, res) => {
     ).catch(() => {});
     res.status(201).json({ id: result.insertId });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -77,7 +77,7 @@ exports.update = async (req, res) => {
     );
     res.json({ message: 'Utakmica ažurirana' });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -89,7 +89,7 @@ exports.remove = async (req, res) => {
     await db.query(`DELETE FROM matches WHERE id = ? AND club_id = ?${coachClause}`, params);
     res.json({ message: 'Utakmica obrisana' });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -118,6 +118,6 @@ exports.getStandings = async (req, res) => {
 
     res.json(table);
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };

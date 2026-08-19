@@ -12,19 +12,25 @@ exports.getAll = async (req, res) => {
     `, [req.user.club_id]);
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
 exports.getMemberFees = async (req, res) => {
   try {
+    const [[member]] = await db.query('SELECT id FROM members WHERE id=? AND club_id=?', [req.params.memberId, req.user.club_id]);
+    if (!member) return res.status(404).json({ message: 'Član nije pronađen' });
+    if (req.user.role === 'member') {
+      const [[m]] = await db.query('SELECT id FROM members WHERE user_id=? AND club_id=?', [req.user.id, req.user.club_id]);
+      if (!m || m.id != req.params.memberId) return res.status(403).json({ message: 'Nedozvoljen pristup' });
+    }
     const [rows] = await db.query(
       'SELECT * FROM membership_fees WHERE member_id = ? ORDER BY period_start DESC',
       [req.params.memberId]
     );
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -37,7 +43,7 @@ exports.create = async (req, res) => {
     );
     res.status(201).json({ id: result.insertId });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -46,14 +52,17 @@ exports.update = async (req, res) => {
   try {
     // Fetch current state before update
     const [before] = await db.query(
-      'SELECT mf.*, m.club_id, u.name as member_name FROM membership_fees mf JOIN members m ON mf.member_id = m.id JOIN users u ON m.user_id = u.id WHERE mf.id = ?',
-      [req.params.id]
+      'SELECT mf.*, m.club_id, u.name as member_name FROM membership_fees mf JOIN members m ON mf.member_id = m.id JOIN users u ON m.user_id = u.id WHERE mf.id = ? AND m.club_id = ?',
+      [req.params.id, req.user.club_id]
     );
     const fee = before[0];
+    if (!fee) return res.status(404).json({ message: 'Članarina nije pronađena' });
 
     await db.query(
-      'UPDATE membership_fees SET status=COALESCE(?,status), paid_date=COALESCE(?,paid_date), payment_method=COALESCE(?,payment_method), notes=COALESCE(?,notes), amount=COALESCE(?,amount) WHERE id=?',
-      [status, paid_date, payment_method, notes, amount, req.params.id]
+      `UPDATE membership_fees mf JOIN members m ON mf.member_id = m.id
+       SET mf.status=COALESCE(?,mf.status), mf.paid_date=COALESCE(?,mf.paid_date), mf.payment_method=COALESCE(?,mf.payment_method), mf.notes=COALESCE(?,mf.notes), mf.amount=COALESCE(?,mf.amount)
+       WHERE mf.id=? AND m.club_id=?`,
+      [status, paid_date, payment_method, notes, amount, req.params.id, req.user.club_id]
     );
 
     // Auto-create finance income entry when marked as paid
@@ -63,7 +72,7 @@ exports.update = async (req, res) => {
 
     res.json({ message: 'Članarina ažurirana' });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -71,14 +80,17 @@ exports.markPaid = async (req, res) => {
   const { payment_method } = req.body;
   try {
     const [before] = await db.query(
-      'SELECT mf.*, m.club_id, u.name as member_name FROM membership_fees mf JOIN members m ON mf.member_id = m.id JOIN users u ON m.user_id = u.id WHERE mf.id = ?',
-      [req.params.id]
+      'SELECT mf.*, m.club_id, u.name as member_name FROM membership_fees mf JOIN members m ON mf.member_id = m.id JOIN users u ON m.user_id = u.id WHERE mf.id = ? AND m.club_id = ?',
+      [req.params.id, req.user.club_id]
     );
     const fee = before[0];
+    if (!fee) return res.status(404).json({ message: 'Članarina nije pronađena' });
 
     await db.query(
-      'UPDATE membership_fees SET status="paid", paid_date=CURDATE(), payment_method=? WHERE id=?',
-      [payment_method || 'cash', req.params.id]
+      `UPDATE membership_fees mf JOIN members m ON mf.member_id = m.id
+       SET mf.status="paid", mf.paid_date=CURDATE(), mf.payment_method=?
+       WHERE mf.id=? AND m.club_id=?`,
+      [payment_method || 'cash', req.params.id, req.user.club_id]
     );
 
     if (fee && fee.status !== 'paid') {
@@ -87,7 +99,7 @@ exports.markPaid = async (req, res) => {
 
     res.json({ message: 'Označeno kao plaćeno' });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -112,10 +124,13 @@ async function autoAddIncome(fee, date, userId) {
 
 exports.remove = async (req, res) => {
   try {
-    await db.query('DELETE FROM membership_fees WHERE id = ?', [req.params.id]);
+    await db.query(
+      'DELETE mf FROM membership_fees mf JOIN members m ON mf.member_id = m.id WHERE mf.id = ? AND m.club_id = ?',
+      [req.params.id, req.user.club_id]
+    );
     res.json({ message: 'Članarina obrisana' });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -135,6 +150,6 @@ exports.getStats = async (req, res) => {
     `, [req.user.club_id]);
     res.json(stats[0]);
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };

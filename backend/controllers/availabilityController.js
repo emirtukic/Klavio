@@ -8,11 +8,11 @@ exports.getForEvent = async (req, res) => {
       FROM member_availability ma
       JOIN members m ON ma.member_id = m.id
       JOIN users u ON m.user_id = u.id
-      WHERE ma.event_type=? AND ma.event_id=?
+      WHERE ma.event_type=? AND ma.event_id=? AND m.club_id=?
       ORDER BY ma.status, u.name
-    `, [event_type, event_id]);
+    `, [event_type, event_id, req.user.club_id]);
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.setAvailability = async (req, res) => {
@@ -28,7 +28,7 @@ exports.setAvailability = async (req, res) => {
       ON DUPLICATE KEY UPDATE status=VALUES(status), note=VALUES(note)
     `, [member.id, event_type, event_id, status, note||null]);
     res.json({ message: 'Dostupnost ažurirana' });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.getMyAvailability = async (req, res) => {
@@ -37,5 +37,5 @@ exports.getMyAvailability = async (req, res) => {
     if (!member) return res.json([]);
     const [rows] = await db.query('SELECT * FROM member_availability WHERE member_id=? ORDER BY updated_at DESC', [member.id]);
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };

@@ -7,7 +7,7 @@ exports.getAll = async (req, res) => {
       [req.user.id]
     );
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.getUnreadCount = async (req, res) => {
@@ -17,28 +17,28 @@ exports.getUnreadCount = async (req, res) => {
       [req.user.id]
     );
     res.json({ count });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.markRead = async (req, res) => {
   try {
     await db.query('UPDATE notifications SET is_read=TRUE WHERE id=? AND user_id=?', [req.params.id, req.user.id]);
     res.json({ message: 'Označeno kao pročitano' });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.markAllRead = async (req, res) => {
   try {
     await db.query('UPDATE notifications SET is_read=TRUE WHERE user_id=?', [req.user.id]);
     res.json({ message: 'Sve označeno kao pročitano' });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.remove = async (req, res) => {
   try {
     await db.query('DELETE FROM notifications WHERE id=? AND user_id=?', [req.params.id, req.user.id]);
     res.json({ message: 'Obrisano' });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 // Internal helper - called from other controllers
@@ -68,5 +68,5 @@ exports.notifyClub = async (req, res) => {
         [u.id, req.user.club_id, title, message, type || 'info', link || null]);
     }
     res.json({ message: `Obavijest poslana ${users.length} korisnika` });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };

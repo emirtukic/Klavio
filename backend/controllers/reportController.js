@@ -25,7 +25,7 @@ exports.getFinancialReport = async (req, res) => {
     `, [req.user.club_id]);
     res.json({ monthly, summary: summary[0] });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -44,7 +44,7 @@ exports.getAttendanceReport = async (req, res) => {
     `, [req.user.club_id]);
     res.json(stats);
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -62,7 +62,7 @@ exports.getSelectionStats = async (req, res) => {
       GROUP BY s.id, s.name ORDER BY s.name
     `, [req.user.club_id]);
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.getTopDebtors = async (req, res) => {
@@ -79,7 +79,7 @@ exports.getTopDebtors = async (req, res) => {
       GROUP BY m.id ORDER BY total_owed DESC LIMIT 10
     `, [req.user.club_id]);
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.getMembersGrowth = async (req, res) => {
@@ -91,7 +91,7 @@ exports.getMembersGrowth = async (req, res) => {
       GROUP BY month ORDER BY month
     `, [req.user.club_id]);
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.getMemberReport = async (req, res) => {
@@ -112,6 +112,6 @@ exports.getMemberReport = async (req, res) => {
     `, [req.user.club_id]);
     res.json({ stats: stats[0], recentJoins });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };

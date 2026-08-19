@@ -15,7 +15,7 @@ exports.getAll = async (req, res) => {
       ORDER BY s.name
     `, [req.user.club_id]);
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.getOne = async (req, res) => {
@@ -35,7 +35,7 @@ exports.getOne = async (req, res) => {
     `, [req.params.id, req.user.club_id]);
     if (!sel) return res.status(404).json({ message: 'Selekcija nije pronađena' });
     res.json(sel);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.create = async (req, res) => {
@@ -47,7 +47,7 @@ exports.create = async (req, res) => {
       [req.user.club_id, name, description || null]
     );
     res.status(201).json({ id: result.insertId, name, description: description || null, member_count: 0, coach_count: 0 });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.update = async (req, res) => {
@@ -58,7 +58,7 @@ exports.update = async (req, res) => {
       [name || null, description !== undefined ? description : null, req.params.id, req.user.club_id]
     );
     res.json({ message: 'Selekcija ažurirana' });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.remove = async (req, res) => {
@@ -74,7 +74,7 @@ exports.remove = async (req, res) => {
     res.json({ message: 'Selekcija obrisana' });
   } catch (err) {
     await conn.rollback();
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   } finally { conn.release(); }
 };
 
@@ -87,7 +87,7 @@ exports.getMembers = async (req, res) => {
       ORDER BY u.name
     `, [req.params.id, req.user.club_id]);
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.getCoaches = async (req, res) => {
@@ -99,33 +99,33 @@ exports.getCoaches = async (req, res) => {
       ORDER BY u.name
     `, [req.params.id, req.user.club_id]);
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.assignMember = async (req, res) => {
   try {
     await db.query('UPDATE members SET selection_id=? WHERE id=? AND club_id=?', [req.params.id, req.body.member_id, req.user.club_id]);
     res.json({ message: 'Član dodat u selekciju' });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.removeMember = async (req, res) => {
   try {
     await db.query('UPDATE members SET selection_id=NULL WHERE id=? AND club_id=?', [req.params.memberId, req.user.club_id]);
     res.json({ message: 'Član uklonjen iz selekcije' });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.assignCoach = async (req, res) => {
   try {
     await db.query('UPDATE coaches SET selection_id=? WHERE id=? AND club_id=?', [req.params.id, req.body.coach_id, req.user.club_id]);
     res.json({ message: 'Trener dodat u selekciju' });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.removeCoach = async (req, res) => {
   try {
     await db.query('UPDATE coaches SET selection_id=NULL WHERE id=? AND club_id=?', [req.params.coachId, req.user.club_id]);
     res.json({ message: 'Trener uklonjen iz selekcije' });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };

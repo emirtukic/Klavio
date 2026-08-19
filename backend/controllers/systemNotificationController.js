@@ -9,7 +9,7 @@ exports.getAll = async (req, res) => {
       ORDER BY sn.created_at DESC
     `);
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.getActive = async (req, res) => {
@@ -18,7 +18,7 @@ exports.getActive = async (req, res) => {
       'SELECT * FROM system_notifications WHERE is_active=1 ORDER BY created_at DESC LIMIT 5'
     );
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.create = async (req, res) => {
@@ -38,19 +38,19 @@ exports.create = async (req, res) => {
       );
     }
     res.status(201).json({ id: result.insertId });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.toggle = async (req, res) => {
   try {
     await db.query('UPDATE system_notifications SET is_active = NOT is_active WHERE id=?', [req.params.id]);
     res.json({ message: 'Ažurirano' });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.remove = async (req, res) => {
   try {
     await db.query('DELETE FROM system_notifications WHERE id=?', [req.params.id]);
     res.json({ message: 'Obrisano' });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };

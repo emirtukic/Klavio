@@ -65,7 +65,7 @@ exports.getStats = async (req, res) => {
       clubsGrowth,
       clubs
     });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.getSubscription = async (req, res) => {
@@ -75,7 +75,7 @@ exports.getSubscription = async (req, res) => {
       [req.params.clubId]
     );
     res.json(sub || null);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.upsertSubscription = async (req, res) => {
@@ -92,7 +92,7 @@ exports.upsertSubscription = async (req, res) => {
         notes=VALUES(notes)
     `, [clubId, plan, price, billing_cycle, status, trial_ends_at||null, current_period_start||null, current_period_end||null, notes||null]);
     res.json({ message: 'Pretplata ažurirana' });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.getMySubscription = async (req, res) => {
@@ -102,7 +102,7 @@ exports.getMySubscription = async (req, res) => {
       [req.user.club_id]
     );
     res.json(sub || null);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.getAllSubscriptions = async (req, res) => {
@@ -116,5 +116,5 @@ exports.getAllSubscriptions = async (req, res) => {
       GROUP BY cs.id ORDER BY cs.status, c.name
     `);
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };

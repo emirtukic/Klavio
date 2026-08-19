@@ -168,6 +168,44 @@ async function resumeMatch(req, res) {
   } catch (e) { res.status(500).json({ message: e.message }); }
 }
 
+/* ─── shared: finish a match (manual end + auto-end reuse this) ───── */
+async function finishMatch(matchId, clubId, minute = 90) {
+  const [[m]] = await db.query(
+    `SELECT * FROM matches WHERE id=? AND club_id=?`, [matchId, clubId]);
+  if (!m || m.status === 'finished') return null;
+
+  let result = 'draw';
+  if (m.goals_for > m.goals_against) result = 'win';
+  if (m.goals_for < m.goals_against) result = 'loss';
+
+  const [upd] = await db.query(
+    `UPDATE matches SET status='finished', result=? WHERE id=? AND status != 'finished'`,
+    [result, matchId]);
+  if (!upd.affectedRows) return null; // another call already finished it
+
+  await db.query(
+    `INSERT INTO match_events (match_id, event_type, minute, score_for, score_against)
+     VALUES (?, 'full_time', ?, ?, ?)`,
+    [matchId, minute, m.goals_for, m.goals_against]);
+
+  const events = await fetchEvents(matchId);
+  sse.broadcast(matchId, {
+    type: 'ended', result,
+    score_for: m.goals_for, score_against: m.goals_against, events
+  });
+
+  // Auto-generate player_stats from match_events
+  let statsErr = null;
+  try {
+    await autoStats(matchId, clubId);
+  } catch (err) {
+    statsErr = err.message;
+    console.error('[autoStats] Failed for match', matchId, ':', err.message);
+  }
+
+  return { result, statsErr };
+}
+
 /* ─── POST /api/live-match/:matchId/end ───────────────────────────── */
 async function endMatch(req, res) {
   try {
@@ -175,39 +213,40 @@ async function endMatch(req, res) {
     const { club_id } = req.user;
     const minute = req.body.minute || 90;
 
-    const [[m]] = await db.query(
-      `SELECT * FROM matches WHERE id=? AND club_id=?`, [matchId, club_id]);
-    if (!m) return res.status(404).json({ message: 'Not found' });
+    const outcome = await finishMatch(matchId, club_id, minute);
+    if (!outcome) return res.status(404).json({ message: 'Not found' });
 
-    let result = 'draw';
-    if (m.goals_for > m.goals_against) result = 'win';
-    if (m.goals_for < m.goals_against) result = 'loss';
-
-    await db.query(
-      `UPDATE matches SET status='finished', result=? WHERE id=?`, [result, matchId]);
-
-    await db.query(
-      `INSERT INTO match_events (match_id, event_type, minute, score_for, score_against)
-       VALUES (?, 'full_time', ?, ?, ?)`,
-      [matchId, minute, m.goals_for, m.goals_against]);
-
-    const events = await fetchEvents(matchId);
-    sse.broadcast(matchId, {
-      type: 'ended', result,
-      score_for: m.goals_for, score_against: m.goals_against, events
-    });
-
-    // Auto-generate player_stats from match_events
-    let statsErr = null;
-    try {
-      await autoStats(matchId, club_id);
-    } catch (err) {
-      statsErr = err.message;
-      console.error('[autoStats] Failed for match', matchId, ':', err.message);
-    }
-
-    res.json({ ok: true, result, statsErr });
+    res.json({ ok: true, result: outcome.result, statsErr: outcome.statsErr });
   } catch (e) { res.status(500).json({ message: e.message }); }
+}
+
+/* ─── auto-end matches nobody closed out ────────────────────────────
+   started_at is wall-clock, not "playing time" - it keeps ticking through
+   half-time and stoppage time. 90 min of regulation + ~15 min half-time
+   break + stoppage time routinely adds up to 110-120 real minutes, so a
+   flat 90-minute cutoff would auto-end matches that are still genuinely
+   in progress. 150 min gives real matches plenty of room while still
+   catching ones that were simply forgotten (the bug this was written for
+   involved a match stuck for months). */
+async function autoEndStaleMatches() {
+  try {
+    const [stale] = await db.query(`
+      SELECT id, club_id FROM matches
+      WHERE status IN ('live','paused')
+        AND started_at IS NOT NULL
+        AND started_at <= (NOW() - INTERVAL 150 MINUTE)
+    `);
+    for (const { id, club_id } of stale) {
+      try {
+        console.log(`[autoEndStale] Auto-ending stale match ${id} (club ${club_id})`);
+        await finishMatch(id, club_id, 90);
+      } catch (e) {
+        console.error(`[autoEndStale] Failed to end match ${id}:`, e.message);
+      }
+    }
+  } catch (e) {
+    console.error('[autoEndStale] Failed:', e.message);
+  }
 }
 
 /* ─── POST /api/live-match/:matchId/events ────────────────────────── */
@@ -367,5 +406,5 @@ async function loadPlayers(matchId, selectionId, clubId) {
 module.exports = {
   getActive, getState, stream,
   startMatch, pauseMatch, resumeMatch, endMatch,
-  addEvent, deleteEvent
+  addEvent, deleteEvent, autoEndStaleMatches
 };

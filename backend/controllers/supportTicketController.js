@@ -12,7 +12,7 @@ exports.getAll = async (req, res) => {
       ORDER BY st.updated_at DESC
     `);
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.getMine = async (req, res) => {
@@ -26,7 +26,7 @@ exports.getMine = async (req, res) => {
       ORDER BY st.updated_at DESC
     `, [req.user.club_id]);
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.create = async (req, res) => {
@@ -43,12 +43,15 @@ exports.create = async (req, res) => {
       );
     }
     res.status(201).json({ id: result.insertId });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.getReplies = async (req, res) => {
   try {
-    const [ticket] = await db.query('SELECT * FROM support_tickets WHERE id=?', [req.params.id]);
+    const isStaff = req.user.role === 'super_admin';
+    const [ticket] = isStaff
+      ? await db.query('SELECT * FROM support_tickets WHERE id=?', [req.params.id])
+      : await db.query('SELECT * FROM support_tickets WHERE id=? AND club_id=?', [req.params.id, req.user.club_id]);
     if (!ticket.length) return res.status(404).json({ message: 'Ticket nije pronađen' });
     const [replies] = await db.query(`
       SELECT r.*, u.name AS user_name FROM support_ticket_replies r
@@ -56,13 +59,17 @@ exports.getReplies = async (req, res) => {
       WHERE r.ticket_id = ? ORDER BY r.created_at ASC
     `, [req.params.id]);
     res.json({ ticket: ticket[0], replies });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.reply = async (req, res) => {
   const { body } = req.body;
   const isStaff = req.user.role === 'super_admin';
   try {
+    const [tRows] = isStaff
+      ? await db.query('SELECT club_id FROM support_tickets WHERE id=?', [req.params.id])
+      : await db.query('SELECT club_id FROM support_tickets WHERE id=? AND club_id=?', [req.params.id, req.user.club_id]);
+    if (!tRows.length) return res.status(404).json({ message: 'Ticket nije pronađen' });
     await db.query(
       'INSERT INTO support_ticket_replies (ticket_id, user_id, body, is_staff) VALUES (?,?,?,?)',
       [req.params.id, req.user.id, body, isStaff ? 1 : 0]
@@ -83,7 +90,7 @@ exports.reply = async (req, res) => {
       }
     }
     res.json({ message: 'Odgovor poslan' });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.updateStatus = async (req, res) => {
@@ -91,5 +98,5 @@ exports.updateStatus = async (req, res) => {
   try {
     await db.query('UPDATE support_tickets SET status=?, updated_at=NOW() WHERE id=?', [status, req.params.id]);
     res.json({ message: 'Status ažuriran' });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };

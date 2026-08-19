@@ -19,7 +19,7 @@ exports.getAll = async (req, res) => {
       ) DESC
     `);
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.getMine = async (req, res) => {
@@ -35,7 +35,7 @@ exports.getMine = async (req, res) => {
       ) DESC
     `, [req.user.club_id]);
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.getReplies = async (req, res) => {
@@ -55,7 +55,7 @@ exports.getReplies = async (req, res) => {
       WHERE r.message_id = ? ORDER BY r.created_at ASC
     `, [req.params.id]);
     res.json({ message: msg[0], replies });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.addReply = async (req, res) => {
@@ -81,7 +81,7 @@ exports.addReply = async (req, res) => {
       }
     }
     res.json({ message: 'Odgovor poslan' });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.send = async (req, res) => {
@@ -109,12 +109,12 @@ exports.send = async (req, res) => {
       }
     }
     res.json({ message: 'Poruka poslana', id: result.insertId });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.remove = async (req, res) => {
   try {
     await db.query('DELETE FROM platform_messages WHERE id=?', [req.params.id]);
     res.json({ message: 'Obrisano' });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };

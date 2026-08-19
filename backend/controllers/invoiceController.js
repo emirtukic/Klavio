@@ -8,7 +8,7 @@ exports.getAll = async (req, res) => {
       ORDER BY i.created_at DESC
     `);
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.getMine = async (req, res) => {
@@ -18,7 +18,7 @@ exports.getMine = async (req, res) => {
       [req.user.club_id]
     );
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.create = async (req, res) => {
@@ -29,7 +29,7 @@ exports.create = async (req, res) => {
       [club_id, invoice_number, amount, status || 'unpaid', due_date, paid_date || null, period_start || null, period_end || null, notes || null]
     );
     res.status(201).json({ id: result.insertId });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.update = async (req, res) => {
@@ -40,12 +40,12 @@ exports.update = async (req, res) => {
       [status, paid_date || null, notes, req.params.id]
     );
     res.json({ message: 'Faktura ažurirana' });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.remove = async (req, res) => {
   try {
     await db.query('DELETE FROM invoices WHERE id=?', [req.params.id]);
     res.json({ message: 'Obrisano' });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };

@@ -1,8 +1,10 @@
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const db = require('../config/db');
+const { imageFileFilter } = require('../middleware/imageUpload');
 
 const logoStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -18,7 +20,7 @@ const logoStorage = multer.diskStorage({
 exports.logoUpload = multer({
   storage: logoStorage,
   limits: { fileSize: 5 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => cb(null, file.mimetype.startsWith('image/'))
+  fileFilter: imageFileFilter
 });
 
 exports.uploadLogo = async (req, res) => {
@@ -28,7 +30,7 @@ exports.uploadLogo = async (req, res) => {
     await db.query('UPDATE clubs SET logo_url = ? WHERE id = ?', [logoUrl, req.params.id]);
     res.json({ message: 'Logo ažuriran', logo_url: logoUrl });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -47,7 +49,7 @@ exports.getAll = async (req, res) => {
     `);
     res.json(clubs);
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -57,7 +59,7 @@ exports.getOne = async (req, res) => {
     if (!rows.length) return res.status(404).json({ message: 'Club not found' });
     res.json(rows[0]);
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -73,7 +75,7 @@ exports.create = async (req, res) => {
     res.status(201).json({ id: result.insertId, name, slug, primary_color: primary_color || '#1e293b', secondary_color: secondary_color || '#3b82f6' });
   } catch (err) {
     if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ message: 'Klub sa tim imenom već postoji' });
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -87,7 +89,7 @@ exports.update = async (req, res) => {
     const [rows] = await db.query('SELECT * FROM clubs WHERE id = ?', [req.params.id]);
     res.json(rows[0]);
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -110,7 +112,7 @@ exports.remove = async (req, res) => {
     res.json({ message: 'Klub obrisan' });
   } catch (err) {
     await conn.rollback();
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   } finally {
     conn.release();
   }
@@ -124,7 +126,7 @@ exports.getAdmins = async (req, res) => {
     );
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -135,15 +137,17 @@ exports.createAdmin = async (req, res) => {
   try {
     const [club] = await db.query('SELECT id FROM clubs WHERE id = ?', [club_id]);
     if (!club.length) return res.status(404).json({ message: 'Klub nije pronađen' });
-    const password_hash = await bcrypt.hash(password || 'password123', 10);
+    const isGenerated = !password;
+    const tempPassword = password || crypto.randomBytes(9).toString('base64url');
+    const password_hash = await bcrypt.hash(tempPassword, 10);
     const [result] = await db.query(
       "INSERT INTO users (name, email, password_hash, role, club_id) VALUES (?, ?, ?, 'admin', ?)",
       [name, email, password_hash, club_id]
     );
-    res.status(201).json({ id: result.insertId, name, email, role: 'admin', club_id });
+    res.status(201).json({ id: result.insertId, name, email, role: 'admin', club_id, temp_password: isGenerated ? tempPassword : undefined });
   } catch (err) {
     if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ message: 'Email već postoji' });
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -152,17 +156,19 @@ exports.deleteAdmin = async (req, res) => {
     await db.query("DELETE FROM users WHERE id = ? AND club_id = ? AND role = 'admin'", [req.params.userId, req.params.id]);
     res.json({ message: 'Admin obrisan' });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
 exports.resetAdminPassword = async (req, res) => {
   try {
-    const hash = await bcrypt.hash('password123', 10);
-    await db.query("UPDATE users SET password_hash = ? WHERE id = ? AND club_id = ? AND role = 'admin'", [hash, req.params.userId, req.params.id]);
-    res.json({ message: 'Lozinka resetovana na password123' });
+    const tempPassword = crypto.randomBytes(9).toString('base64url');
+    const hash = await bcrypt.hash(tempPassword, 10);
+    const [result] = await db.query("UPDATE users SET password_hash = ? WHERE id = ? AND club_id = ? AND role = 'admin'", [hash, req.params.userId, req.params.id]);
+    if (!result.affectedRows) return res.status(404).json({ message: 'Admin nije pronađen' });
+    res.json({ message: 'Lozinka resetovana', temp_password: tempPassword });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -184,6 +190,6 @@ exports.accessClub = async (req, res) => {
     );
     res.json({ token, club, user: { id: req.user.id, name: req.user.name, email: req.user.email, role: 'super_admin', club_id: club.id } });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };

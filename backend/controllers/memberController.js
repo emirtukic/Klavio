@@ -25,7 +25,7 @@ exports.getAll = async (req, res) => {
     `, params);
     res.json(rows);
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -44,7 +44,7 @@ exports.getOne = async (req, res) => {
     );
     res.json({ ...rows[0], fees });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -85,7 +85,7 @@ exports.create = async (req, res) => {
   } catch (err) {
     await conn.rollback();
     if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ message: 'Email ili broj članske već postoji' });
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   } finally {
     conn.release();
   }
@@ -104,14 +104,14 @@ exports.update = async (req, res) => {
       [name, email, is_active, members[0].user_id]
     );
     await conn.query(
-      'UPDATE members SET phone=COALESCE(?,phone), date_of_birth=COALESCE(?,date_of_birth), address=COALESCE(?,address), status=COALESCE(?,status), position=COALESCE(?,position), jersey_number=COALESCE(?,jersey_number), selection_id=COALESCE(?,selection_id) WHERE id=?',
+      'UPDATE members SET phone=COALESCE(?,phone), date_of_birth=COALESCE(?,date_of_birth), address=COALESCE(?,address), status=COALESCE(?,status), position=COALESCE(?,position), jersey_number=COALESCE(?,jersey_number), selection_id=? WHERE id=?',
       [phone, date_of_birth, address, status, position||null, jersey_number||null, selection_id||null, req.params.id]
     );
     await conn.commit();
     res.json({ message: 'Član ažuriran' });
   } catch (err) {
     await conn.rollback();
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   } finally {
     conn.release();
   }
@@ -146,7 +146,7 @@ exports.bulkAction = async (req, res) => {
       return res.status(400).json({ message: 'Nepoznata akcija' });
     }
     res.json({ message: 'Akcija izvršena', count: ids.length });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.remove = async (req, res) => {
@@ -156,7 +156,7 @@ exports.remove = async (req, res) => {
     await db.query('DELETE FROM users WHERE id = ?', [members[0].user_id]);
     res.json({ message: 'Član obrisan' });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -175,6 +175,6 @@ exports.getMyProfile = async (req, res) => {
     );
     res.json({ ...rows[0], fees });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };

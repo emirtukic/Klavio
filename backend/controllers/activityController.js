@@ -72,7 +72,7 @@ exports.getAllPlatform = async (req, res) => {
       [parseInt(limit)]
     );
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.getAll = async (req, res) => {
@@ -89,7 +89,7 @@ exports.getAll = async (req, res) => {
       [...params, parseInt(limit)]
     );
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.log = (action, entityType) => async (req, res, next) => {

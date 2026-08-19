@@ -176,51 +176,53 @@ function renderTable() {
 
 async function openThread(id) {
   currentMsgId = id;
-  const { message: msg, replies } = await apiGet('/platform-messaging/' + id + '/replies');
-  document.getElementById('threadSubject').textContent = msg.subject;
-  document.getElementById('threadMeta').innerHTML =
-    `${msg.type === 'broadcast' ? '<span class="badge bg-primary">Broadcast</span>' : '<span class="badge bg-info text-dark">Direktna</span>'}
-     ${msg.club_name ? `<span class="badge bg-secondary">${msg.club_name}</span>` : ''}
-     <span class="text-muted small">${new Date(msg.created_at).toLocaleDateString('bs-BA')}</span>`;
-  document.getElementById('replyBody').value = '';
+  try {
+    const { message: msg, replies } = await apiGet('/platform-messaging/' + id + '/replies');
+    document.getElementById('threadSubject').textContent = msg.subject;
+    document.getElementById('threadMeta').innerHTML =
+      `${msg.type === 'broadcast' ? '<span class="badge bg-primary">Broadcast</span>' : '<span class="badge bg-info text-dark">Direktna</span>'}
+       ${msg.club_name ? `<span class="badge bg-secondary">${msg.club_name}</span>` : ''}
+       <span class="text-muted small">${new Date(msg.created_at).toLocaleDateString('bs-BA')}</span>`;
+    document.getElementById('replyBody').value = '';
 
-  // Original message bubble
-  const original = `
-    <div class="d-flex gap-2 mb-3">
-      <div class="flex-shrink-0">
-        <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:36px;height:36px;background:#9b86f2">
-          <i class="bi bi-shield-check text-white"></i>
+    // Original message bubble
+    const original = `
+      <div class="d-flex gap-2 mb-3">
+        <div class="flex-shrink-0">
+          <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:36px;height:36px;background:#9b86f2">
+            <i class="bi bi-shield-check text-white"></i>
+          </div>
         </div>
-      </div>
-      <div class="flex-grow-1">
-        <div class="small fw-semibold mb-1">${msg.sent_by_name} <span class="badge" style="background:#9b86f2">Klavio</span></div>
-        <div class="p-3 rounded-3 text-white" style="background:#9b86f2;white-space:pre-wrap;">${msg.body}</div>
-        <div class="small text-muted mt-1">${new Date(msg.created_at).toLocaleString('bs-BA')}</div>
-      </div>
-    </div>`;
-
-  const replyBubbles = replies.map(r => {
-    const isStaff = r.user_role === 'super_admin';
-    return `
-    <div class="d-flex gap-2 mb-3 ${isStaff ? 'flex-row-reverse' : ''}">
-      <div class="flex-shrink-0">
-        <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:36px;height:36px;background:${isStaff ? '#9b86f2' : '#e2e8f0'}">
-          <i class="bi bi-${isStaff ? 'shield-check text-white' : 'building text-muted'}"></i>
+        <div class="flex-grow-1">
+          <div class="small fw-semibold mb-1">${msg.sent_by_name} <span class="badge" style="background:#9b86f2">Klavio</span></div>
+          <div class="p-3 rounded-3 text-white" style="background:#9b86f2;white-space:pre-wrap;">${msg.body}</div>
+          <div class="small text-muted mt-1">${new Date(msg.created_at).toLocaleString('bs-BA')}</div>
         </div>
-      </div>
-      <div class="flex-grow-1">
-        <div class="small fw-semibold ${isStaff ? 'text-end' : ''} mb-1">${r.user_name} ${isStaff ? '<span class="badge" style="background:#9b86f2">Klavio</span>' : '<span class="badge bg-secondary">Admin</span>'}</div>
-        <div class="p-3 rounded-3 ${isStaff ? 'text-white' : 'bg-light'}" style="${isStaff ? 'background:#9b86f2' : ''};white-space:pre-wrap;">${r.body}</div>
-        <div class="small text-muted mt-1 ${isStaff ? 'text-end' : ''}">${new Date(r.created_at).toLocaleString('bs-BA')}</div>
-      </div>
-    </div>`;
-  }).join('');
+      </div>`;
 
-  const container = document.getElementById('threadReplies');
-  container.innerHTML = original + (replyBubbles || '<p class="text-muted text-center small">Nema odgovora</p>');
-  container.scrollTop = container.scrollHeight;
-  const _tm = document.getElementById('threadModal');
-  (bootstrap.Modal.getInstance(_tm) || new bootstrap.Modal(_tm)).show();
+    const replyBubbles = replies.map(r => {
+      const isStaff = r.user_role === 'super_admin';
+      return `
+      <div class="d-flex gap-2 mb-3 ${isStaff ? 'flex-row-reverse' : ''}">
+        <div class="flex-shrink-0">
+          <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:36px;height:36px;background:${isStaff ? '#9b86f2' : '#e2e8f0'}">
+            <i class="bi bi-${isStaff ? 'shield-check text-white' : 'building text-muted'}"></i>
+          </div>
+        </div>
+        <div class="flex-grow-1">
+          <div class="small fw-semibold ${isStaff ? 'text-end' : ''} mb-1">${r.user_name} ${isStaff ? '<span class="badge" style="background:#9b86f2">Klavio</span>' : '<span class="badge bg-secondary">Admin</span>'}</div>
+          <div class="p-3 rounded-3 ${isStaff ? 'text-white' : 'bg-light'}" style="${isStaff ? 'background:#9b86f2' : ''};white-space:pre-wrap;">${r.body}</div>
+          <div class="small text-muted mt-1 ${isStaff ? 'text-end' : ''}">${new Date(r.created_at).toLocaleString('bs-BA')}</div>
+        </div>
+      </div>`;
+    }).join('');
+
+    const container = document.getElementById('threadReplies');
+    container.innerHTML = original + (replyBubbles || '<p class="text-muted text-center small">Nema odgovora</p>');
+    container.scrollTop = container.scrollHeight;
+    const _tm = document.getElementById('threadModal');
+    (bootstrap.Modal.getInstance(_tm) || new bootstrap.Modal(_tm)).show();
+  } catch(e) { showToast(e.message, 'error'); }
 }
 
 async function sendReply() {

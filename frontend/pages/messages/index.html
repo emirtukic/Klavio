@@ -73,8 +73,10 @@ setUserInfo(user); buildSidebar();
 let allMsgs = [], currentMsgId = null;
 
 async function load() {
-  allMsgs = await apiGet('/platform-messaging/mine');
-  renderTable();
+  try {
+    allMsgs = await apiGet('/platform-messaging/mine');
+    renderTable();
+  } catch(e) { showToast(e.message, 'error'); }
 }
 
 function renderTable() {
@@ -101,47 +103,49 @@ function renderTable() {
 
 async function openThread(id) {
   currentMsgId = id;
-  const { message: msg, replies } = await apiGet('/platform-messaging/' + id + '/replies');
-  document.getElementById('threadSubject').textContent = msg.subject;
-  document.getElementById('threadMeta').innerHTML =
-    `${msg.type === 'broadcast' ? '<span class="badge bg-primary">Broadcast</span>' : '<span class="badge bg-info text-dark">Direktna</span>'}
-     <span class="text-muted small">${new Date(msg.created_at).toLocaleDateString('bs-BA')}</span>`;
-  document.getElementById('replyBody').value = '';
+  try {
+    const { message: msg, replies } = await apiGet('/platform-messaging/' + id + '/replies');
+    document.getElementById('threadSubject').textContent = msg.subject;
+    document.getElementById('threadMeta').innerHTML =
+      `${msg.type === 'broadcast' ? '<span class="badge bg-primary">Broadcast</span>' : '<span class="badge bg-info text-dark">Direktna</span>'}
+       <span class="text-muted small">${new Date(msg.created_at).toLocaleDateString('bs-BA')}</span>`;
+    document.getElementById('replyBody').value = '';
 
-  // Build the full conversation (original message + replies)
-  const allBubbles = [
-    { body: msg.body, user_name: msg.sent_by_name, user_role: 'super_admin', created_at: msg.created_at },
-    ...replies
-  ];
+    // Build the full conversation (original message + replies)
+    const allBubbles = [
+      { body: msg.body, user_name: msg.sent_by_name, user_role: 'super_admin', created_at: msg.created_at },
+      ...replies
+    ];
 
-  document.getElementById('threadMessages').innerHTML = allBubbles.map(r => {
-    const isStaff = r.user_role === 'super_admin';
-    return `
-    <div class="d-flex gap-2 mb-3 ${isStaff ? '' : 'flex-row-reverse'}">
-      <div class="flex-shrink-0">
-        <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:36px;height:36px;background:${isStaff ? '#9b86f2' : '#e2e8f0'}">
-          <i class="bi bi-${isStaff ? 'shield-check text-white' : 'person text-muted'}"></i>
+    document.getElementById('threadMessages').innerHTML = allBubbles.map(r => {
+      const isStaff = r.user_role === 'super_admin';
+      return `
+      <div class="d-flex gap-2 mb-3 ${isStaff ? '' : 'flex-row-reverse'}">
+        <div class="flex-shrink-0">
+          <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:36px;height:36px;background:${isStaff ? '#9b86f2' : '#e2e8f0'}">
+            <i class="bi bi-${isStaff ? 'shield-check text-white' : 'person text-muted'}"></i>
+          </div>
         </div>
-      </div>
-      <div class="flex-grow-1">
-        <div class="small fw-semibold ${isStaff ? '' : 'text-end'} mb-1">
-          ${r.user_name}
-          ${isStaff ? '<span class="badge ms-1" style="background:#9b86f2">Klavio</span>' : ''}
+        <div class="flex-grow-1">
+          <div class="small fw-semibold ${isStaff ? '' : 'text-end'} mb-1">
+            ${r.user_name}
+            ${isStaff ? '<span class="badge ms-1" style="background:#9b86f2">Klavio</span>' : ''}
+          </div>
+          <div class="p-3 rounded-3 ${isStaff ? 'text-white' : 'bg-light'}" style="${isStaff ? 'background:#9b86f2' : ''};white-space:pre-wrap;">${r.body}</div>
+          <div class="small text-muted mt-1 ${isStaff ? '' : 'text-end'}">${new Date(r.created_at).toLocaleString('bs-BA')}</div>
         </div>
-        <div class="p-3 rounded-3 ${isStaff ? 'text-white' : 'bg-light'}" style="${isStaff ? 'background:#9b86f2' : ''};white-space:pre-wrap;">${r.body}</div>
-        <div class="small text-muted mt-1 ${isStaff ? '' : 'text-end'}">${new Date(r.created_at).toLocaleString('bs-BA')}</div>
-      </div>
-    </div>`;
-  }).join('');
+      </div>`;
+    }).join('');
 
-  const container = document.getElementById('threadMessages');
-  container.scrollTop = container.scrollHeight;
+    const container = document.getElementById('threadMessages');
+    container.scrollTop = container.scrollHeight;
 
-  const _tm = document.getElementById('threadModal');
-  (bootstrap.Modal.getInstance(_tm) || new bootstrap.Modal(_tm)).show();
+    const _tm = document.getElementById('threadModal');
+    (bootstrap.Modal.getInstance(_tm) || new bootstrap.Modal(_tm)).show();
 
-  // Mark as "read" by refreshing the list after a short delay
-  setTimeout(() => { load(); }, 500);
+    // Mark as "read" by refreshing the list after a short delay
+    setTimeout(() => { load(); }, 500);
+  } catch(e) { showToast(e.message, 'error'); }
 }
 
 async function sendReply() {

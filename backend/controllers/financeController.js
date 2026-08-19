@@ -13,7 +13,7 @@ exports.getAll = async (req, res) => {
       params
     );
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.getStats = async (req, res) => {
@@ -35,7 +35,7 @@ exports.getStats = async (req, res) => {
     const income = rows.find(r => r.type === 'income')?.total || 0;
     const expense = rows.find(r => r.type === 'expense')?.total || 0;
     res.json({ income: parseFloat(income), expense: parseFloat(expense), balance: parseFloat(income) - parseFloat(expense), monthly, categories });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.create = async (req, res) => {
@@ -47,7 +47,7 @@ exports.create = async (req, res) => {
       [req.user.club_id, type, category, description || null, amount, date, reference || null, req.user.id]
     );
     res.status(201).json({ id: result.insertId, type, category, amount, date });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.update = async (req, res) => {
@@ -57,16 +57,17 @@ exports.update = async (req, res) => {
       'UPDATE finances SET type=COALESCE(?,type), category=COALESCE(?,category), description=COALESCE(?,description), amount=COALESCE(?,amount), date=COALESCE(?,date), reference=COALESCE(?,reference) WHERE id=? AND club_id=?',
       [type||null, category||null, description||null, amount||null, date||null, reference||null, req.params.id, req.user.club_id]
     );
-    const [rows] = await db.query('SELECT * FROM finances WHERE id=?', [req.params.id]);
+    const [rows] = await db.query('SELECT * FROM finances WHERE id=? AND club_id=?', [req.params.id, req.user.club_id]);
+    if (!rows.length) return res.status(404).json({ message: 'Zapis nije pronađen' });
     res.json(rows[0]);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.remove = async (req, res) => {
   try {
     await db.query('DELETE FROM finances WHERE id=? AND club_id=?', [req.params.id, req.user.club_id]);
     res.json({ message: 'Zapis obrisan' });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.getGoal = async (req, res) => {
@@ -78,7 +79,7 @@ exports.getGoal = async (req, res) => {
     )`);
     const [[row]] = await db.query('SELECT * FROM club_finance_goals WHERE club_id=?', [req.user.club_id]);
     res.json(row || { income_goal: 0, expense_limit: 0, year: new Date().getFullYear() });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.setGoal = async (req, res) => {
@@ -95,5 +96,5 @@ exports.setGoal = async (req, res) => {
       [req.user.club_id, income_goal || 0, expense_limit || 0, year || new Date().getFullYear()]
     );
     res.json({ message: 'Ciljevi ažurirani' });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };

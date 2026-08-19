@@ -25,7 +25,7 @@ exports.sendFeeReminder = async (req, res) => {
     );
     res.json({ message: `Podsjetnik poslan za ${fee.member_name}` });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -88,6 +88,6 @@ exports.checkFees = async (req, res) => {
       notifsSent
     });
   } catch (err) {
-    res.status(500).json({ message: 'Server error', error: err.message });
+    res.status(500).json({ message: 'Server error' });
   }
 };

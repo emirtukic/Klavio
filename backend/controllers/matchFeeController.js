@@ -17,7 +17,7 @@ exports.getAll = async (req, res) => {
       params
     );
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.getStats = async (req, res) => {
@@ -40,7 +40,7 @@ exports.getStats = async (req, res) => {
       overdue: parseFloat(s.overdue || 0),
       total_count: s.total_count || 0
     });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.create = async (req, res) => {
@@ -65,7 +65,7 @@ exports.create = async (req, res) => {
       [req.user.club_id, member_id, match_id, amount, 'pending', notes || null]
     );
     res.status(201).json({ id: result.insertId });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.update = async (req, res) => {
@@ -80,14 +80,15 @@ exports.update = async (req, res) => {
        WHERE id = ? AND club_id = ?`,
       [status || null, paid_date || null, notes !== undefined ? notes : null, amount || null, req.params.id, req.user.club_id]
     );
-    const [rows] = await db.query('SELECT * FROM match_fees WHERE id = ?', [req.params.id]);
+    const [rows] = await db.query('SELECT * FROM match_fees WHERE id = ? AND club_id = ?', [req.params.id, req.user.club_id]);
+    if (!rows.length) return res.status(404).json({ message: 'Naknada nije pronađena' });
     res.json(rows[0]);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.remove = async (req, res) => {
   try {
     await db.query('DELETE FROM match_fees WHERE id = ? AND club_id = ?', [req.params.id, req.user.club_id]);
     res.json({ message: 'Naknada obrisana' });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };

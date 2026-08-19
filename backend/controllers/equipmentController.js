@@ -23,7 +23,7 @@ exports.getAll = async (req, res) => {
       ORDER BY e.type, e.name
     `, params);
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.create = async (req, res) => {
@@ -51,7 +51,7 @@ exports.create = async (req, res) => {
        notes || null, assigned_to || null, selection_id, assigned_by]
     );
     res.status(201).json({ id: r.insertId, name });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.update = async (req, res) => {
@@ -99,10 +99,11 @@ exports.update = async (req, res) => {
       LEFT JOIN selections s ON e.selection_id  = s.id
       LEFT JOIN coaches c    ON e.assigned_by   = c.id
       LEFT JOIN users u2     ON c.user_id        = u2.id
-      WHERE e.id = ?
-    `, [req.params.id]);
+      WHERE e.id = ? AND e.club_id = ?
+    `, [req.params.id, req.user.club_id]);
+    if (!rows.length) return res.status(404).json({ message: 'Oprema nije pronađena' });
     res.json(rows[0]);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.remove = async (req, res) => {
@@ -115,5 +116,5 @@ exports.remove = async (req, res) => {
     }
     await db.query(query, params);
     res.json({ message: 'Oprema obrisana' });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };

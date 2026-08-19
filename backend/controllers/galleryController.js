@@ -2,6 +2,7 @@ const path = require('path');
 const fs = require('fs');
 const multer = require('multer');
 const db = require('../config/db');
+const { imageFileFilter } = require('../middleware/imageUpload');
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -14,7 +15,11 @@ const storage = multer.diskStorage({
     cb(null, `gallery_${Date.now()}_${Math.random().toString(36).slice(2, 7)}${ext}`);
   }
 });
-exports.upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 }, fileFilter: (req, file, cb) => cb(null, file.mimetype.startsWith('image/')) });
+exports.upload = multer({
+  storage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: imageFileFilter
+});
 
 exports.getAll = async (req, res) => {
   try {
@@ -28,7 +33,7 @@ exports.getAll = async (req, res) => {
       params
     );
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.uploadPhoto = async (req, res) => {
@@ -41,7 +46,7 @@ exports.uploadPhoto = async (req, res) => {
       [req.user.club_id, req.user.id, req.file.filename, url, title||null, event_type||'other', event_id||null]
     );
     res.status(201).json({ id: r.insertId, url, title });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.remove = async (req, res) => {
@@ -52,5 +57,5 @@ exports.remove = async (req, res) => {
     if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
     await db.query('DELETE FROM gallery WHERE id=?', [req.params.id]);
     res.json({ message: 'Slika obrisana' });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };

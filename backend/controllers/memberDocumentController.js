@@ -49,7 +49,7 @@ exports.getAll = async (req, res) => {
       [req.params.memberId, req.user.club_id]
     );
     res.json(rows);
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.create = async (req, res) => {
@@ -63,7 +63,7 @@ exports.create = async (req, res) => {
       [req.params.memberId, req.user.club_id, name, fileUrl, req.file.size, req.file.mimetype, req.user.id]
     );
     res.status(201).json({ id: result.insertId, name, file_url: fileUrl, file_size: req.file.size, mime_type: req.file.mimetype, created_at: new Date() });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.remove = async (req, res) => {
@@ -75,5 +75,5 @@ exports.remove = async (req, res) => {
     if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
     await db.query('DELETE FROM member_documents WHERE id=?', [req.params.id]);
     res.json({ message: 'Dokument obrisan' });
-  } catch (err) { res.status(500).json({ message: 'Server error', error: err.message }); }
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };

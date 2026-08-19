@@ -137,12 +137,14 @@ const STATUS_BADGE = { open:'<span class="badge bg-danger">Otvoren</span>', in_p
 const PRIO_BADGE   = { low:'<span class="badge bg-secondary">Nizak</span>', medium:'<span class="badge bg-info text-dark">Srednji</span>', high:'<span class="badge bg-danger">Visok</span>' };
 
 async function load() {
-  allTickets = await apiGet('/support-tickets');
-  document.getElementById('kOpen').textContent      = allTickets.filter(t=>t.status==='open').length;
-  document.getElementById('kInProgress').textContent= allTickets.filter(t=>t.status==='in_progress').length;
-  document.getElementById('kResolved').textContent  = allTickets.filter(t=>t.status==='resolved').length;
-  document.getElementById('kTotal').textContent     = allTickets.length;
-  renderTable();
+  try {
+    allTickets = await apiGet('/support-tickets');
+    document.getElementById('kOpen').textContent      = allTickets.filter(t=>t.status==='open').length;
+    document.getElementById('kInProgress').textContent= allTickets.filter(t=>t.status==='in_progress').length;
+    document.getElementById('kResolved').textContent  = allTickets.filter(t=>t.status==='resolved').length;
+    document.getElementById('kTotal').textContent     = allTickets.length;
+    renderTable();
+  } catch(e) { showToast(e.message, 'error'); }
 }
 
 function renderTable() {
@@ -164,26 +166,28 @@ function renderTable() {
 
 async function openThread(id) {
   currentTicketId=id;
-  const {ticket, replies} = await apiGet('/support-tickets/'+id+'/replies');
-  document.getElementById('threadSubject').textContent=ticket.subject;
-  document.getElementById('threadMeta').innerHTML=`${STATUS_BADGE[ticket.status]} ${PRIO_BADGE[ticket.priority]} <span class="text-muted small">${ticket.club_name}</span>`;
-  document.getElementById('threadStatus').value=ticket.status;
-  document.getElementById('replyBody').value='';
-  document.getElementById('threadReplies').innerHTML = replies.map(r=>`
-    <div class="d-flex gap-2 mb-3 ${r.is_staff?'flex-row-reverse':''}">
-      <div class="flex-shrink-0">
-        <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:36px;height:36px;background:${r.is_staff?'#9b86f2':'#e2e8f0'}">
-          <i class="bi bi-${r.is_staff?'shield-check text-white':'person text-muted'}"></i>
+  try {
+    const {ticket, replies} = await apiGet('/support-tickets/'+id+'/replies');
+    document.getElementById('threadSubject').textContent=ticket.subject;
+    document.getElementById('threadMeta').innerHTML=`${STATUS_BADGE[ticket.status]} ${PRIO_BADGE[ticket.priority]} <span class="text-muted small">${ticket.club_name}</span>`;
+    document.getElementById('threadStatus').value=ticket.status;
+    document.getElementById('replyBody').value='';
+    document.getElementById('threadReplies').innerHTML = replies.map(r=>`
+      <div class="d-flex gap-2 mb-3 ${r.is_staff?'flex-row-reverse':''}">
+        <div class="flex-shrink-0">
+          <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:36px;height:36px;background:${r.is_staff?'#9b86f2':'#e2e8f0'}">
+            <i class="bi bi-${r.is_staff?'shield-check text-white':'person text-muted'}"></i>
+          </div>
         </div>
-      </div>
-      <div class="flex-grow-1">
-        <div class="small fw-semibold ${r.is_staff?'text-end':''} mb-1">${r.user_name} ${r.is_staff?'<span class="badge" style="background:#9b86f2">Klavio</span>':''}</div>
-        <div class="p-3 rounded-3 ${r.is_staff?'text-white':'bg-light'}" style="${r.is_staff?'background:#9b86f2':''};white-space:pre-wrap;">${r.body}</div>
-        <div class="small text-muted mt-1 ${r.is_staff?'text-end':''}">${new Date(r.created_at).toLocaleString('bs-BA')}</div>
-      </div>
-    </div>`).join('')||'<p class="text-muted text-center">Nema poruka</p>';
-  const _tm = document.getElementById('threadModal');
-  (bootstrap.Modal.getInstance(_tm) || new bootstrap.Modal(_tm)).show();
+        <div class="flex-grow-1">
+          <div class="small fw-semibold ${r.is_staff?'text-end':''} mb-1">${r.user_name} ${r.is_staff?'<span class="badge" style="background:#9b86f2">Klavio</span>':''}</div>
+          <div class="p-3 rounded-3 ${r.is_staff?'text-white':'bg-light'}" style="${r.is_staff?'background:#9b86f2':''};white-space:pre-wrap;">${r.body}</div>
+          <div class="small text-muted mt-1 ${r.is_staff?'text-end':''}">${new Date(r.created_at).toLocaleString('bs-BA')}</div>
+        </div>
+      </div>`).join('')||'<p class="text-muted text-center">Nema poruka</p>';
+    const _tm = document.getElementById('threadModal');
+    (bootstrap.Modal.getInstance(_tm) || new bootstrap.Modal(_tm)).show();
+  } catch(e) { showToast(e.message, 'error'); }
 }
 
 async function sendReply() {

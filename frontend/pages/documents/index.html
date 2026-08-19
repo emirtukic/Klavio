@@ -1528,21 +1528,20 @@
             </a>
           </div>
         </div>`;
-      return;
-    }
+    } else {
+      const club = getClub();
+      if (club && club.name) {
+        document.querySelectorAll('.auto-club-name').forEach(el => { el.value = club.name; });
+      }
 
-    const club = getClub();
-    if (club && club.name) {
-      document.querySelectorAll('.auto-club-name').forEach(el => { el.value = club.name; });
-    }
-
-    // Auto-open modal if navigated from search (?open=modal-id)
-    const _openParam = new URLSearchParams(window.location.search).get('open');
-    if (_openParam) {
-      window.addEventListener('load', () => {
-        const el = document.getElementById(_openParam);
-        if (el) new bootstrap.Modal(el).show();
-      });
+      // Auto-open modal if navigated from search (?open=modal-id)
+      const _openParam = new URLSearchParams(window.location.search).get('open');
+      if (_openParam) {
+        window.addEventListener('load', () => {
+          const el = document.getElementById(_openParam);
+          if (el) new bootstrap.Modal(el).show();
+        });
+      }
     }
   }
 
@@ -1655,7 +1654,6 @@
       const form = pdfDoc.getForm();
       const acroFields = form.getFields();
       if (acroFields.length > 0) {
-        console.log('[pdf-lib] AcroForm fields:', acroFields.map(f => f.getName()));
         for (const f of fields) {
           if (f.acroName) {
             try { form.getTextField(f.acroName).setText(f.text || ''); } catch(_) {}

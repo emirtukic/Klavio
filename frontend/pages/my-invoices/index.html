@@ -94,11 +94,13 @@ const fmt  = n => parseFloat(n || 0).toFixed(2) + ' KM';
 const fmtD = d => d ? new Date(d).toLocaleDateString('bs-BA') : '-';
 
 async function load() {
-  allInv = await apiGet('/invoices/mine');
-  document.getElementById('kPaid').textContent    = allInv.filter(i => i.status === 'paid').length;
-  document.getElementById('kUnpaid').textContent  = allInv.filter(i => i.status === 'unpaid').length;
-  document.getElementById('kOverdue').textContent = allInv.filter(i => i.status === 'overdue').length;
-  renderTable();
+  try {
+    allInv = await apiGet('/invoices/mine');
+    document.getElementById('kPaid').textContent    = allInv.filter(i => i.status === 'paid').length;
+    document.getElementById('kUnpaid').textContent  = allInv.filter(i => i.status === 'unpaid').length;
+    document.getElementById('kOverdue').textContent = allInv.filter(i => i.status === 'overdue').length;
+    renderTable();
+  } catch(e) { showToast(e.message, 'error'); }
 }
 
 function renderTable() {
