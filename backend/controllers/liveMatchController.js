@@ -1,5 +1,6 @@
 const db  = require('../config/db');
 const sse = require('../services/sseManager');
+const { assertClubOwned } = require('../utils/clubScope');
 
 /* ─── helpers ─────────────────────────────────────────────────────── */
 
@@ -313,9 +314,7 @@ async function deleteEvent(req, res) {
     const { matchId, eventId } = req.params;
     const { club_id } = req.user;
 
-    const [[m]] = await db.query(
-      `SELECT id FROM matches WHERE id=? AND club_id=?`, [matchId, club_id]);
-    if (!m) return res.status(404).json({ message: 'Not found' });
+    if (!(await assertClubOwned('matches', matchId, club_id))) return res.status(404).json({ message: 'Not found' });
 
     await db.query(
       `DELETE FROM match_events WHERE id=? AND match_id=?`, [eventId, matchId]);

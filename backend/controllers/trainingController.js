@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { assertClubOwned } = require('../utils/clubScope');
 
 function selScope(req) {
   if ((req.user.role === 'coach' || req.user.role === 'member') && req.user.selection_id)
@@ -99,8 +100,7 @@ exports.remove = async (req, res) => {
 exports.markAttendance = async (req, res) => {
   const { member_id, status } = req.body;
   try {
-    const [[session]] = await db.query('SELECT id FROM training_sessions WHERE id=? AND club_id=?', [req.params.id, req.user.club_id]);
-    if (!session) return res.status(404).json({ message: 'Trening nije pronađen' });
+    if (!(await assertClubOwned('training_sessions', req.params.id, req.user.club_id))) return res.status(404).json({ message: 'Trening nije pronađen' });
     await db.query(
       'INSERT INTO training_attendance (session_id, member_id, status) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE status=?',
       [req.params.id, member_id, status, status]

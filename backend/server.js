@@ -126,11 +126,22 @@ async function runMigrations() {
   } catch (err) {
     console.error('[migration] 004_live_match failed:', err.message);
   }
+
+  try {
+    // Disambiguate what verification_token is for (email-verify / invite / password-reset)
+    // so the three flows can't be mixed up via a shared column.
+    await db.query(`
+      ALTER TABLE users
+        ADD COLUMN IF NOT EXISTS token_purpose VARCHAR(20) NULL AFTER verification_expires
+    `);
+    console.log('[migration] 005_token_purpose: OK');
+  } catch (err) {
+    console.error('[migration] 005_token_purpose failed:', err.message);
+  }
 }
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, async () => {
   console.log(`Server running on http://localhost:${PORT}`);
   await runMigrations();
-  autoEndStaleMatches();
 });

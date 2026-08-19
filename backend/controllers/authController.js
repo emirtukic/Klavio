@@ -109,7 +109,7 @@ exports.register = async (req, res) => {
     const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     await db.query(
-      'INSERT INTO users (name, email, password_hash, role, club_id, is_active, email_verified, verification_token, verification_expires) VALUES (?, ?, ?, ?, ?, 1, 0, ?, ?)',
+      "INSERT INTO users (name, email, password_hash, role, club_id, is_active, email_verified, verification_token, verification_expires, token_purpose) VALUES (?, ?, ?, ?, ?, 1, 0, ?, ?, 'verify')",
       [admin_name, email, password_hash, 'admin', clubId, verificationToken, verificationExpires]
     );
 
@@ -161,12 +161,12 @@ exports.verifyEmail = async (req, res) => {
   if (!token) return res.redirect('/verify-email.html?error=invalid');
   try {
     const [rows] = await db.query(
-      'SELECT id FROM users WHERE verification_token = ? AND verification_expires > NOW() AND email_verified = 0',
+      "SELECT id FROM users WHERE verification_token = ? AND verification_expires > NOW() AND email_verified = 0 AND token_purpose = 'verify'",
       [token]
     );
     if (!rows.length) return res.redirect('/verify-email.html?error=expired');
     await db.query(
-      'UPDATE users SET email_verified = 1, verification_token = NULL, verification_expires = NULL WHERE id = ?',
+      'UPDATE users SET email_verified = 1, verification_token = NULL, verification_expires = NULL, token_purpose = NULL WHERE id = ?',
       [rows[0].id]
     );
     res.redirect('/verify-email.html?success=1');
@@ -187,7 +187,7 @@ exports.createUser = async (req, res) => {
     const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
     const [result] = await db.query(
-      'INSERT INTO users (name, email, password_hash, role, club_id, email_verified, verification_token, verification_expires) VALUES (?, ?, ?, ?, ?, 0, ?, ?)',
+      "INSERT INTO users (name, email, password_hash, role, club_id, email_verified, verification_token, verification_expires, token_purpose) VALUES (?, ?, ?, ?, ?, 0, ?, ?, 'invite')",
       [name, email, password_hash, role, club_id, token, expires]
     );
 
@@ -306,7 +306,7 @@ exports.forgotPassword = async (req, res) => {
     const user = rows[0];
     const token = crypto.randomBytes(32).toString('hex');
     const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
-    await db.query('UPDATE users SET verification_token = ?, verification_expires = ? WHERE id = ?', [token, expires, user.id]);
+    await db.query("UPDATE users SET verification_token = ?, verification_expires = ?, token_purpose = 'reset' WHERE id = ?", [token, expires, user.id]);
     const appUrl = process.env.APP_URL || 'http://localhost:3000';
     const resetLink = `${appUrl}/reset-password.html?token=${token}`;
     sendMail({
@@ -337,7 +337,7 @@ exports.validateResetToken = async (req, res) => {
   if (!token) return res.status(400).json({ message: 'Token nije naveden' });
   try {
     const [rows] = await db.query(
-      'SELECT name, email FROM users WHERE verification_token = ? AND verification_expires > NOW()',
+      "SELECT name, email FROM users WHERE verification_token = ? AND verification_expires > NOW() AND token_purpose = 'reset'",
       [token]
     );
     if (!rows.length) return res.status(404).json({ message: 'Link nije validan ili je istekao' });
@@ -353,13 +353,13 @@ exports.resetPassword = async (req, res) => {
   if (password.length < 8) return res.status(400).json({ message: 'Lozinka mora imati najmanje 8 karaktera' });
   try {
     const [rows] = await db.query(
-      'SELECT id FROM users WHERE verification_token = ? AND verification_expires > NOW()',
+      "SELECT id FROM users WHERE verification_token = ? AND verification_expires > NOW() AND token_purpose = 'reset'",
       [token]
     );
     if (!rows.length) return res.status(400).json({ message: 'Link nije validan ili je istekao' });
     const hash = await bcrypt.hash(password, 10);
     await db.query(
-      'UPDATE users SET password_hash = ?, email_verified = 1, verification_token = NULL, verification_expires = NULL WHERE id = ?',
+      'UPDATE users SET password_hash = ?, email_verified = 1, verification_token = NULL, verification_expires = NULL, token_purpose = NULL WHERE id = ?',
       [hash, rows[0].id]
     );
     res.json({ message: 'Lozinka je uspješno resetovana. Možete se prijaviti.' });
@@ -389,7 +389,7 @@ exports.validateSetPasswordToken = async (req, res) => {
   if (!token) return res.status(400).json({ message: 'Token nije naveden' });
   try {
     const [rows] = await db.query(
-      'SELECT name, email FROM users WHERE verification_token = ? AND verification_expires > NOW() AND email_verified = 0',
+      "SELECT name, email FROM users WHERE verification_token = ? AND verification_expires > NOW() AND email_verified = 0 AND token_purpose = 'invite'",
       [token]
     );
     if (!rows.length) return res.status(404).json({ message: 'Link nije validan ili je istekao' });
@@ -405,13 +405,13 @@ exports.setPassword = async (req, res) => {
   if (password.length < 8) return res.status(400).json({ message: 'Lozinka mora imati najmanje 8 karaktera' });
   try {
     const [rows] = await db.query(
-      'SELECT id FROM users WHERE verification_token = ? AND verification_expires > NOW() AND email_verified = 0',
+      "SELECT id FROM users WHERE verification_token = ? AND verification_expires > NOW() AND email_verified = 0 AND token_purpose = 'invite'",
       [token]
     );
     if (!rows.length) return res.status(400).json({ message: 'Link nije validan ili je istekao' });
     const hash = await bcrypt.hash(password, 10);
     await db.query(
-      'UPDATE users SET password_hash = ?, email_verified = 1, verification_token = NULL, verification_expires = NULL WHERE id = ?',
+      'UPDATE users SET password_hash = ?, email_verified = 1, verification_token = NULL, verification_expires = NULL, token_purpose = NULL WHERE id = ?',
       [hash, rows[0].id]
     );
     res.json({ message: 'Lozinka je uspješno postavljena. Možete se prijaviti.' });

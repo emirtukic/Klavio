@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { assertClubOwned } = require('../utils/clubScope');
 
 exports.getPlayerStats = async (req, res) => {
   try {
@@ -81,10 +82,8 @@ exports.upsertStats = async (req, res) => {
   const { member_id, goals, assists, yellow_cards, red_cards, minutes_played, started } = req.body;
   const match_id = req.params.matchId;
   try {
-    const [[match]] = await db.query('SELECT id FROM matches WHERE id=? AND club_id=?', [match_id, req.user.club_id]);
-    if (!match) return res.status(404).json({ message: 'Utakmica nije pronađena' });
-    const [[member]] = await db.query('SELECT id FROM members WHERE id=? AND club_id=?', [member_id, req.user.club_id]);
-    if (!member) return res.status(404).json({ message: 'Član nije pronađen' });
+    if (!(await assertClubOwned('matches', match_id, req.user.club_id))) return res.status(404).json({ message: 'Utakmica nije pronađena' });
+    if (!(await assertClubOwned('members', member_id, req.user.club_id))) return res.status(404).json({ message: 'Član nije pronađen' });
     await db.query(`
       INSERT INTO player_stats (member_id, match_id, club_id, goals, assists, yellow_cards, red_cards, minutes_played, started)
       VALUES (?,?,?,?,?,?,?,?,?)

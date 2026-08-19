@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { assertClubOwned } = require('../utils/clubScope');
 
 exports.getAll = async (req, res) => {
   try {
@@ -18,8 +19,7 @@ exports.getAll = async (req, res) => {
 
 exports.getMemberFees = async (req, res) => {
   try {
-    const [[member]] = await db.query('SELECT id FROM members WHERE id=? AND club_id=?', [req.params.memberId, req.user.club_id]);
-    if (!member) return res.status(404).json({ message: 'Član nije pronađen' });
+    if (!(await assertClubOwned('members', req.params.memberId, req.user.club_id))) return res.status(404).json({ message: 'Član nije pronađen' });
     if (req.user.role === 'member') {
       const [[m]] = await db.query('SELECT id FROM members WHERE user_id=? AND club_id=?', [req.user.id, req.user.club_id]);
       if (!m || m.id != req.params.memberId) return res.status(403).json({ message: 'Nedozvoljen pristup' });

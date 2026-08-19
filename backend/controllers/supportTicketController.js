@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { assertClubOwned } = require('../utils/clubScope');
 
 exports.getAll = async (req, res) => {
   try {
@@ -66,10 +67,10 @@ exports.reply = async (req, res) => {
   const { body } = req.body;
   const isStaff = req.user.role === 'super_admin';
   try {
-    const [tRows] = isStaff
-      ? await db.query('SELECT club_id FROM support_tickets WHERE id=?', [req.params.id])
-      : await db.query('SELECT club_id FROM support_tickets WHERE id=? AND club_id=?', [req.params.id, req.user.club_id]);
-    if (!tRows.length) return res.status(404).json({ message: 'Ticket nije pronađen' });
+    const exists = isStaff
+      ? (await db.query('SELECT id FROM support_tickets WHERE id=?', [req.params.id]))[0].length > 0
+      : await assertClubOwned('support_tickets', req.params.id, req.user.club_id);
+    if (!exists) return res.status(404).json({ message: 'Ticket nije pronađen' });
     await db.query(
       'INSERT INTO support_ticket_replies (ticket_id, user_id, body, is_staff) VALUES (?,?,?,?)',
       [req.params.id, req.user.id, body, isStaff ? 1 : 0]
