@@ -20,7 +20,6 @@ frontend/assets/uploads/gallery/*
 # DOCX extracted working files
 obrazci/_extracted/
 
-# Claude Code local session data
 .claude/
 
 # OS files
