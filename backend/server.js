@@ -94,13 +94,33 @@ cron.schedule('*/5 * * * *', () => {
 
 console.log('[boot] liveMatch controller version: 2 (uses users.name)');
 
+// MySQL only added ADD COLUMN IF NOT EXISTS in 8.0.29 - older MySQL (e.g. some
+// managed Aiven versions) rejects that syntax outright, which aborted the whole
+// migration block before it ever reached the CREATE TABLE statements after it.
+// information_schema works identically on every MySQL/MariaDB version instead.
+async function columnExists(table, column) {
+  const [rows] = await db.query(
+    `SELECT 1 FROM information_schema.COLUMNS
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?`,
+    [table, column]
+  );
+  return rows.length > 0;
+}
+
 async function runMigrations() {
   try {
-    await db.query(`
-      ALTER TABLE matches
-        ADD COLUMN IF NOT EXISTS status ENUM('scheduled','live','paused','finished') NOT NULL DEFAULT 'scheduled' AFTER goals_against,
-        ADD COLUMN IF NOT EXISTS started_at DATETIME NULL AFTER status
-    `);
+    if (!(await columnExists('matches', 'status'))) {
+      await db.query(`
+        ALTER TABLE matches
+          ADD COLUMN status ENUM('scheduled','live','paused','finished') NOT NULL DEFAULT 'scheduled' AFTER goals_against
+      `);
+    }
+    if (!(await columnExists('matches', 'started_at'))) {
+      await db.query(`
+        ALTER TABLE matches
+          ADD COLUMN started_at DATETIME NULL AFTER status
+      `);
+    }
     await db.query(`
       CREATE TABLE IF NOT EXISTS match_events (
         id                  INT AUTO_INCREMENT PRIMARY KEY,
@@ -130,10 +150,12 @@ async function runMigrations() {
   try {
     // Disambiguate what verification_token is for (email-verify / invite / password-reset)
     // so the three flows can't be mixed up via a shared column.
-    await db.query(`
-      ALTER TABLE users
-        ADD COLUMN IF NOT EXISTS token_purpose VARCHAR(20) NULL AFTER verification_expires
-    `);
+    if (!(await columnExists('users', 'token_purpose'))) {
+      await db.query(`
+        ALTER TABLE users
+          ADD COLUMN token_purpose VARCHAR(20) NULL AFTER verification_expires
+      `);
+    }
     console.log('[migration] 005_token_purpose: OK');
   } catch (err) {
     console.error('[migration] 005_token_purpose failed:', err.message);
