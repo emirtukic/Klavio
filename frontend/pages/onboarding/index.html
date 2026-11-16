@@ -265,7 +265,7 @@
     const user = requireRole('admin', 'super_admin');
     if (!user) return;
     const club = getClub();
-    if (!club) { window.location.href = '/'; return; }
+    if (!club) { window.location.href = '/app/'; return; }
     if (localStorage.getItem('onboarding_done_' + club.id)) {
       window.location.href = '/pages/dashboard/admin.html';
       return;

@@ -158,20 +158,20 @@ exports.register = async (req, res) => {
 
 exports.verifyEmail = async (req, res) => {
   const { token } = req.query;
-  if (!token) return res.redirect('/verify-email.html?error=invalid');
+  if (!token) return res.redirect('/app/verify-email.html?error=invalid');
   try {
     const [rows] = await db.query(
       "SELECT id FROM users WHERE verification_token = ? AND verification_expires > NOW() AND email_verified = 0 AND token_purpose = 'verify'",
       [token]
     );
-    if (!rows.length) return res.redirect('/verify-email.html?error=expired');
+    if (!rows.length) return res.redirect('/app/verify-email.html?error=expired');
     await db.query(
       'UPDATE users SET email_verified = 1, verification_token = NULL, verification_expires = NULL, token_purpose = NULL WHERE id = ?',
       [rows[0].id]
     );
-    res.redirect('/verify-email.html?success=1');
+    res.redirect('/app/verify-email.html?success=1');
   } catch (err) {
-    res.redirect('/verify-email.html?error=server');
+    res.redirect('/app/verify-email.html?error=server');
   }
 };
 
@@ -192,7 +192,7 @@ exports.createUser = async (req, res) => {
     );
 
     const appUrl = process.env.APP_URL || 'http://localhost:3000';
-    const setPasswordLink = `${appUrl}/set-password.html?token=${token}`;
+    const setPasswordLink = `${appUrl}/app/set-password.html?token=${token}`;
 
     let clubName = 'Klavio';
     if (club_id) {
@@ -308,7 +308,7 @@ exports.forgotPassword = async (req, res) => {
     const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
     await db.query("UPDATE users SET verification_token = ?, verification_expires = ?, token_purpose = 'reset' WHERE id = ?", [token, expires, user.id]);
     const appUrl = process.env.APP_URL || 'http://localhost:3000';
-    const resetLink = `${appUrl}/reset-password.html?token=${token}`;
+    const resetLink = `${appUrl}/app/reset-password.html?token=${token}`;
     sendMail({
       to: email,
       subject: 'Resetovanje lozinke – Klavio',

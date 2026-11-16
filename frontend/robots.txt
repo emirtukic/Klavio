@@ -1,8 +1,8 @@
 User-agent: *
-Allow: /website/
+Allow: /
+Disallow: /app/
 Disallow: /pages/
 Disallow: /api/
 Disallow: /assets/js/
-Disallow: /index.html
 
-Sitemap: https://klavio.ba/website/sitemap.xml
+Sitemap: https://klavioclub.com/sitemap.xml

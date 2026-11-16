@@ -41,7 +41,7 @@
   <h1>Provjera...</h1>
   <p>Molimo pričekajte.</p>
 </div>
-<a href="/website/" class="back-link">← Nazad na klavio.ba</a>
+<a href="/" class="back-link">← Nazad na klavioclub.com</a>
 <script>
   const params  = new URLSearchParams(window.location.search);
   const success = params.get('success');
@@ -53,14 +53,14 @@
       <div class="icon">✅</div>
       <h1>E-mail potvrđen!</h1>
       <p>Vaš nalog je aktiviran. Sada se možete prijaviti u Klavio i početi koristiti platformu.</p>
-      <a href="/" class="btn">Prijavite se</a>
+      <a href="/app/" class="btn">Prijavite se</a>
     `;
   } else if (error === 'expired') {
     card.innerHTML = `
       <div class="icon">⏰</div>
       <h1>Link je istekao</h1>
       <p>Link za potvrdu e-maila je istekao (važi 24 sata). Molimo registrujte se ponovo ili nas kontaktirajte.</p>
-      <a href="/website/register.html" class="btn">Registrujte se ponovo</a>
+      <a href="/register.html" class="btn">Registrujte se ponovo</a>
       <a href="mailto:klavio.app@gmail.com" class="btn btn-ghost">Kontakt</a>
     `;
   } else {
@@ -68,7 +68,7 @@
       <div class="icon">❌</div>
       <h1>Nevalidan link</h1>
       <p>Ovaj link za potvrdu nije validan ili je već iskorišten. Pokušajte se prijaviti ili kontaktirajte podršku.</p>
-      <a href="/" class="btn">Pokušajte se prijaviti</a>
+      <a href="/app/" class="btn">Pokušajte se prijaviti</a>
       <a href="mailto:klavio.app@gmail.com" class="btn btn-ghost">Kontakt</a>
     `;
   }

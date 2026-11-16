@@ -14,22 +14,22 @@ function isSuperAdminInClub() { return !!localStorage.getItem('sa_token'); }
 /* ── Auth ── */
 function logout() {
   ['token','user','club','selection','sa_token'].forEach(k => localStorage.removeItem(k));
-  window.location.href = '/';
+  window.location.href = '/app/';
 }
 function redirectToDashboard(role) {
   const paths = { super_admin:'/pages/dashboard/super-admin.html', admin:'/pages/dashboard/admin.html', coach:'/pages/dashboard/coach.html', member:'/pages/dashboard/member.html' };
-  window.location.href = paths[role] || '/';
+  window.location.href = paths[role] || '/app/';
 }
 function requireAuth() {
   const token = getToken(), user = getUser();
-  if (!token || !user) { window.location.href = '/'; return null; }
+  if (!token || !user) { window.location.href = '/app/'; return null; }
   return user;
 }
 function requireRole(...roles) {
   const user = requireAuth();
   if (!user) return null;
   if (user.role === 'super_admin') return user;
-  if (!roles.includes(user.role)) { window.location.href = '/'; return null; }
+  if (!roles.includes(user.role)) { window.location.href = '/app/'; return null; }
   return user;
 }
 

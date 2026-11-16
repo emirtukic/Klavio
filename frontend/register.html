@@ -5,9 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Registracija Kluba | Klavio – Besplatni Menadžment Fudbalskog Kluba</title>
   <meta name="description" content="Registrujte vaš fudbalski klub na Klavio platformi besplatno. Upravljanje članovima, treninzima, utakmicama i finansijama – bez kreditne kartice, bez vremenskog ograničenja.">
-  <link rel="canonical" href="https://klavio.ba/website/register.html">
+  <link rel="canonical" href="https://klavio.ba/register.html">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://klavio.ba/website/register.html">
+  <meta property="og:url" content="https://klavio.ba/register.html">
   <meta property="og:title" content="Registracija Kluba | Klavio – Besplatni Menadžment Fudbalskog Kluba">
   <meta property="og:description" content="Registrujte vaš fudbalski klub besplatno. Upravljanje članovima, treninzima, utakmicama i finansijama na jednom mjestu.">
   <meta property="og:site_name" content="Klavio">
@@ -175,12 +175,12 @@
 </head>
 <body>
 
-<a href="/website/" class="back-home">← Početna</a>
+<a href="/" class="back-home">← Početna</a>
 
 <div class="reg-wrap">
   <!-- Left branding -->
   <div class="reg-left">
-    <a href="/website/" class="reg-logo">
+    <a href="/" class="reg-logo">
       <img src="/assets/img/klavio-logo.png" alt="Klavio" style="height:60px;filter:none;">
     </a>
     <h2>Kreirajte vaš klub.<br><em>Potpuno besplatno.</em></h2>
@@ -248,11 +248,11 @@
     </form>
 
     <p class="reg-login">
-      Već imate račun? <a href="/">Prijavite se</a>
+      Već imate račun? <a href="/app/">Prijavite se</a>
     </p>
     <p style="text-align:center;font-size:0.75rem;color:#94a3b8;margin-top:12px;">
-      Registracijom prihvatate naše <a href="/website/terms.html" style="color:#2563eb">Uvjete korištenja</a>
-      i <a href="/website/privacy.html" style="color:#2563eb">Politiku privatnosti</a>.
+      Registracijom prihvatate naše <a href="/terms.html" style="color:#2563eb">Uvjete korištenja</a>
+      i <a href="/privacy.html" style="color:#2563eb">Politiku privatnosti</a>.
     </p>
   </div>
 </div>
@@ -314,7 +314,7 @@
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Greška pri registraciji');
 
-      successEl.innerHTML = 'Klub kreiran! <strong>Provjerite vaš e-mail inbox</strong> (' + data.email + ') za link potvrde. Nakon potvrde možete se <a href="/" style="color:#16a34a;font-weight:600;">prijaviti</a>.';
+      successEl.innerHTML = 'Klub kreiran! <strong>Provjerite vaš e-mail inbox</strong> (' + data.email + ') za link potvrde. Nakon potvrde možete se <a href="/app/" style="color:#16a34a;font-weight:600;">prijaviti</a>.';
       successEl.style.display = 'block';
       document.getElementById('regForm').style.display = 'none';
     } catch (err) {

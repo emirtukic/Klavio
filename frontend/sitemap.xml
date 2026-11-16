@@ -3,78 +3,78 @@
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
 
   <url>
-    <loc>https://klavio.ba/website/</loc>
+    <loc>https://klavioclub.com/</loc>
     <lastmod>2026-05-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-    <xhtml:link rel="alternate" hreflang="bs" href="https://klavio.ba/website/"/>
+    <xhtml:link rel="alternate" hreflang="bs" href="https://klavioclub.com/"/>
   </url>
 
   <url>
-    <loc>https://klavio.ba/website/register.html</loc>
+    <loc>https://klavioclub.com/register.html</loc>
     <lastmod>2026-05-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://klavio.ba/website/plan-starter.html</loc>
+    <loc>https://klavioclub.com/plan-starter.html</loc>
     <lastmod>2026-05-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.85</priority>
   </url>
 
   <url>
-    <loc>https://klavio.ba/website/plan-pro.html</loc>
+    <loc>https://klavioclub.com/plan-pro.html</loc>
     <lastmod>2026-05-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.85</priority>
   </url>
 
   <url>
-    <loc>https://klavio.ba/website/plan-klub.html</loc>
+    <loc>https://klavioclub.com/plan-klub.html</loc>
     <lastmod>2026-05-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.85</priority>
   </url>
 
   <url>
-    <loc>https://klavio.ba/website/about.html</loc>
+    <loc>https://klavioclub.com/about.html</loc>
     <lastmod>2026-05-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://klavio.ba/website/contact.html</loc>
+    <loc>https://klavioclub.com/contact.html</loc>
     <lastmod>2026-05-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://klavio.ba/website/terms.html</loc>
+    <loc>https://klavioclub.com/terms.html</loc>
     <lastmod>2026-05-22</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>
   </url>
 
   <url>
-    <loc>https://klavio.ba/website/privacy.html</loc>
+    <loc>https://klavioclub.com/privacy.html</loc>
     <lastmod>2026-05-22</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>
   </url>
 
   <url>
-    <loc>https://klavio.ba/website/cookies.html</loc>
+    <loc>https://klavioclub.com/cookies.html</loc>
     <lastmod>2026-05-22</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.1</priority>
   </url>
 
   <url>
-    <loc>https://klavio.ba/website/gdpr.html</loc>
+    <loc>https://klavioclub.com/gdpr.html</loc>
     <lastmod>2026-05-22</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.1</priority>
