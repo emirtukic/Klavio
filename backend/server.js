@@ -8,6 +8,13 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// Clean URL for the registration page (file has no extension on disk,
+// so express.static can't guess its content type on its own).
+app.get('/register', (req, res) => {
+  res.type('html').sendFile(path.join(__dirname, '../frontend/register'));
+});
+
 app.use(express.static(path.join(__dirname, '../frontend')));
 app.use('/forms', express.static(path.join(__dirname, '../obrazci')));
 
