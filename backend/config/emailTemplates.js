@@ -1,45 +1,41 @@
-const fs   = require('fs');
-const path = require('path');
-
 const FONT = `-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif`;
+const SITE = 'https://klavioclub.com';
+const LOGO_URL = `${SITE}/assets/img/favicon-192.png`;
 
-// Build a white monochrome base64 data URI from the icon SVG
-const _iconPath = path.join(__dirname, '../../frontend/assets/img/klavio-icon.svg');
-let _logoSrc = null;
-if (fs.existsSync(_iconPath)) {
-  const white = fs.readFileSync(_iconPath, 'utf8')
-    .replace('.st0 { fill: #9b86f2; }', '.st0 { fill: #ffffff; }')
-    .replace('.st1 { fill: #84f4d4; }', '.st1 { fill: #ffffff; }');
-  _logoSrc = 'data:image/svg+xml;base64,' + Buffer.from(white).toString('base64');
-}
-
-// viewBox="55 190 370 120" → aspect ratio 370:120
-function logoImg(w, h) {
-  return _logoSrc
-    ? `<img src="${_logoSrc}" alt="Klavio" width="${w}" height="${h}" style="display:block;width:${w}px;height:${h}px;border:0;">`
-    : `<span style="font-size:20px;font-weight:900;color:#ffffff;font-family:Arial,sans-serif;letter-spacing:-0.5px;">KLAVIO</span>`;
+function logoRow() {
+  return `
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 28px;">
+              <tr>
+                <td valign="middle" style="padding-right:10px;">
+                  <img src="${LOGO_URL}" alt="Klavio" width="36" height="36" style="display:block;width:36px;height:36px;border:0;border-radius:8px;">
+                </td>
+                <td valign="middle">
+                  <span style="font-size:19px;font-weight:800;color:#0f172a;letter-spacing:-0.3px;font-family:${FONT};">KLAVIO</span>
+                </td>
+              </tr>
+            </table>`;
 }
 
 function ctaButton(link, label) {
   return `
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 20px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 24px;">
               <tr>
                 <td align="center" bgcolor="#2563eb"
-                    style="background-color:#2563eb;border-radius:12px;">
+                    style="background-color:#2563eb;border-radius:10px;">
                   <!--[if mso]>
                   <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml"
                     xmlns:w="urn:schemas-microsoft-com:office:word"
                     href="${link}"
-                    style="height:54px;v-text-anchor:middle;width:300px;"
-                    arcsize="14%" stroke="f" fillcolor="#2563eb">
+                    style="height:50px;v-text-anchor:middle;width:280px;"
+                    arcsize="10%" stroke="f" fillcolor="#2563eb">
                     <w:anchorlock/>
                     <center style="color:#ffffff;font-family:Arial,sans-serif;font-size:15px;font-weight:bold;">${label}</center>
                   </v:roundrect>
                   <![endif]-->
                   <!--[if !mso]><!-->
                   <a href="${link}"
-                     style="display:inline-block;padding:16px 52px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;letter-spacing:0.4px;border-radius:12px;font-family:${FONT};">
-                    &#9993;&nbsp;&nbsp;${label}&nbsp;&nbsp;&#8594;
+                     style="display:inline-block;padding:14px 40px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:10px;font-family:${FONT};">
+                    ${label}
                   </a>
                   <!--<![endif]-->
                 </td>
@@ -47,30 +43,21 @@ function ctaButton(link, label) {
             </table>`;
 }
 
-function lockNote(html) {
+function noteText(html) {
   return `
-            <p style="margin:0 0 28px;font-size:13px;color:#64748b;text-align:center;font-family:${FONT};">
-              &#128274;&nbsp;&nbsp;${html}
+            <p style="margin:0 0 4px;font-size:13px;color:#94a3b8;text-align:center;font-family:${FONT};">
+              ${html}
             </p>`;
 }
 
 function infoBox(title, body) {
   return `
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:28px;">
               <tr>
-                <td bgcolor="#0d1525"
-                    style="background-color:#0d1525;border-radius:12px;border:1px solid #1e293b;padding:18px 22px;">
-                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-                    <tr>
-                      <td width="28" valign="top" style="padding-right:12px;padding-top:1px;">
-                        <span style="font-size:17px;line-height:1;">&#8505;</span>
-                      </td>
-                      <td>
-                        <p style="margin:0 0 5px;font-size:13px;font-weight:700;color:#e2e8f0;font-family:${FONT};">${title}</p>
-                        <p style="margin:0;font-size:13px;color:#64748b;line-height:1.65;font-family:${FONT};">${body}</p>
-                      </td>
-                    </tr>
-                  </table>
+                <td bgcolor="#f8fafc"
+                    style="background-color:#f8fafc;border-radius:10px;border:1px solid #e2e8f0;padding:16px 20px;">
+                  <p style="margin:0 0 4px;font-size:13px;font-weight:700;color:#334155;font-family:${FONT};">${title}</p>
+                  <p style="margin:0;font-size:13px;color:#64748b;line-height:1.6;font-family:${FONT};">${body}</p>
                 </td>
               </tr>
             </table>`;
@@ -94,89 +81,51 @@ function emailWrap(previewText, content) {
     img { -ms-interpolation-mode:bicubic; border:0; height:auto; line-height:100%; outline:none; text-decoration:none; }
     @media only screen and (max-width:620px) {
       .card-pad { padding:32px 24px !important; }
-      .heading  { font-size:24px !important; }
+      .heading  { font-size:22px !important; }
     }
   </style>
 </head>
-<body style="margin:0;padding:0;background-color:#07101e;">
+<body style="margin:0;padding:0;background-color:#f1f5f9;">
 
-<!-- Preview text -->
-<div style="display:none;font-size:1px;color:#07101e;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">${previewText}</div>
+<div style="display:none;font-size:1px;color:#f1f5f9;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;">${previewText}</div>
 
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
   <tr>
-    <td bgcolor="#07101e" style="background-color:#07101e;padding:36px 20px 48px;">
+    <td bgcolor="#f1f5f9" style="background-color:#f1f5f9;padding:40px 20px 48px;">
 
-      <!-- View in browser -->
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" width="600" style="max-width:600px;margin:0 auto 24px;">
-        <tr><td align="center">
-          <p style="margin:0;font-size:12px;color:#374151;font-family:${FONT};">
-            Ako e-mail ne prikazuje ispravno,
-            <a href="https://klavio.app" style="color:#4b5563;text-decoration:underline;">otvorite ga u pregledniku</a>.
-          </p>
-        </td></tr>
-      </table>
-
-      <!-- Tagline -->
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" width="600" style="max-width:600px;margin:0 auto 32px;">
-        <tr><td align="center">
-          <p style="margin:0;font-size:14px;font-weight:700;color:#e2e8f0;letter-spacing:0.05em;font-family:${FONT};">
-            KLAVIO
-          </p>
-          <p style="margin:4px 0 0;font-size:10px;font-weight:600;color:#374151;letter-spacing:0.18em;text-transform:uppercase;font-family:${FONT};">
-            Platforma za upravljanje fudbalskim klubom
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" width="560" style="max-width:560px;margin:0 auto;">
+        <tr><td align="center" style="padding-bottom:28px;">
+          <p style="margin:0;font-size:12px;color:#94a3b8;font-family:${FONT};">
+            Ako e-mail ne prikazuje ispravno, <a href="${SITE}" style="color:#64748b;text-decoration:underline;">otvorite ga u pregledniku</a>.
           </p>
         </td></tr>
       </table>
 
       <!-- Card -->
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" width="600"
-             style="max-width:600px;width:100%;background-color:#0f172a;border-radius:20px;border:1px solid #1e293b;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" width="560"
+             style="max-width:560px;width:100%;background-color:#ffffff;border-radius:16px;box-shadow:0 4px 24px rgba(15,23,42,0.06);border:1px solid #e2e8f0;">
         <tr>
-          <td class="card-pad" style="padding:44px 52px 48px;">
+          <td class="card-pad" style="padding:40px 44px 44px;">
+            ${logoRow()}
             ${content}
           </td>
         </tr>
       </table>
 
       <!-- Footer -->
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" width="600"
-             style="max-width:600px;margin:28px auto 0;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" width="560"
+             style="max-width:560px;margin:28px auto 0;">
         <tr>
-          <td style="padding:0;">
-
-            <!-- Footer brand row -->
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-              <tr>
-                <td valign="middle">
-                  <p style="margin:0;font-size:13px;font-weight:700;color:#e2e8f0;font-family:${FONT};">KLAVIO</p>
-                  <p style="margin:3px 0 0;font-size:9px;color:#1f2937;letter-spacing:0.14em;text-transform:uppercase;font-family:${FONT};">Platforma za upravljanje fudbalskim klubom</p>
-                </td>
-                <td align="right" valign="middle">
-                  <a href="https://klavio.app"
-                     style="display:inline-block;margin-left:8px;text-decoration:none;color:#4b5563;font-size:17px;line-height:1;">&#127760;</a>
-                  <a href="https://www.instagram.com/klavio_app/"
-                     style="display:inline-block;margin-left:10px;text-decoration:none;color:#4b5563;font-size:17px;line-height:1;">&#128247;</a>
-                  <a href="https://www.facebook.com/people/Klavio/61590365125679/"
-                     style="display:inline-block;margin-left:10px;text-decoration:none;color:#4b5563;font-size:17px;line-height:1;">&#128441;</a>
-                </td>
-              </tr>
-            </table>
-
-            <!-- Divider -->
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:20px;">
-              <tr><td style="border-top:1px solid #111827;font-size:0;line-height:0;">&nbsp;</td></tr>
-            </table>
-
-            <!-- Copyright -->
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-top:16px;">
-              <tr><td align="center">
-                <p style="margin:0;font-size:12px;color:#374151;font-family:${FONT};">
-                  &copy; 2026 Klavio. Sva prava zadr&#382;ana.
-                </p>
-              </td></tr>
-            </table>
-
+          <td align="center">
+            <p style="margin:0 0 6px;font-size:13px;font-weight:700;color:#334155;font-family:${FONT};">KLAVIO</p>
+            <p style="margin:0 0 14px;font-size:11px;color:#94a3b8;letter-spacing:0.08em;text-transform:uppercase;font-family:${FONT};">Platforma za upravljanje fudbalskim klubom</p>
+            <p style="margin:0;font-size:12px;color:#94a3b8;font-family:${FONT};">
+              Sarajevo, Bosna i Hercegovina &middot;
+              <a href="mailto:info@klavioclub.com" style="color:#64748b;text-decoration:none;">info@klavioclub.com</a>
+            </p>
+            <p style="margin:12px 0 0;font-size:12px;color:#cbd5e1;font-family:${FONT};">
+              &copy; 2026 Klavio. Sva prava zadr&#382;ana.
+            </p>
           </td>
         </tr>
       </table>
@@ -191,138 +140,100 @@ function emailWrap(previewText, content) {
 /* ── 1. Email verification (club self-registration) ── */
 function verifyEmailHtml(adminName, clubName, link) {
   const body = `
-            <!-- Badge -->
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:28px;">
-              <tr>
-                <td bgcolor="#1e293b"
-                    style="background-color:#1e293b;border-radius:100px;border:1px solid #334155;padding:7px 18px;">
-                  <span style="font-size:11px;font-weight:700;color:#e2e8f0;letter-spacing:0.12em;text-transform:uppercase;font-family:${FONT};">
-                    &#128737;&nbsp;&nbsp;Potvrda e-mail adrese
-                  </span>
-                </td>
-              </tr>
-            </table>
-
-            <!-- Heading -->
-            <h1 class="heading"
-                style="margin:0 0 18px;font-size:30px;font-weight:800;color:#f1f5f9;letter-spacing:-0.5px;line-height:1.2;font-family:${FONT};">
-              Potvrdite svoju<br>
-              <span style="color:#3b82f6;">e-mail</span> adresu
+            <h1 class="heading" style="margin:0 0 14px;font-size:26px;font-weight:800;color:#0f172a;letter-spacing:-0.4px;line-height:1.25;text-align:center;font-family:${FONT};">
+              Potvrdite svoju e-mail adresu
             </h1>
-
-            <!-- Blue dot divider -->
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:24px;">
-              <tr>
-                <td width="8" height="8" bgcolor="#3b82f6"
-                    style="background-color:#3b82f6;border-radius:50%;font-size:0;line-height:0;">&nbsp;&nbsp;</td>
-              </tr>
-            </table>
-
-            <!-- Welcome -->
-            <p style="margin:0 0 16px;font-size:18px;font-weight:600;color:#f1f5f9;font-family:${FONT};">
-              Dobro&#273;o&#353;li, <span style="color:#f97316;">${clubName}</span>!
-            </p>
-
-            <!-- Body text -->
-            <p style="margin:0 0 8px;font-size:15px;color:#94a3b8;line-height:1.7;font-family:${FONT};">
-              Va&#353; klub je uspje&#353;no kreiran na Klavio platformi.
-            </p>
-            <p style="margin:0 0 36px;font-size:15px;color:#94a3b8;line-height:1.7;font-family:${FONT};">
+            <p style="margin:0 0 28px;font-size:15px;color:#475569;line-height:1.7;text-align:center;font-family:${FONT};">
+              Dobro&#273;o&#353;li, <strong style="color:#0f172a;">${clubName}</strong>! Va&#353; klub je uspje&#353;no kreiran na Klavio platformi.
               Potvrdite e-mail adresu kako biste aktivirali ra&#269;un i po&#269;eli upravljati klubom.
             </p>
-
             ${ctaButton(link, 'Aktiviraj ra&#269;un')}
-            ${lockNote('Link vrijedi <strong style="color:#e2e8f0;">24 sata</strong> iz sigurnosnih razloga.')}
-            ${infoBox(
-              'Niste kreirali ra&#269;un?',
-              'Ako niste registrirali klub na Klavio platformi, slobodno ignori&#353;ite ovaj e-mail.'
-            )}`;
+            ${noteText('Link vrijedi <strong style="color:#475569;">24 sata</strong> iz sigurnosnih razloga.')}
+            ${infoBox('Niste kreirali ra&#269;un?', 'Ako niste registrirali klub na Klavio platformi, slobodno ignori&#353;ite ovaj e-mail.')}`;
 
   return emailWrap(`Potvrdite e-mail adresu za ${clubName}`, body);
 }
 
-/* ── 2. Invite / set-password (admin adds coach or member) ── */
-function inviteEmailHtml(name, role, clubName, link) {
-  const features = [
-    { icon: '&#128197;', text: 'Rasporedu treninga'           },
-    { icon: '&#128202;', text: 'Statistikama igra&#269;a'     },
-    { icon: '&#9917;',   text: 'Me&#269;evima i rezultatima'  },
-    { icon: '&#128101;', text: 'Administraciji kluba'         },
+/* ── 2. Welcome (sent right after successful e-mail verification) ── */
+function welcomeEmailHtml(adminName, clubName) {
+  const items = [
+    'Dodajte &#269;lanove, trenere i selekcije kluba',
+    'Zaka&#382;ite treninge i pratite prisustvo',
+    'Pratite utakmice u realnom vremenu',
+    'Upravljajte finansijama i &#269;lanarinama',
   ];
-
-  const featureRows = features.map(f => `
+  const itemRows = items.map(t => `
                     <tr>
-                      <td width="40" valign="middle" style="padding-bottom:18px;font-size:20px;line-height:1;">${f.icon}</td>
-                      <td valign="middle" style="padding-bottom:18px;">
-                        <p style="margin:0;font-size:15px;color:#e2e8f0;font-family:${FONT};">${f.text}</p>
+                      <td width="22" valign="top" style="padding-bottom:12px;color:#2563eb;font-weight:700;font-size:14px;">&#10003;</td>
+                      <td valign="top" style="padding-bottom:12px;">
+                        <p style="margin:0;font-size:14px;color:#334155;line-height:1.5;font-family:${FONT};">${t}</p>
                       </td>
                     </tr>`).join('');
 
   const body = `
-            <!-- Badge -->
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:28px;">
-              <tr>
-                <td bgcolor="#1e3a5f"
-                    style="background-color:#1e3a5f;border-radius:100px;border:1px solid #2563eb;padding:8px 22px;">
-                  <span style="font-size:11px;font-weight:700;color:#93c5fd;letter-spacing:0.14em;text-transform:uppercase;font-family:${FONT};">
-                    Poziv u klub
-                  </span>
-                </td>
-              </tr>
-            </table>
-
-            <!-- Heading -->
-            <h1 class="heading"
-                style="margin:0 0 18px;font-size:32px;font-weight:800;color:#f1f5f9;letter-spacing:-0.5px;line-height:1.2;font-family:${FONT};">
-              Pozvani ste u klub<br>
-              <span style="color:#3b82f6;">${clubName}</span>
+            <h1 class="heading" style="margin:0 0 14px;font-size:26px;font-weight:800;color:#0f172a;letter-spacing:-0.4px;line-height:1.25;text-align:center;font-family:${FONT};">
+              Dobro&#273;o&#353;li u Klavio, ${adminName}!
             </h1>
-
-            <!-- Blue dot divider -->
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:24px;">
-              <tr>
-                <td width="8" height="8" bgcolor="#3b82f6"
-                    style="background-color:#3b82f6;border-radius:50%;font-size:0;line-height:0;">&nbsp;&nbsp;</td>
-              </tr>
+            <p style="margin:0 0 28px;font-size:15px;color:#475569;line-height:1.7;text-align:center;font-family:${FONT};">
+              Va&#353; nalog je aktiviran i klub <strong style="color:#0f172a;">${clubName}</strong> je spreman za upravljanje. Evo &#353;ta mo&#382;ete uraditi odmah:
+            </p>
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:8px;">
+              ${itemRows}
             </table>
+            ${ctaButton(`${SITE}/app/`, 'Otvori Klavio')}`;
 
-            <!-- Intro text -->
-            <p style="margin:0 0 28px;font-size:15px;color:#94a3b8;line-height:1.7;text-align:center;font-family:${FONT};">
-              Administrator vas je pozvao da se pridru&#382;ite klubu<br>na Klavio platformi.
+  return emailWrap(`Dobrodošli u Klavio, ${clubName} je spreman`, body);
+}
+
+/* ── 3. Invite / set-password (admin adds coach or member) ── */
+function inviteEmailHtml(name, role, clubName, link) {
+  const ROLE_LABEL = { coach: 'trener', member: '&#269;lan', admin: 'administrator' };
+  const roleLabel = ROLE_LABEL[role] || role;
+
+  const body = `
+            <h1 class="heading" style="margin:0 0 14px;font-size:26px;font-weight:800;color:#0f172a;letter-spacing:-0.4px;line-height:1.25;text-align:center;font-family:${FONT};">
+              Pozvani ste u klub ${clubName}
+            </h1>
+            <p style="margin:0 0 28px;font-size:15px;color:#475569;line-height:1.7;text-align:center;font-family:${FONT};">
+              Pozdrav ${name}, administrator kluba <strong style="color:#0f172a;">${clubName}</strong> je kreirao va&#353; nalog kao <strong style="color:#0f172a;">${roleLabel}</strong> na Klavio platformi. Postavite lozinku da aktivirate nalog.
             </p>
-
-            <!-- Features -->
-            <p style="margin:0 0 16px;font-size:14px;font-weight:700;color:#f1f5f9;font-family:${FONT};">
-              Nakon prihvatanja poziva mo&#263;i &#263;ete pristupiti:
-            </p>
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:32px;">
-              ${featureRows}
-            </table>
-
-            ${ctaButton(link, '&#9745;&nbsp;&nbsp;PRIHVATI POZIV')}
-
-            <!-- Expiry -->
-            <p style="margin:0 0 32px;font-size:13px;color:#64748b;text-align:center;font-family:${FONT};">
-              Pozivnica isti&#269;e za <span style="color:#3b82f6;font-weight:600;">7 dana</span>.
-            </p>
-
-            <!-- Support -->
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
-              <tr>
-                <td style="border-top:1px solid #1e293b;padding-top:24px;text-align:center;">
-                  <p style="margin:0 0 6px;font-size:13px;color:#64748b;font-family:${FONT};">
-                    Ako imate pitanja, slobodno nam se javite.
-                  </p>
-                  <p style="margin:0;font-size:13px;color:#64748b;font-family:${FONT};">
-                    Podr&#353;ka:&nbsp;
-                    <a href="mailto:klavio.app@gmail.com"
-                       style="color:#3b82f6;text-decoration:none;font-weight:600;">klavio.app@gmail.com</a>
-                  </p>
-                </td>
-              </tr>
-            </table>`;
+            ${ctaButton(link, 'Postavi lozinku')}
+            ${noteText('Pozivnica isti&#269;e za <strong style="color:#475569;">7 dana</strong>.')}
+            ${infoBox('Imate pitanja?', 'Javite se administratoru va&#353;eg kluba ili nam pi&#353;ite na <a href="mailto:info@klavioclub.com" style="color:#2563eb;text-decoration:none;">info@klavioclub.com</a>.')}`;
 
   return emailWrap(`Pozvani ste u ${clubName} na Klavio`, body);
 }
 
-module.exports = { verifyEmailHtml, inviteEmailHtml };
+/* ── 4. Password reset ── */
+function resetPasswordEmailHtml(name, link) {
+  const body = `
+            <h1 class="heading" style="margin:0 0 14px;font-size:26px;font-weight:800;color:#0f172a;letter-spacing:-0.4px;line-height:1.25;text-align:center;font-family:${FONT};">
+              Resetovanje lozinke
+            </h1>
+            <p style="margin:0 0 28px;font-size:15px;color:#475569;line-height:1.7;text-align:center;font-family:${FONT};">
+              Pozdrav ${name}, zatra&#382;eno je resetovanje lozinke za va&#353; Klavio nalog. Kliknite na dugme ispod da postavite novu lozinku.
+            </p>
+            ${ctaButton(link, 'Resetuj lozinku')}
+            ${noteText('Link va&#382;i <strong style="color:#475569;">1 sat</strong>.')}
+            ${infoBox('Niste tra&#382;ili reset?', 'Ako niste zatra&#382;ili resetovanje lozinke, slobodno ignori&#353;ite ovaj e-mail - va&#353; nalog je i dalje siguran.')}`;
+
+  return emailWrap('Resetovanje lozinke za vaš Klavio nalog', body);
+}
+
+/* ── 5. Internal notification - new club registered (sent to the Klavio team) ── */
+function newClubNotificationHtml(clubName, clubCity, adminName, adminEmail) {
+  const body = `
+            <h1 class="heading" style="margin:0 0 14px;font-size:24px;font-weight:800;color:#0f172a;letter-spacing:-0.4px;line-height:1.25;text-align:center;font-family:${FONT};">
+              Novi klub registrovan &#127881;
+            </h1>
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:24px 0;">
+              <tr><td style="padding:8px 0;border-bottom:1px solid #e2e8f0;"><span style="font-size:13px;color:#94a3b8;font-family:${FONT};">Klub</span><br><span style="font-size:15px;color:#0f172a;font-weight:600;font-family:${FONT};">${clubName}</span></td></tr>
+              <tr><td style="padding:8px 0;border-bottom:1px solid #e2e8f0;"><span style="font-size:13px;color:#94a3b8;font-family:${FONT};">Grad</span><br><span style="font-size:15px;color:#0f172a;font-weight:600;font-family:${FONT};">${clubCity || '-'}</span></td></tr>
+              <tr><td style="padding:8px 0;border-bottom:1px solid #e2e8f0;"><span style="font-size:13px;color:#94a3b8;font-family:${FONT};">Administrator</span><br><span style="font-size:15px;color:#0f172a;font-weight:600;font-family:${FONT};">${adminName}</span></td></tr>
+              <tr><td style="padding:8px 0;"><span style="font-size:13px;color:#94a3b8;font-family:${FONT};">E-mail</span><br><span style="font-size:15px;color:#0f172a;font-weight:600;font-family:${FONT};">${adminEmail}</span></td></tr>
+            </table>`;
+
+  return emailWrap(`Novi klub: ${clubName}`, body);
+}
+
+module.exports = { verifyEmailHtml, welcomeEmailHtml, inviteEmailHtml, resetPasswordEmailHtml, newClubNotificationHtml };

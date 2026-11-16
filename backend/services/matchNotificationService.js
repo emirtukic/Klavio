@@ -10,7 +10,7 @@ function matchEmailHtml(subject, details) {
   return `
     <div style="font-family:sans-serif;max-width:520px;margin:0 auto;background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;">
       <div style="background:#1e3a5f;padding:20px 24px;">
-        <img src="https://klavio.app/assets/img/klavio-icon.svg" alt="Klavio" style="height:32px;" onerror="this.style.display='none'">
+        <img src="https://klavioclub.com/assets/img/favicon-192.png" alt="Klavio" style="height:32px;width:32px;" onerror="this.style.display='none'">
         <h2 style="color:#fff;margin:12px 0 0;font-size:1.1rem;">⚽ ${subject}</h2>
       </div>
       <div style="padding:20px 24px;color:#1e293b;font-size:0.95rem;line-height:1.6;">

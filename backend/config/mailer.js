@@ -1,5 +1,5 @@
 const FROM_NAME  = 'Klavio';
-const FROM_EMAIL = process.env.MAIL_USER || 'klavio.app@gmail.com';
+const FROM_EMAIL = process.env.MAIL_USER || 'info@klavioclub.com';
 
 async function send(options) {
   const to = Array.isArray(options.to)

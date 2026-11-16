@@ -18,7 +18,7 @@ router.post('/', async (req, res) => {
 
   try {
     await sendMail({
-      to: process.env.MAIL_USER || 'klavio.app@gmail.com',
+      to: process.env.MAIL_USER || 'info@klavioclub.com',
       replyTo: `${name} <${email}>`,
       subject: `[Klavio Kontakt] ${subjectLabel} - ${name}`,
       text: `Nova kontakt poruka\n\nIme: ${name}\nE-mail: ${email}\nPredmet: ${subjectLabel}\n\n${message}`,
@@ -35,7 +35,7 @@ router.post('/', async (req, res) => {
     res.json({ message: 'Poruka uspješno poslana! Odgovorit ćemo u roku od 24 sata.' });
   } catch (err) {
     console.error('Contact mail error:', err.message);
-    res.status(500).json({ message: 'Greška pri slanju. Kontaktirajte nas direktno na klavio.app@gmail.com' });
+    res.status(500).json({ message: 'Greška pri slanju. Kontaktirajte nas direktno na info@klavioclub.com' });
   }
 });
 

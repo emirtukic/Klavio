@@ -570,7 +570,7 @@ async function seed() {
     await conn.commit();
     console.log('🎉  All 4 clubs seeded successfully!\n');
     console.log('── Login credentials ────────────────────────────────────────');
-    console.log('Super admin:  klavio.app@gmail.com    / admin123');
+    console.log('Super admin:  info@klavioclub.com    / admin123');
     for (const c of CLUBS) {
       console.log(`${c.name.padEnd(24)} ${c.adminEmail.padEnd(34)} / password123`);
       console.log(`  Coach:       ${c.coaches[0].email.padEnd(34)} / password123`);

@@ -229,7 +229,7 @@ function buildSidebar() {
       } else {
         const badge = PLAN_LABEL[item.plan] || item.plan;
         navHtml += `<li class="nav-item">
-          <a class="nav-link" href="mailto:klavio.app@gmail.com" style="opacity:0.45;cursor:pointer;" title="Dostupno u ${badge} planu - za nadogradnju pišite na klavio.app@gmail.com">
+          <a class="nav-link" href="mailto:info@klavioclub.com" style="opacity:0.45;cursor:pointer;" title="Dostupno u ${badge} planu - za nadogradnju pišite na info@klavioclub.com">
             <i class="bi bi-${item.icon}"></i> ${item.label}
             <span style="margin-left:auto;font-size:0.58rem;font-weight:700;background:rgba(255,255,255,0.12);padding:1px 6px;border-radius:10px;flex-shrink:0">${badge}</span>
           </a></li>`;
@@ -773,7 +773,7 @@ function showAccessBlock(data) {
         <h2 style="margin:0 0 14px;font-size:1.7rem;font-weight:800;color:#f1f5f9;letter-spacing:-0.3px;">${title}</h2>
         <p style="margin:0 0 24px;font-size:0.95rem;color:#64748b;line-height:1.7;">${msg}</p>
         ${expiredRow}
-        <a href="mailto:klavio.app@gmail.com?subject=${contactSubject}&body=${contactBody}"
+        <a href="mailto:info@klavioclub.com?subject=${contactSubject}&body=${contactBody}"
            onclick="event.stopPropagation();"
            style="display:inline-flex;align-items:center;gap:8px;background:#2563eb;color:#fff;font-size:0.95rem;font-weight:600;padding:14px 32px;border-radius:12px;text-decoration:none;">
           <i class="bi bi-envelope"></i> Kontaktirajte Klavio

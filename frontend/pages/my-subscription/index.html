@@ -138,10 +138,10 @@
             </div>
           </div>
           <div class="d-flex gap-2 flex-wrap">
-            <a id="mailInfo" href="mailto:klavio.app@gmail.com?subject=Upit o pretplati" class="btn btn-outline-primary btn-sm">
+            <a id="mailInfo" href="mailto:info@klavioclub.com?subject=Upit o pretplati" class="btn btn-outline-primary btn-sm">
               <i class="bi bi-info-circle me-1"></i>Zatražite informacije
             </a>
-            <a id="mailChange" href="mailto:klavio.app@gmail.com?subject=Promjena pretplate" class="btn btn-primary btn-sm">
+            <a id="mailChange" href="mailto:info@klavioclub.com?subject=Promjena pretplate" class="btn btn-primary btn-sm">
               <i class="bi bi-arrow-repeat me-1"></i>Promjena pretplate
             </a>
           </div>
@@ -250,7 +250,7 @@ function renderUpgradeCol(plan) {
         <ul class="list-unstyled mb-3" style="font-size:.875rem">
           ${unlockFeats.map(f => `<li class="mb-1"><i class="bi bi-check-lg text-success me-2"></i>${f.label}</li>`).join('')}
         </ul>
-        <a href="mailto:klavio.app@gmail.com?subject=Nadogradnja na ${next.label} plan" class="btn btn-primary btn-sm w-100">
+        <a href="mailto:info@klavioclub.com?subject=Nadogradnja na ${next.label} plan" class="btn btn-primary btn-sm w-100">
           <i class="bi bi-envelope me-1"></i>Kontaktirajte nas za nadogradnju
         </a>
       </div>
@@ -331,9 +331,9 @@ async function load() {
     const clubName = (club && club.name) ? encodeURIComponent(club.name) : '';
     const planLabelEnc = encodeURIComponent(planLabel);
     document.getElementById('mailInfo').href =
-      `mailto:klavio.app@gmail.com?subject=Upit o pretplati - ${clubName}&body=Pozdrav Klavio timu,%0A%0AMoj klub: ${clubName}%0ATrenutni plan: ${planLabelEnc}%0A%0A`;
+      `mailto:info@klavioclub.com?subject=Upit o pretplati - ${clubName}&body=Pozdrav Klavio timu,%0A%0AMoj klub: ${clubName}%0ATrenutni plan: ${planLabelEnc}%0A%0A`;
     document.getElementById('mailChange').href =
-      `mailto:klavio.app@gmail.com?subject=Promjena pretplate - ${clubName}&body=Pozdrav Klavio timu,%0A%0AMoj klub: ${clubName}%0ATrenutni plan: ${planLabelEnc}%0A%0AŽelim promijeniti pretplatu na: %0A`;
+      `mailto:info@klavioclub.com?subject=Promjena pretplate - ${clubName}&body=Pozdrav Klavio timu,%0A%0AMoj klub: ${clubName}%0ATrenutni plan: ${planLabelEnc}%0A%0AŽelim promijeniti pretplatu na: %0A`;
 
   } catch(e) { showToast('Greška: ' + e.message, 'error'); }
 }

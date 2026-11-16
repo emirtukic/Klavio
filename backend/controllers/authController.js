@@ -6,7 +6,7 @@ const multer = require('multer');
 const crypto = require('crypto');
 const db = require('../config/db');
 const { send: sendMail } = require('../config/mailer');
-const { verifyEmailHtml, inviteEmailHtml } = require('../config/emailTemplates');
+const { verifyEmailHtml, welcomeEmailHtml, inviteEmailHtml, resetPasswordEmailHtml, newClubNotificationHtml } = require('../config/emailTemplates');
 const { imageFileFilter } = require('../middleware/imageUpload');
 
 const avatarStorage = multer.diskStorage({
@@ -138,13 +138,21 @@ exports.register = async (req, res) => {
           'Link je valjan 24 sata.',
           'Ako niste kreirali ovaj račun, možete ignorisati ovaj e-mail.',
           '',
-          '© 2026 Klavio · klavio.app',
+          '© 2026 Klavio',
         ].join('\n'),
         html: verifyEmailHtml(admin_name, club_name, verifyLink),
       });
     } catch (mailErr) {
       console.error('Mail send error:', mailErr.message);
     }
+
+    // Notify the Klavio team of the new signup (non-blocking, never fails the request)
+    sendMail({
+      to: process.env.MAIL_USER || 'info@klavioclub.com',
+      subject: `Novi klub registrovan - ${club_name}`,
+      text: `Novi klub: ${club_name}\nGrad: ${club_city || '-'}\nAdministrator: ${admin_name}\nE-mail: ${email}`,
+      html: newClubNotificationHtml(club_name, club_city, admin_name, email),
+    }).catch(err => console.error('Admin notify mail error:', err.message));
 
     res.status(201).json({
       message: 'Klub kreiran! Provjerite vaš e-mail inbox za link potvrde.',
@@ -161,14 +169,35 @@ exports.verifyEmail = async (req, res) => {
   if (!token) return res.redirect('/app/verify-email.html?error=invalid');
   try {
     const [rows] = await db.query(
-      "SELECT id FROM users WHERE verification_token = ? AND verification_expires > NOW() AND email_verified = 0 AND token_purpose = 'verify'",
+      "SELECT id, name, email, club_id FROM users WHERE verification_token = ? AND verification_expires > NOW() AND email_verified = 0 AND token_purpose = 'verify'",
       [token]
     );
     if (!rows.length) return res.redirect('/app/verify-email.html?error=expired');
+    const user = rows[0];
     await db.query(
       'UPDATE users SET email_verified = 1, verification_token = NULL, verification_expires = NULL, token_purpose = NULL WHERE id = ?',
-      [rows[0].id]
+      [user.id]
     );
+
+    // Welcome email - non-blocking, doesn't delay the redirect
+    (async () => {
+      let clubName = 'Klavio';
+      if (user.club_id) {
+        const [clubRows] = await db.query('SELECT name FROM clubs WHERE id = ?', [user.club_id]);
+        clubName = clubRows[0]?.name || clubName;
+      }
+      try {
+        await sendMail({
+          to: user.email,
+          subject: `Dobrodošli u ${clubName} - vaš nalog je aktivan`,
+          text: `Dobrodošli u Klavio, ${user.name}!\n\nVaš nalog je aktiviran i klub "${clubName}" je spreman za upravljanje.\n\nOtvorite Klavio: ${process.env.APP_URL || 'http://localhost:3000'}/app/\n\n© 2026 Klavio`,
+          html: welcomeEmailHtml(user.name, clubName),
+        });
+      } catch (mailErr) {
+        console.error('Welcome mail error:', mailErr.message);
+      }
+    })();
+
     res.redirect('/app/verify-email.html?success=1');
   } catch (err) {
     res.redirect('/app/verify-email.html?error=server');
@@ -216,7 +245,7 @@ exports.createUser = async (req, res) => {
           'Link je valjan 7 dana.',
           'Ako niste očekivali ovaj e-mail, možete ga ignorisati.',
           '',
-          '© 2026 Klavio · klavio.app',
+          '© 2026 Klavio',
         ].join('\n'),
         html: inviteEmailHtml(name, role, clubName, setPasswordLink),
       });
@@ -313,18 +342,7 @@ exports.forgotPassword = async (req, res) => {
       to: email,
       subject: 'Resetovanje lozinke – Klavio',
       text: `Pozdrav ${user.name},\n\nZatraženo je resetovanje lozinke za vaš Klavio nalog.\n\nKliknite na link ispod:\n\n${resetLink}\n\nLink važi 1 sat. Ako niste zatražili resetovanje lozinke, ignorišite ovaj e-mail.\n\n© 2026 Klavio`,
-      html: `<div style="font-family:system-ui,sans-serif;max-width:480px;margin:0 auto;padding:32px 24px;background:#f8fafc;border-radius:16px;">
-        <div style="text-align:center;margin-bottom:24px;">
-          <div style="display:inline-block;background:#3b82f6;color:#fff;font-weight:800;font-size:1.3rem;padding:8px 20px;border-radius:8px;letter-spacing:.05em;">KLAVIO</div>
-        </div>
-        <div style="background:#fff;border-radius:12px;padding:28px 24px;box-shadow:0 2px 8px rgba(0,0,0,.07);">
-          <h2 style="margin:0 0 8px;color:#1e293b;font-size:1.1rem;">Resetovanje lozinke</h2>
-          <p style="color:#64748b;font-size:.9rem;margin:0 0 20px;">Pozdrav <strong>${user.name}</strong>,<br>Zatraženo je resetovanje lozinke za vaš nalog.</p>
-          <a href="${resetLink}" style="display:inline-block;background:#3b82f6;color:#fff;font-weight:600;padding:12px 24px;border-radius:8px;text-decoration:none;font-size:.95rem;">Resetuj lozinku</a>
-          <p style="color:#94a3b8;font-size:.78rem;margin:20px 0 0;">Link važi <strong>1 sat</strong>. Ako niste zatražili resetovanje lozinke, ignorišite ovaj e-mail.</p>
-        </div>
-        <p style="text-align:center;color:#cbd5e1;font-size:.72rem;margin-top:20px;">© 2026 Klavio · klavio.app</p>
-      </div>`
+      html: resetPasswordEmailHtml(user.name, resetLink)
     }).catch(e => console.error('Reset mail error:', e.message));
     res.json(successMsg);
   } catch (err) {
