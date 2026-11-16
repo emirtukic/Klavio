@@ -4,7 +4,7 @@ const mailer = require('../config/mailer');
 const MATCH_TYPE_LABEL = { friendly: 'Prijateljska', league: 'Liga', cup: 'Kup' };
 const HOME_AWAY_LABEL  = { home: 'Domaćin', away: 'Gost', neutral: 'Neutralno' };
 
-const MAIL_ENABLED = !!(process.env.MAIL_USER && process.env.MAIL_PASS);
+const MAIL_ENABLED = !!(process.env.MAIL_USER && process.env.BREVO_API_KEY);
 
 function matchEmailHtml(subject, details) {
   return `
