@@ -180,7 +180,7 @@
         <div class="mb-3">
           <label class="form-label fw-semibold">Igrač</label>
           <select class="form-select" id="statMemberId">
-            <option value="">— Odaberite igrača —</option>
+            <option value="">- Odaberite igrača -</option>
           </select>
         </div>
 
@@ -220,7 +220,7 @@
 
         <!-- Hint: existing stats -->
         <div id="statExistingHint" class="alert alert-info py-2 small d-none mt-2">
-          <i class="bi bi-info-circle me-1"></i>Postoje statistike za ovog igrača — bit će prepisane.
+          <i class="bi bi-info-circle me-1"></i>Postoje statistike za ovog igrača - bit će prepisane.
         </div>
       </div>
       <div class="modal-footer border-0 pt-1">
@@ -485,7 +485,7 @@
 
     // Populate player dropdown
     const sel = document.getElementById('statMemberId');
-    sel.innerHTML = '<option value="">— Odaberite igrača —</option>';
+    sel.innerHTML = '<option value="">- Odaberite igrača -</option>';
     allMembers.forEach(m => {
       const opt = document.createElement('option');
       opt.value = m.id;
@@ -505,7 +505,7 @@
     document.getElementById('statStarter').checked = true;
     document.getElementById('statExistingHint').classList.add('d-none');
 
-    // On player change — pre-fill if stats already exist
+    // On player change - pre-fill if stats already exist
     sel.onchange = () => {
       const mid = parseInt(sel.value);
       const existing = currentStats.find(s => s.member_id === mid);

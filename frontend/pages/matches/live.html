@@ -656,10 +656,10 @@ function renderTimeline() {
 
     // Dividers
     if (e.event_type === 'half_time') {
-      return `<div class="tl-divider">— Poluvrijeme — ${e.score_for}:${e.score_against} —</div>`;
+      return `<div class="tl-divider">- Poluvrijeme - ${e.score_for}:${e.score_against} -</div>`;
     }
     if (e.event_type === 'full_time') {
-      return `<div class="tl-divider">— Kraj — ${e.score_for}:${e.score_against} —</div>`;
+      return `<div class="tl-divider">- Kraj - ${e.score_for}:${e.score_against} -</div>`;
     }
 
     let subLine = '';

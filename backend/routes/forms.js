@@ -7,6 +7,8 @@ const Docxtemplater = require('docxtemplater');
 const db      = require('../config/db');
 const auth    = require('../middleware/auth');
 const role    = require('../middleware/roleCheck');
+const requirePlan = require('../middleware/requirePlan');
+const pro     = requirePlan('pro');
 
 const FORMS_DIR = path.resolve(__dirname, '../../obrazci');
 
@@ -26,7 +28,7 @@ db.query(`
 `).catch(err => console.error('[form_history] table init:', err.message));
 
 // POST /api/forms/history - save a fill event
-router.post('/history', auth, role('admin', 'super_admin'), async (req, res) => {
+router.post('/history', auth, role('admin', 'super_admin'), pro, async (req, res) => {
   try {
     const { form_type, form_name, summary } = req.body;
     if (!form_type || !form_name) return res.status(400).json({ message: 'form_type and form_name required' });
@@ -40,7 +42,7 @@ router.post('/history', auth, role('admin', 'super_admin'), async (req, res) => 
 });
 
 // GET /api/forms/history - list fill history for club
-router.get('/history', auth, role('admin', 'super_admin'), async (req, res) => {
+router.get('/history', auth, role('admin', 'super_admin'), pro, async (req, res) => {
   try {
     const [rows] = await db.query(
       `SELECT id, form_type, form_name, summary, user_name, filled_at
@@ -54,7 +56,7 @@ router.get('/history', auth, role('admin', 'super_admin'), async (req, res) => {
 // POST /api/forms/fill
 // Body: { template: "NSFBIH/Obrazac-spisak igrača...docx", data: { key: value, ... } }
 // Returns: filled .docx file as download
-router.post('/fill', auth, (req, res) => {
+router.post('/fill', auth, pro, (req, res) => {
   const { template, data } = req.body;
   if (!template) return res.status(400).json({ message: 'template required' });
 

@@ -44,6 +44,10 @@ module.exports = async (req, res, next) => {
           });
         }
       }
+
+      // Expose the club's current plan so route-level plan gating (requirePlan)
+      // doesn't need a second DB round-trip per request.
+      req.user.plan = club?.plan || 'starter';
     }
 
     next();
