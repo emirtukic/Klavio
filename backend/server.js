@@ -56,7 +56,7 @@ app.use('/api/live-match',     require('./routes/liveMatch'));
 app.use('/api/members/:memberId/documents', require('./routes/member-documents'));
 
 app.get('*splat', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/index.html'));
+  res.status(404).sendFile(path.join(__dirname, '../frontend/404.html'));
 });
 
 // Catch multer/fileFilter errors (and anything else passed to next(err))
