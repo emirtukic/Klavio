@@ -61,6 +61,9 @@
       <p>Vaš nalog je aktiviran. Sada se možete prijaviti u Klavio i početi koristiti platformu.</p>
       <a href="/app/" class="btn">Prijavite se</a>
     `;
+    document.addEventListener('DOMContentLoaded', function () {
+      if (window.klavioTrack) window.klavioTrack('email_verified');
+    });
   } else if (error === 'expired') {
     card.innerHTML = `
       <div class="icon">⏰</div>

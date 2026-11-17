@@ -61,12 +61,16 @@
     });
   }
 
-  document.addEventListener('DOMContentLoaded', function () {
-    var consent = localStorage.getItem(STORAGE_KEY);
-    if (consent === 'accepted') {
-      loadAnalytics();
-    } else if (consent !== 'declined') {
-      showBanner();
+  var consent = localStorage.getItem(STORAGE_KEY);
+  if (consent === 'accepted') {
+    loadAnalytics();
+  } else if (consent !== 'declined') {
+    showBanner();
+  }
+
+  window.klavioTrack = function (eventName, params) {
+    if (typeof window.gtag === 'function') {
+      window.gtag('event', eventName, params || {});
     }
-  });
+  };
 })();

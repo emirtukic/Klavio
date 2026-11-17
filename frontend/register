@@ -322,6 +322,7 @@
       successEl.innerHTML = 'Klub kreiran! <strong>Provjerite vaš e-mail inbox</strong> (' + data.email + ') za link potvrde. Nakon potvrde možete se <a href="/app/" style="color:#16a34a;font-weight:600;">prijaviti</a>.';
       successEl.style.display = 'block';
       document.getElementById('regForm').style.display = 'none';
+      if (window.klavioTrack) window.klavioTrack('sign_up', { method: 'club_registration' });
     } catch (err) {
       alertEl.textContent = err.message;
       alertEl.style.display = 'block';
