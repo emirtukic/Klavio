@@ -15,8 +15,11 @@ app.get('/register', (req, res) => {
   res.type('html').sendFile(path.join(__dirname, '../frontend/register'));
 });
 
-app.use(express.static(path.join(__dirname, '../frontend')));
-app.use('/forms', express.static(path.join(__dirname, '../obrazci')));
+// acceptRanges disabled: Range requests return 206 Partial Content, which
+// Cloudflare should never compress - doing so corrupts the response and
+// breaks crawlers (e.g. Meta's domain verification, link scraping).
+app.use(express.static(path.join(__dirname, '../frontend'), { acceptRanges: false }));
+app.use('/forms', express.static(path.join(__dirname, '../obrazci'), { acceptRanges: false }));
 
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/members', require('./routes/members'));
