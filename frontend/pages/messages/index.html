@@ -78,6 +78,11 @@ setUserInfo(user); buildSidebar();
 
 let allMsgs = [], currentMsgId = null;
 
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 async function load() {
   try {
     allMsgs = await apiGet('/platform-messaging/mine');
@@ -98,7 +103,7 @@ function renderTable() {
       </td>
       <td data-label="Naslov">
         ${hasNewReply ? '<i class="bi bi-circle-fill text-primary me-1" style="font-size:0.45rem;vertical-align:middle;"></i>' : ''}
-        <span class="${hasNewReply ? 'fw-semibold' : ''}">${m.subject}</span>
+        <span class="${hasNewReply ? 'fw-semibold' : ''}">${escHtml(m.subject)}</span>
       </td>
       <td data-label="Odgovori" class="text-center text-muted small">${m.reply_count || 0}</td>
       <td data-label="Aktivnost" class="small text-muted">${new Date(lastActivity).toLocaleString('bs-BA')}</td>
@@ -134,10 +139,10 @@ async function openThread(id) {
         </div>
         <div class="flex-grow-1">
           <div class="small fw-semibold ${isStaff ? '' : 'text-end'} mb-1">
-            ${r.user_name}
+            ${escHtml(r.user_name)}
             ${isStaff ? '<span class="badge ms-1" style="background:#9b86f2">Klavio</span>' : ''}
           </div>
-          <div class="p-3 rounded-3 ${isStaff ? 'text-white' : 'bg-light'}" style="${isStaff ? 'background:#9b86f2' : ''};white-space:pre-wrap;">${r.body}</div>
+          <div class="p-3 rounded-3 ${isStaff ? 'text-white' : 'bg-light'}" style="${isStaff ? 'background:#9b86f2' : ''};white-space:pre-wrap;">${escHtml(r.body)}</div>
           <div class="small text-muted mt-1 ${isStaff ? '' : 'text-end'}">${new Date(r.created_at).toLocaleString('bs-BA')}</div>
         </div>
       </div>`;

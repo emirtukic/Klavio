@@ -142,6 +142,11 @@ let allTickets=[], currentTicketId=null;
 const STATUS_BADGE = { open:'<span class="badge bg-danger">Otvoren</span>', in_progress:'<span class="badge bg-warning text-dark">U obradi</span>', resolved:'<span class="badge bg-success">Riješen</span>', closed:'<span class="badge bg-secondary">Zatvoren</span>' };
 const PRIO_BADGE   = { low:'<span class="badge bg-secondary">Nizak</span>', medium:'<span class="badge bg-info text-dark">Srednji</span>', high:'<span class="badge bg-danger">Visok</span>' };
 
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 async function load() {
   try {
     allTickets = await apiGet('/support-tickets');
@@ -160,8 +165,8 @@ function renderTable() {
   document.getElementById('ticketTable').innerHTML = rows.map(t=>`
     <tr style="cursor:pointer;" onclick="openThread(${t.id})">
       <td data-label="#" class="text-muted small">#${t.id}</td>
-      <td data-label="Predmet" class="fw-semibold">${t.subject}</td>
-      <td data-label="Klub">${t.club_name}</td>
+      <td data-label="Predmet" class="fw-semibold">${escHtml(t.subject)}</td>
+      <td data-label="Klub">${escHtml(t.club_name)}</td>
       <td data-label="Prioritet">${PRIO_BADGE[t.priority]||t.priority}</td>
       <td data-label="Status">${STATUS_BADGE[t.status]||t.status}</td>
       <td data-label="Odgovori" class="text-center">${t.reply_count||0}</td>
@@ -175,7 +180,7 @@ async function openThread(id) {
   try {
     const {ticket, replies} = await apiGet('/support-tickets/'+id+'/replies');
     document.getElementById('threadSubject').textContent=ticket.subject;
-    document.getElementById('threadMeta').innerHTML=`${STATUS_BADGE[ticket.status]} ${PRIO_BADGE[ticket.priority]} <span class="text-muted small">${ticket.club_name}</span>`;
+    document.getElementById('threadMeta').innerHTML=`${STATUS_BADGE[ticket.status]} ${PRIO_BADGE[ticket.priority]} <span class="text-muted small">${escHtml(ticket.club_name)}</span>`;
     document.getElementById('threadStatus').value=ticket.status;
     document.getElementById('replyBody').value='';
     document.getElementById('threadReplies').innerHTML = replies.map(r=>`
@@ -186,8 +191,8 @@ async function openThread(id) {
           </div>
         </div>
         <div class="flex-grow-1">
-          <div class="small fw-semibold ${r.is_staff?'text-end':''} mb-1">${r.user_name} ${r.is_staff?'<span class="badge" style="background:#9b86f2">Klavio</span>':''}</div>
-          <div class="p-3 rounded-3 ${r.is_staff?'text-white':'bg-light'}" style="${r.is_staff?'background:#9b86f2':''};white-space:pre-wrap;">${r.body}</div>
+          <div class="small fw-semibold ${r.is_staff?'text-end':''} mb-1">${escHtml(r.user_name)} ${r.is_staff?'<span class="badge" style="background:#9b86f2">Klavio</span>':''}</div>
+          <div class="p-3 rounded-3 ${r.is_staff?'text-white':'bg-light'}" style="${r.is_staff?'background:#9b86f2':''};white-space:pre-wrap;">${escHtml(r.body)}</div>
           <div class="small text-muted mt-1 ${r.is_staff?'text-end':''}">${new Date(r.created_at).toLocaleString('bs-BA')}</div>
         </div>
       </div>`).join('')||'<p class="text-muted text-center">Nema poruka</p>';

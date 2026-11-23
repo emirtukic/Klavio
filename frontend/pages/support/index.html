@@ -161,6 +161,11 @@ const PRIO_BADGE = {
   high:   '<span class="badge bg-danger">Visok</span>'
 };
 
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 async function load() {
   try {
     allTickets = await apiGet('/support-tickets/mine');
@@ -176,7 +181,7 @@ function renderTable() {
   document.getElementById('ticketTable').innerHTML = allTickets.map(t => `
     <tr style="cursor:pointer;" onclick="openThread(${t.id})">
       <td data-label="#" class="text-muted small">#${t.id}</td>
-      <td data-label="Naslov" class="fw-semibold">${t.subject}</td>
+      <td data-label="Naslov" class="fw-semibold">${escHtml(t.subject)}</td>
       <td data-label="Prioritet">${PRIO_BADGE[t.priority] || t.priority}</td>
       <td data-label="Status">${STATUS_BADGE[t.status] || t.status}</td>
       <td data-label="Odgovori" class="text-center">${t.reply_count || 0}</td>
@@ -225,8 +230,8 @@ async function openThread(id) {
           </div>
         </div>
         <div class="flex-grow-1">
-          <div class="small fw-semibold ${r.is_staff ? 'text-end' : ''} mb-1">${r.user_name} ${r.is_staff ? '<span class="badge" style="background:#9b86f2">Klavio</span>' : ''}</div>
-          <div class="p-3 rounded-3 ${r.is_staff ? 'text-white' : 'bg-light'}" style="${r.is_staff ? 'background:#9b86f2' : ''};white-space:pre-wrap;">${r.body}</div>
+          <div class="small fw-semibold ${r.is_staff ? 'text-end' : ''} mb-1">${escHtml(r.user_name)} ${r.is_staff ? '<span class="badge" style="background:#9b86f2">Klavio</span>' : ''}</div>
+          <div class="p-3 rounded-3 ${r.is_staff ? 'text-white' : 'bg-light'}" style="${r.is_staff ? 'background:#9b86f2' : ''};white-space:pre-wrap;">${escHtml(r.body)}</div>
           <div class="small text-muted mt-1 ${r.is_staff ? 'text-end' : ''}">${new Date(r.created_at).toLocaleString('bs-BA')}</div>
         </div>
       </div>`).join('') || '<p class="text-muted text-center">Nema poruka</p>';

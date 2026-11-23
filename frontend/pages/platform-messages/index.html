@@ -146,6 +146,11 @@ setUserInfo(user); buildSidebar();
 
 let allMsgs = [], clubs = [], currentMsgId = null;
 
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
 async function load() {
   [allMsgs, clubs] = await Promise.all([apiGet('/platform-messaging'), apiGet('/clubs')]);
   document.getElementById('kBroadcast').textContent = allMsgs.filter(m => m.type === 'broadcast').length;
@@ -154,7 +159,7 @@ async function load() {
   renderTable();
   const sel = document.getElementById('msgClub');
   sel.innerHTML = '<option value="">-- Odaberi klub --</option>' +
-    clubs.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    clubs.map(c => `<option value="${c.id}">${escHtml(c.name)}</option>`).join('');
 }
 
 function renderTable() {
@@ -169,8 +174,8 @@ function renderTable() {
       <td data-label="Tip">${m.type === 'broadcast'
         ? '<span class="badge bg-primary">Broadcast</span>'
         : '<span class="badge bg-info text-dark">Direktna</span>'}</td>
-      <td data-label="Naslov">${m.subject}${indicator}</td>
-      <td data-label="Klub" class="text-muted small">${m.club_name || '<span class="text-muted">Svi klubovi</span>'}</td>
+      <td data-label="Naslov">${escHtml(m.subject)}${indicator}</td>
+      <td data-label="Klub" class="text-muted small">${m.club_name ? escHtml(m.club_name) : '<span class="text-muted">Svi klubovi</span>'}</td>
       <td data-label="Odgovori" class="text-center">${m.reply_count || 0}</td>
       <td data-label="Aktivnost" class="small text-muted">${new Date(lastActivity).toLocaleString('bs-BA')}</td>
       <td>
@@ -187,7 +192,7 @@ async function openThread(id) {
     document.getElementById('threadSubject').textContent = msg.subject;
     document.getElementById('threadMeta').innerHTML =
       `${msg.type === 'broadcast' ? '<span class="badge bg-primary">Broadcast</span>' : '<span class="badge bg-info text-dark">Direktna</span>'}
-       ${msg.club_name ? `<span class="badge bg-secondary">${msg.club_name}</span>` : ''}
+       ${msg.club_name ? `<span class="badge bg-secondary">${escHtml(msg.club_name)}</span>` : ''}
        <span class="text-muted small">${new Date(msg.created_at).toLocaleDateString('bs-BA')}</span>`;
     document.getElementById('replyBody').value = '';
 
@@ -200,8 +205,8 @@ async function openThread(id) {
           </div>
         </div>
         <div class="flex-grow-1">
-          <div class="small fw-semibold mb-1">${msg.sent_by_name} <span class="badge" style="background:#9b86f2">Klavio</span></div>
-          <div class="p-3 rounded-3 text-white" style="background:#9b86f2;white-space:pre-wrap;">${msg.body}</div>
+          <div class="small fw-semibold mb-1">${escHtml(msg.sent_by_name)} <span class="badge" style="background:#9b86f2">Klavio</span></div>
+          <div class="p-3 rounded-3 text-white" style="background:#9b86f2;white-space:pre-wrap;">${escHtml(msg.body)}</div>
           <div class="small text-muted mt-1">${new Date(msg.created_at).toLocaleString('bs-BA')}</div>
         </div>
       </div>`;
@@ -216,8 +221,8 @@ async function openThread(id) {
           </div>
         </div>
         <div class="flex-grow-1">
-          <div class="small fw-semibold ${isStaff ? 'text-end' : ''} mb-1">${r.user_name} ${isStaff ? '<span class="badge" style="background:#9b86f2">Klavio</span>' : '<span class="badge bg-secondary">Admin</span>'}</div>
-          <div class="p-3 rounded-3 ${isStaff ? 'text-white' : 'bg-light'}" style="${isStaff ? 'background:#9b86f2' : ''};white-space:pre-wrap;">${r.body}</div>
+          <div class="small fw-semibold ${isStaff ? 'text-end' : ''} mb-1">${escHtml(r.user_name)} ${isStaff ? '<span class="badge" style="background:#9b86f2">Klavio</span>' : '<span class="badge bg-secondary">Admin</span>'}</div>
+          <div class="p-3 rounded-3 ${isStaff ? 'text-white' : 'bg-light'}" style="${isStaff ? 'background:#9b86f2' : ''};white-space:pre-wrap;">${escHtml(r.body)}</div>
           <div class="small text-muted mt-1 ${isStaff ? 'text-end' : ''}">${new Date(r.created_at).toLocaleString('bs-BA')}</div>
         </div>
       </div>`;

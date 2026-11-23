@@ -48,6 +48,10 @@ exports.getReplies = async (req, res) => {
       WHERE pm.id = ?
     `, [req.params.id]);
     if (!msg.length) return res.status(404).json({ message: 'Poruka nije pronađena' });
+    const isStaff = req.user.role === 'super_admin';
+    if (!isStaff && msg[0].type !== 'broadcast' && msg[0].club_id != req.user.club_id) {
+      return res.status(404).json({ message: 'Poruka nije pronađena' });
+    }
     const [replies] = await db.query(`
       SELECT r.*, u.name AS user_name, u.role AS user_role
       FROM platform_message_replies r
@@ -63,21 +67,23 @@ exports.addReply = async (req, res) => {
   if (!body || !body.trim()) return res.status(400).json({ message: 'Unesite poruku' });
   const isStaff = req.user.role === 'super_admin';
   try {
+    const [msg] = await db.query('SELECT club_id, subject, type FROM platform_messages WHERE id=?', [req.params.id]);
+    if (!msg.length) return res.status(404).json({ message: 'Poruka nije pronađena' });
+    if (!isStaff && msg[0].type !== 'broadcast' && msg[0].club_id != req.user.club_id) {
+      return res.status(404).json({ message: 'Poruka nije pronađena' });
+    }
     await db.query(
       'INSERT INTO platform_message_replies (message_id, user_id, body) VALUES (?,?,?)',
       [req.params.id, req.user.id, body.trim()]
     );
-    const [msg] = await db.query('SELECT club_id, subject FROM platform_messages WHERE id=?', [req.params.id]);
-    if (msg.length) {
-      if (isStaff && msg[0].club_id) {
-        // Notify admin(s) of this club
-        const [admins] = await db.query("SELECT id FROM users WHERE role='admin' AND club_id=?", [msg[0].club_id]);
-        for (const admin of admins) {
-          await db.query(
-            'INSERT INTO notifications (user_id, club_id, title, message, type) VALUES (?,?,?,?,?)',
-            [admin.id, msg[0].club_id, `💬 Odgovor: ${msg[0].subject}`, body.trim().slice(0, 200), 'info']
-          );
-        }
+    if (isStaff && msg[0].club_id) {
+      // Notify admin(s) of this club
+      const [admins] = await db.query("SELECT id FROM users WHERE role='admin' AND club_id=?", [msg[0].club_id]);
+      for (const admin of admins) {
+        await db.query(
+          'INSERT INTO notifications (user_id, club_id, title, message, type) VALUES (?,?,?,?,?)',
+          [admin.id, msg[0].club_id, `💬 Odgovor: ${msg[0].subject}`, body.trim().slice(0, 200), 'info']
+        );
       }
     }
     res.json({ message: 'Odgovor poslan' });
