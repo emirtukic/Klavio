@@ -80,4 +80,32 @@
     <priority>0.1</priority>
   </url>
 
+  <url>
+    <loc>https://klavioclub.com/blog/</loc>
+    <lastmod>2026-11-24</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://klavioclub.com/blog/evidencija-clanova-bez-excela.html</loc>
+    <lastmod>2026-11-24</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <url>
+    <loc>https://klavioclub.com/blog/greske-finansije-fudbalski-klub.html</loc>
+    <lastmod>2026-11-24</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <url>
+    <loc>https://klavioclub.com/blog/besplatni-alati-vodjenje-kluba-bih.html</loc>
+    <lastmod>2026-11-24</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
 </urlset>
