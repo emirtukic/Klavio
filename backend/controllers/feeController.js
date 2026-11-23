@@ -55,7 +55,7 @@ async function findOverlapping(clubId, period_start, period_end) {
   if (!members.length) return { members: [], overlapping: [] };
 
   const [overlapping] = await db.query(
-    `SELECT mf.member_id, u.name
+    `SELECT DISTINCT mf.member_id, u.name
      FROM membership_fees mf
      JOIN members m ON mf.member_id = m.id
      JOIN users u ON m.user_id = u.id
