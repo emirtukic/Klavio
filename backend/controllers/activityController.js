@@ -40,6 +40,11 @@ function buildLogDetails(action, entityType, resBody, reqBody, prefetchedName) {
       const amount = resBody?.amount || reqBody?.amount || '';
       return `${verb}: ${member}${amount ? ' - ' + amount + ' KM' : ''}`;
     }
+    case 'Članarina (masovno)': {
+      const created = resBody?.created ?? '';
+      const amount = reqBody?.amount || '';
+      return `Generisano: ${created} članarina${amount ? ' - ' + amount + ' KM po članu' : ''}`;
+    }
     case 'Finansije': {
       const desc = prefetchedName || resBody?.description || reqBody?.description || reqBody?.category || '';
       const amount = resBody?.amount || reqBody?.amount || '';

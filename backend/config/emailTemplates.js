@@ -2,6 +2,10 @@ const FONT = `-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-seri
 const SITE = 'https://klavioclub.com';
 const LOGO_URL = `${SITE}/assets/img/favicon-192.png`;
 
+function escapeHtml(str) {
+  return String(str ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+
 function logoRow() {
   return `
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 28px;">
@@ -238,34 +242,38 @@ function newClubNotificationHtml(clubName, clubCity, adminName, adminEmail) {
 
 /* ── 6. Internal notification - new support ticket (sent to the Klavio team) ── */
 function newTicketNotificationHtml(clubName, userName, subject, body) {
+  const safeSubject = escapeHtml(subject);
+  const safeBody = escapeHtml(body).replace(/\n/g, '<br>');
   const bodyHtml = `
             <h1 class="heading" style="margin:0 0 14px;font-size:24px;font-weight:800;color:#0f172a;letter-spacing:-0.4px;line-height:1.25;text-align:center;font-family:${FONT};">
               Novi support tiket &#128172;
             </h1>
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:24px 0;">
-              <tr><td style="padding:8px 0;border-bottom:1px solid #e2e8f0;"><span style="font-size:13px;color:#94a3b8;font-family:${FONT};">Klub</span><br><span style="font-size:15px;color:#0f172a;font-weight:600;font-family:${FONT};">${clubName}</span></td></tr>
-              <tr><td style="padding:8px 0;border-bottom:1px solid #e2e8f0;"><span style="font-size:13px;color:#94a3b8;font-family:${FONT};">Od</span><br><span style="font-size:15px;color:#0f172a;font-weight:600;font-family:${FONT};">${userName}</span></td></tr>
-              <tr><td style="padding:8px 0;border-bottom:1px solid #e2e8f0;"><span style="font-size:13px;color:#94a3b8;font-family:${FONT};">Naslov</span><br><span style="font-size:15px;color:#0f172a;font-weight:600;font-family:${FONT};">${subject}</span></td></tr>
+              <tr><td style="padding:8px 0;border-bottom:1px solid #e2e8f0;"><span style="font-size:13px;color:#94a3b8;font-family:${FONT};">Klub</span><br><span style="font-size:15px;color:#0f172a;font-weight:600;font-family:${FONT};">${escapeHtml(clubName)}</span></td></tr>
+              <tr><td style="padding:8px 0;border-bottom:1px solid #e2e8f0;"><span style="font-size:13px;color:#94a3b8;font-family:${FONT};">Od</span><br><span style="font-size:15px;color:#0f172a;font-weight:600;font-family:${FONT};">${escapeHtml(userName)}</span></td></tr>
+              <tr><td style="padding:8px 0;border-bottom:1px solid #e2e8f0;"><span style="font-size:13px;color:#94a3b8;font-family:${FONT};">Naslov</span><br><span style="font-size:15px;color:#0f172a;font-weight:600;font-family:${FONT};">${safeSubject}</span></td></tr>
             </table>
-            ${infoBox('Poruka', body || '-')}
+            ${infoBox('Poruka', safeBody || '-')}
             ${ctaButton(`${SITE}/pages/support-tickets/index.html`, 'Otvori tiket')}`;
 
-  return emailWrap(`Novi tiket: ${subject}`, bodyHtml);
+  return emailWrap(`Novi tiket: ${safeSubject}`, bodyHtml);
 }
 
 /* ── 7. Reply to support ticket (sent to the club admin who opened it) ── */
 function ticketReplyEmailHtml(userName, subject, body) {
+  const safeSubject = escapeHtml(subject);
+  const safeBody = escapeHtml(body).replace(/\n/g, '<br>');
   const bodyHtml = `
             <h1 class="heading" style="margin:0 0 14px;font-size:26px;font-weight:800;color:#0f172a;letter-spacing:-0.4px;line-height:1.25;text-align:center;font-family:${FONT};">
               Odgovor na va&#353; upit
             </h1>
             <p style="margin:0 0 20px;font-size:15px;color:#475569;line-height:1.7;text-align:center;font-family:${FONT};">
-              Pozdrav ${userName}, stigao je odgovor na va&#353; tiket <strong style="color:#0f172a;">"${subject}"</strong>.
+              Pozdrav ${escapeHtml(userName)}, stigao je odgovor na va&#353; tiket <strong style="color:#0f172a;">"${safeSubject}"</strong>.
             </p>
-            ${infoBox('Odgovor Klavio tima', body)}
+            ${infoBox('Odgovor Klavio tima', safeBody)}
             ${ctaButton(`${SITE}/pages/support/index.html`, 'Pogledaj u aplikaciji')}`;
 
-  return emailWrap(`Odgovor na vaš tiket: ${subject}`, bodyHtml);
+  return emailWrap(`Odgovor na vaš tiket: ${safeSubject}`, bodyHtml);
 }
 
 module.exports = { verifyEmailHtml, welcomeEmailHtml, inviteEmailHtml, resetPasswordEmailHtml, newClubNotificationHtml, newTicketNotificationHtml, ticketReplyEmailHtml };
