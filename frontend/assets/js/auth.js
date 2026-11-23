@@ -165,10 +165,10 @@ function buildSidebar() {
 
   const sel = getSelection();
   const clubSub = club
-    ? `<div style="font-size:0.7rem;opacity:0.5;font-weight:400;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${club.name}</div>`
+    ? `<div style="font-size:0.7rem;opacity:0.5;font-weight:400;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(club.name)}</div>`
     : '';
   const selSub = sel
-    ? `<div style="font-size:0.65rem;opacity:0.4;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${sel.name}</div>`
+    ? `<div style="font-size:0.65rem;opacity:0.4;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(sel.name)}</div>`
     : '';
 
   // Pick nav config
@@ -256,12 +256,12 @@ function buildSidebar() {
     brandHtml = `<img src="/assets/img/klavio-icon.png" alt="Klavio" style="width:100%;height:auto;display:block;">`;
   } else if (club && club.logo_url) {
     brandHtml = `
-      <img src="${club.logo_url}?t=${Date.now()}" style="width:36px;height:36px;border-radius:8px;object-fit:contain;flex-shrink:0;" alt="">
-      <div style="overflow:hidden;"><div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${club.name}</div>${selSub}</div>`;
+      <img src="${escHtml(club.logo_url)}?t=${Date.now()}" style="width:36px;height:36px;border-radius:8px;object-fit:contain;flex-shrink:0;" alt="">
+      <div style="overflow:hidden;"><div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(club.name)}</div>${selSub}</div>`;
   } else {
     brandHtml = `
       <div style="width:36px;height:36px;border-radius:8px;background:rgba(var(--sidebar-fg),0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;"><i class="bi bi-building" style="font-size:1.1rem;"></i></div>
-      <div style="overflow:hidden;"><div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${club ? club.name : 'Klavio'}</div>${selSub}</div>`;
+      <div style="overflow:hidden;"><div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${club ? escHtml(club.name) : 'Klavio'}</div>${selSub}</div>`;
   }
 
   const klavioWatermark = isSA ? '' : `
@@ -351,7 +351,7 @@ function renderSuperAdminBanner() {
   banner.id = 'sa-banner';
   banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#dc2626;color:#fff;padding:6px 16px;display:flex;align-items:center;justify-content:space-between;font-size:0.82rem;font-weight:600;';
   banner.innerHTML = `
-    <span><i class="bi bi-shield-fill-check me-2"></i>Super Admin - pristupate klubu: <strong>${club ? club.name : ''}</strong></span>
+    <span><i class="bi bi-shield-fill-check me-2"></i>Super Admin - pristupate klubu: <strong>${club ? escHtml(club.name) : ''}</strong></span>
     <button onclick="exitClub()" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:#fff;border-radius:6px;padding:2px 12px;cursor:pointer;font-size:0.8rem;">
       <i class="bi bi-arrow-left me-1"></i>Izlaz iz kluba
     </button>`;
@@ -647,11 +647,16 @@ async function runSearch(q) {
 function renderSearchResults(data, q) {
   const el = document.getElementById('globalSearchResults');
   const total = (data.members||[]).length + (data.matches||[]).length + (data.coaches||[]).length + (data.announcements||[]).length + (data.forms||[]).length;
-  if (total === 0) { el.innerHTML = '<div style="padding:24px;text-align:center;color:#94a3b8;font-size:0.9rem;">Nema rezultata za „' + q + '"</div>'; return; }
+  if (total === 0) { el.innerHTML = '<div style="padding:24px;text-align:center;color:#94a3b8;font-size:0.9rem;">Nema rezultata za „' + escHtml(q) + '"</div>'; return; }
 
+  // Escape first, then highlight - matching against the escaped text so a
+  // query containing HTML-special characters still searches correctly.
   const hl = (str) => {
     if (!str) return '';
-    return String(str).replace(new RegExp('(' + q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')', 'gi'), '<mark style="background:#fef08a;border-radius:2px;padding:0 2px;">$1</mark>');
+    const escaped = escHtml(str);
+    const qEsc = escHtml(q).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    if (!qEsc) return escaped;
+    return escaped.replace(new RegExp('(' + qEsc + ')', 'gi'), '<mark style="background:#fef08a;border-radius:2px;padding:0 2px;">$1</mark>');
   };
 
   let html = '';
@@ -664,7 +669,7 @@ function renderSearchResults(data, q) {
         <i class="bi bi-person-circle" style="color:#3b82f6;font-size:1.2rem;flex-shrink:0;"></i>
         <div style="flex:1;min-width:0;">
           <div style="font-weight:600;font-size:0.9rem;">${hl(m.name)}</div>
-          <div style="font-size:0.75rem;color:#94a3b8;">${m.position||''} ${m.selection_name ? '· '+m.selection_name : ''}</div>
+          <div style="font-size:0.75rem;color:#94a3b8;">${escHtml(m.position)} ${m.selection_name ? '· '+escHtml(m.selection_name) : ''}</div>
         </div>
         <span style="font-size:0.7rem;font-weight:600;color:${statusCls};flex-shrink:0;">${m.status||''}</span>
       </a>`;
@@ -680,7 +685,7 @@ function renderSearchResults(data, q) {
         <i class="bi bi-trophy" style="color:#f59e0b;font-size:1.1rem;flex-shrink:0;"></i>
         <div style="flex:1;min-width:0;">
           <div style="font-weight:600;font-size:0.9rem;">${hl(m.opponent)} <span style="font-weight:400;font-size:0.85rem;color:#94a3b8;">${score}</span></div>
-          <div style="font-size:0.75rem;color:#94a3b8;">${dateStr} ${m.selection_name ? '· '+m.selection_name : ''}</div>
+          <div style="font-size:0.75rem;color:#94a3b8;">${dateStr} ${m.selection_name ? '· '+escHtml(m.selection_name) : ''}</div>
         </div>
       </a>`;
     });
@@ -693,7 +698,7 @@ function renderSearchResults(data, q) {
         <i class="bi bi-person-badge" style="color:#8b5cf6;font-size:1.1rem;flex-shrink:0;"></i>
         <div style="flex:1;min-width:0;">
           <div style="font-weight:600;font-size:0.9rem;">${hl(c.name)}</div>
-          <div style="font-size:0.75rem;color:#94a3b8;">${c.email||''}</div>
+          <div style="font-size:0.75rem;color:#94a3b8;">${escHtml(c.email)}</div>
         </div>
       </a>`;
     });

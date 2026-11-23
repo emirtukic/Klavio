@@ -1,3 +1,9 @@
+// Shared across auth.js/utils.js - anything user-controlled (club/member/coach
+// names, titles) must go through this before innerHTML, never interpolated raw.
+function escHtml(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
 function formatDate(d) {
   if (!d) return '-';
   return new Date(d).toLocaleDateString('bs-BA');
