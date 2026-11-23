@@ -16,12 +16,13 @@ const BUCKET = process.env.R2_BUCKET_NAME;
 // Public base URL for serving files back out (r2.dev subdomain or a custom domain bound to the bucket).
 const PUBLIC_URL = (process.env.R2_PUBLIC_URL || '').replace(/\/$/, '');
 
-async function uploadToR2(key, buffer, contentType) {
+async function uploadToR2(key, buffer, contentType, contentDisposition) {
   await client.send(new PutObjectCommand({
     Bucket: BUCKET,
     Key: key,
     Body: buffer,
     ContentType: contentType,
+    ...(contentDisposition ? { ContentDisposition: contentDisposition } : {}),
   }));
   return `${PUBLIC_URL}/${key}`;
 }

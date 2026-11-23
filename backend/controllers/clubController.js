@@ -1,10 +1,10 @@
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
-const path = require('path');
 const multer = require('multer');
 const db = require('../config/db');
 const { imageFileFilter } = require('../middleware/imageUpload');
 const { uploadToR2 } = require('../config/r2');
+const { detectImageType } = require('../utils/fileSignature');
 
 exports.logoUpload = multer({
   storage: multer.memoryStorage(),
@@ -15,8 +15,9 @@ exports.logoUpload = multer({
 exports.uploadLogo = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'Nema fajla' });
-    const ext = path.extname(req.file.originalname).toLowerCase();
-    const logoUrl = await uploadToR2(`clubs/club_${req.params.id}_${Date.now()}${ext}`, req.file.buffer, req.file.mimetype);
+    const type = detectImageType(req.file.buffer);
+    if (!type) return res.status(400).json({ message: 'Fajl nije validna slika' });
+    const logoUrl = await uploadToR2(`clubs/club_${req.params.id}_${Date.now()}${type.ext}`, req.file.buffer, type.mime);
     await db.query('UPDATE clubs SET logo_url = ? WHERE id = ?', [logoUrl, req.params.id]);
     res.json({ message: 'Logo ažuriran', logo_url: logoUrl });
   } catch (err) {

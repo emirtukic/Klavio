@@ -1,8 +1,8 @@
-const path = require('path');
 const multer = require('multer');
 const db = require('../config/db');
 const { imageFileFilter } = require('../middleware/imageUpload');
 const { uploadToR2, deleteFromR2, keyFromUrl } = require('../config/r2');
+const { detectImageType } = require('../utils/fileSignature');
 
 exports.upload = multer({
   storage: multer.memoryStorage(),
@@ -29,9 +29,10 @@ exports.uploadPhoto = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'Nema fajla' });
     const { title, event_type, event_id } = req.body;
-    const ext = path.extname(req.file.originalname).toLowerCase();
-    const filename = `gallery_${Date.now()}_${Math.random().toString(36).slice(2, 7)}${ext}`;
-    const url = await uploadToR2(`gallery/${filename}`, req.file.buffer, req.file.mimetype);
+    const type = detectImageType(req.file.buffer);
+    if (!type) return res.status(400).json({ message: 'Fajl nije validna slika' });
+    const filename = `gallery_${Date.now()}_${Math.random().toString(36).slice(2, 7)}${type.ext}`;
+    const url = await uploadToR2(`gallery/${filename}`, req.file.buffer, type.mime);
     const [r] = await db.query(
       'INSERT INTO gallery (club_id, uploaded_by, filename, url, title, event_type, event_id) VALUES (?,?,?,?,?,?,?)',
       [req.user.club_id, req.user.id, filename, url, title||null, event_type||'other', event_id||null]
