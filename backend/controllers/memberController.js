@@ -85,6 +85,7 @@ exports.create = async (req, res) => {
   } catch (err) {
     await conn.rollback();
     if (err.code === 'ER_DUP_ENTRY') return res.status(400).json({ message: 'Email ili broj članske već postoji' });
+    console.error('Member create error:', err.message);
     res.status(500).json({ message: 'Server error' });
   } finally {
     conn.release();
@@ -146,7 +147,10 @@ exports.bulkAction = async (req, res) => {
       return res.status(400).json({ message: 'Nepoznata akcija' });
     }
     res.json({ message: 'Akcija izvršena', count: ids.length });
-  } catch (err) { res.status(500).json({ message: 'Server error' }); }
+  } catch (err) {
+    console.error('bulkAction error:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
 };
 
 exports.remove = async (req, res) => {
@@ -156,6 +160,7 @@ exports.remove = async (req, res) => {
     await db.query('DELETE FROM users WHERE id = ?', [members[0].user_id]);
     res.json({ message: 'Član obrisan' });
   } catch (err) {
+    console.error('Member remove error:', err.message);
     res.status(500).json({ message: 'Server error' });
   }
 };
