@@ -59,12 +59,18 @@ exports.bulkGenerate = async (req, res) => {
     );
     if (!members.length) return res.json({ created: 0, skipped: 0, message: 'Nema aktivnih članova' });
 
-    const [existing] = await db.query(
-      'SELECT member_id FROM membership_fees WHERE period_start = ? AND member_id IN (?)',
-      [period_start, members.map(m => m.id)]
+    // A member already covered for this period overlaps if their existing fee's
+    // range intersects the new range at all (not just an exact period_start match).
+    const [overlapping] = await db.query(
+      `SELECT mf.member_id, u.name
+       FROM membership_fees mf
+       JOIN members m ON mf.member_id = m.id
+       JOIN users u ON m.user_id = u.id
+       WHERE mf.member_id IN (?) AND mf.period_start <= ? AND mf.period_end >= ?`,
+      [members.map(m => m.id), period_end, period_start]
     );
-    const alreadyHas = new Set(existing.map(e => e.member_id));
-    const toCreate = members.filter(m => !alreadyHas.has(m.id));
+    const overlapIds = new Set(overlapping.map(o => o.member_id));
+    const toCreate = members.filter(m => !overlapIds.has(m.id));
 
     if (toCreate.length) {
       const values = toCreate.map(m => [m.id, amount, period_start, period_end, due_date, payment_method || null, notes || null, req.user.id]);
@@ -74,7 +80,11 @@ exports.bulkGenerate = async (req, res) => {
       );
     }
 
-    res.status(201).json({ created: toCreate.length, skipped: alreadyHas.size });
+    res.status(201).json({
+      created: toCreate.length,
+      skipped: overlapIds.size,
+      skippedNames: overlapping.map(o => o.name),
+    });
   } catch (err) {
     console.error('Fee bulk generate error:', err.message);
     res.status(500).json({ message: 'Server error' });

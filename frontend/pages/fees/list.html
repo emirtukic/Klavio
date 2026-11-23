@@ -482,7 +482,11 @@ async function runBulkGenerate() {
   try {
     const r = await apiPost('/fees/bulk-generate', { amount, period_start, period_end, due_date, payment_method, notes });
     bootstrap.Modal.getInstance(document.getElementById('bulkGenerateModal')).hide();
-    showToast(r.skipped ? `Kreirano ${r.created}, preskočeno ${r.skipped} (već imaju članarinu za period)` : `Kreirano ${r.created} članarina`, 'success');
+    showToast(`Kreirano ${r.created} članarina`, 'success');
+    if (r.skipped) {
+      const names = (r.skippedNames || []).join(', ');
+      alert(`Preskočeno ${r.skipped} (već imaju članarinu koja se preklapa sa ovim periodom):\n\n${names}`);
+    }
     load();
   } catch(e) { showToast(e.message, 'error'); }
   finally { btn.disabled = false; sp.classList.add('d-none'); }
