@@ -8,6 +8,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-v2.png">
   <link rel="manifest" href="/site.webmanifest">
   <meta name="theme-color" content="#2563eb">
+  <script src="/assets/js/cookie-consent.js" defer></script>
   <title>Registracija Kluba | Klavio – Besplatni Menadžment Fudbalskog Kluba</title>
   <meta name="description" content="Registrujte vaš fudbalski klub na Klavio platformi besplatno. Upravljanje članovima, treninzima, utakmicama i finansijama – bez kreditne kartice, bez vremenskog ograničenja.">
   <link rel="canonical" href="https://klavioclub.com/register">
