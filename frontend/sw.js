@@ -1,4 +1,4 @@
-const CACHE_NAME = 'klavio-v1';
+const CACHE_NAME = 'klavio-v2';
 const STATIC_ASSETS = [
   '/',
   '/assets/css/style.css',
@@ -37,7 +37,23 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // Static assets: cache-first
+  // HTML pages: network-first, so fixes/deploys are never stuck behind a stale cache
+  const isHtml = e.request.mode === 'navigate' ||
+    (e.request.headers.get('accept') || '').includes('text/html');
+  if (isHtml) {
+    e.respondWith(
+      fetch(e.request).then(res => {
+        if (res && res.status === 200) {
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+        }
+        return res;
+      }).catch(() => caches.match(e.request).then(cached => cached || caches.match('/')))
+    );
+    return;
+  }
+
+  // Static assets (css/js/img): cache-first
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
@@ -47,9 +63,6 @@ self.addEventListener('fetch', e => {
           caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
         }
         return res;
-      }).catch(() => {
-        // Offline fallback for navigation requests
-        if (e.request.mode === 'navigate') return caches.match('/');
       });
     })
   );
