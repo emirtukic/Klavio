@@ -250,7 +250,7 @@
     const page    = members.slice(start, start + PAGE_SIZE);
 
     document.getElementById('memberCount').textContent = total + ' članova';
-    document.getElementById('pageInfo').textContent    = `Prikazano ${start+1}–${Math.min(start+PAGE_SIZE,total)} od ${total}`;
+    document.getElementById('pageInfo').textContent    = `Prikazano ${start+1}-${Math.min(start+PAGE_SIZE,total)} od ${total}`;
 
     const colCount = canEdit ? 9 : 8;
     document.getElementById('tableBody').innerHTML = page.length ? page.map(m => {

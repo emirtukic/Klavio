@@ -363,8 +363,8 @@
     document.getElementById('heroBadgeSel').textContent  = m.selection_name || 'Selekcija';
 
     const pending = !m.result || m.result === 'pending';
-    document.getElementById('heroGoalsFor').textContent     = pending ? '–' : (m.goals_for ?? '–');
-    document.getElementById('heroGoalsAgainst').textContent = pending ? '–' : (m.goals_against ?? '–');
+    document.getElementById('heroGoalsFor').textContent     = pending ? '-' : (m.goals_for ?? '-');
+    document.getElementById('heroGoalsAgainst').textContent = pending ? '-' : (m.goals_against ?? '-');
 
     if (!pending) {
       document.getElementById('resultBadgeWrap').innerHTML =

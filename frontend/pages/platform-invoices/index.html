@@ -185,7 +185,7 @@ function renderTable() {
       <td data-label="Status">${STATUS_BADGE[i.status]||i.status}</td>
       <td data-label="Rok" class="small">${fmtD(i.due_date)}</td>
       <td data-label="Plaćeno" class="small">${fmtD(i.paid_date)}</td>
-      <td data-label="Period" class="small text-muted">${i.period_start?fmtD(i.period_start)+' – '+fmtD(i.period_end):'-'}</td>
+      <td data-label="Period" class="small text-muted">${i.period_start?fmtD(i.period_start)+' - '+fmtD(i.period_end):'-'}</td>
       <td>
         <div class="d-flex gap-1">
           <button class="btn btn-sm btn-outline-secondary" onclick='editInv(${JSON.stringify(i).replace(/'/g,"&apos;")})' title="Uredi"><i class="bi bi-pencil"></i></button>

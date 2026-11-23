@@ -170,7 +170,7 @@
     <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-2">
       <div>
         <h4>Live utakmica</h4>
-        <p class="text-muted mb-0">Upravljajte utakmicom uživo – golovi, kartoni, izmjene.</p>
+        <p class="text-muted mb-0">Upravljajte utakmicom uživo - golovi, kartoni, izmjene.</p>
       </div>
       <div class="d-flex gap-2 align-items-center flex-wrap">
         <select class="form-select form-select-sm" id="matchSelector" style="min-width:240px;" onchange="selectMatch()">
@@ -300,7 +300,7 @@ async function loadMatchList() {
       const d = new Date(m.match_date).toLocaleDateString('bs-BA');
       const opt = document.createElement('option');
       opt.value = m.id;
-      opt.textContent = `${statusLabel[m.status]||'⏳'} ${d} – ${m.selection_name||'?'} vs ${m.opponent}`;
+      opt.textContent = `${statusLabel[m.status]||'⏳'} ${d} - ${m.selection_name||'?'} vs ${m.opponent}`;
       if (m.status === 'live' || m.status === 'paused') opt.style.fontWeight = '700';
       sel.appendChild(opt);
     });
@@ -334,7 +334,7 @@ async function loadMatchState() {
     }
   } catch(e) {
     if (e.message && e.message.includes('404')) {
-      // Match not yet started – fetch base match info
+      // Match not yet started - fetch base match info
       try {
         const m = await apiGet('/matches/' + currentMatchId);
         matchState = { match: { ...m, status: m.status || 'scheduled', goals_for: 0, goals_against: 0 }, events: [], players: [] };
@@ -677,7 +677,7 @@ function renderTimeline() {
       <div class="tl-minute">${minTxt}</div>
       <div class="tl-icon ${meta.cls}">${meta.icon}</div>
       <div class="tl-text">
-        <div class="tl-name">${isOpp && e.event_type==='goal' ? matchState.match.opponent : (e.member_name_cache||'–')}</div>
+        <div class="tl-name">${isOpp && e.event_type==='goal' ? matchState.match.opponent : (e.member_name_cache||'-')}</div>
         ${subLine}
         <div class="tl-score">${e.score_for}:${e.score_against}</div>
       </div>
@@ -783,7 +783,7 @@ async function doResume() {
   if (!currentMatchId) return;
   try {
     await api('/live-match/' + currentMatchId + '/resume', { method:'POST', body:{} });
-    showToast('Nastavak utakmice – 2. poluvrijeme', 'success');
+    showToast('Nastavak utakmice - 2. poluvrijeme', 'success');
     loadMatchList();
   } catch(e) { showToast(e.message, 'error'); }
 }

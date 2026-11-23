@@ -119,7 +119,7 @@ function renderTable() {
       <td data-label="Status">${STATUS_BADGE[i.status] || i.status}</td>
       <td data-label="Rok" class="small">${fmtD(i.due_date)}</td>
       <td data-label="Plaćeno" class="small">${fmtD(i.paid_date)}</td>
-      <td data-label="Period" class="small text-muted">${i.period_start ? fmtD(i.period_start) + ' – ' + fmtD(i.period_end) : '-'}</td>
+      <td data-label="Period" class="small text-muted">${i.period_start ? fmtD(i.period_start) + ' - ' + fmtD(i.period_end) : '-'}</td>
       <td data-label="Napomene" class="small text-muted">${i.notes || '-'}</td>
     </tr>`).join('') || '<tr><td colspan="7" class="text-center text-muted py-3">Nema faktura</td></tr>';
 }

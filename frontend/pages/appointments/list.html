@@ -179,7 +179,7 @@
         <td data-label="Trener">${a.coach_name || '-'}</td>
         <td data-label="Član">${a.member_name || '-'}</td>
         <td data-label="Datum">${formatDate(a.appointment_date)}</td>
-        <td data-label="Vrijeme">${a.start_time ? a.start_time.slice(0,5) : '-'} – ${a.end_time ? a.end_time.slice(0,5) : '-'}</td>
+        <td data-label="Vrijeme">${a.start_time ? a.start_time.slice(0,5) : '-'} - ${a.end_time ? a.end_time.slice(0,5) : '-'}</td>
         <td data-label="Status">${apptBadge(a.status)}</td>
         <td>
           ${a.status === 'pending' && !isMember
@@ -233,7 +233,7 @@
       ]);
       document.getElementById('mCoach').innerHTML =
         '<option value="">Odaberi trenera...</option>' +
-        coaches.map(c => `<option value="${c.id}">${c.name} – ${c.specialization || 'Opći'}</option>`).join('');
+        coaches.map(c => `<option value="${c.id}">${c.name} - ${c.specialization || 'Opći'}</option>`).join('');
       document.getElementById('mMember').innerHTML =
         '<option value="">Odaberi člana...</option>' +
         members.map(m => `<option value="${m.id}">${m.name}</option>`).join('');

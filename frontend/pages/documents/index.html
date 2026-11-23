@@ -1904,13 +1904,13 @@
     const kapDresChars = [v('f1-kap-dres-0'), v('f1-kap-dres-1')];
 
     // --- Cell left-edge x positions (text placed at xl+5 to center single digit) ---
-    // Vrijemе (4 cells, y=658–675): H1 H2 | M1 M2
+    // Vrijemе (4 cells, y=658-675): H1 H2 | M1 M2
     const satXL  = [429, 445, 463, 479];
-    // Datum (8 cells, y=640–657): D1 D2 | M1 M2 | Y1 Y2 Y3 Y4
+    // Datum (8 cells, y=640-657): D1 D2 | M1 M2 | Y1 Y2 Y3 Y4
     const datXL  = [429, 445, 463, 479, 497, 513, 529, 545];
-    // Kolo (2 cells, y=622–638)
+    // Kolo (2 cells, y=622-638)
     const koloXL = [429, 446];
-    // Kapiten dres (2 cells, y=185–201)
+    // Kapiten dres (2 cells, y=185-201)
     const kapDresXL = [214, 235];
     // Broj licence (4 cells per official)
     const licXL  = [496, 513, 529, 546];
@@ -1988,7 +1988,7 @@
 
     const domacin = v('f1-domacin'), gost = v('f1-gost');
     const dlDate = rawDate ? (() => { const d = new Date(rawDate + 'T00:00:00'); return String(d.getDate()).padStart(2,'0') + '.' + String(d.getMonth()+1).padStart(2,'0') + '.' + d.getFullYear(); })() : '';
-    const dlName = [...[domacin, gost].filter(Boolean), dlDate].filter(Boolean).join(' – ') || 'Spisak igrača';
+    const dlName = [...[domacin, gost].filter(Boolean), dlDate].filter(Boolean).join(' - ') || 'Spisak igrača';
     await fillPdfAndPrint(
       '/forms/FSKS/Spisak igrača i službenih osoba (1).pdf',
       [
@@ -2023,7 +2023,7 @@
 
     // Save to history
     const datum = v('f1-datum'), kolo = (v('f1-kolo-0')+v('f1-kolo-1')).trim();
-    const summary = [domacin && gost ? `${domacin} – ${gost}` : '', datum ? new Date(datum+'T00:00:00').toLocaleDateString('bs-BA') : '', kolo ? `Kolo ${kolo}` : ''].filter(Boolean).join(', ');
+    const summary = [domacin && gost ? `${domacin} - ${gost}` : '', datum ? new Date(datum+'T00:00:00').toLocaleDateString('bs-BA') : '', kolo ? `Kolo ${kolo}` : ''].filter(Boolean).join(', ');
     saveFormHistory('fsks-1', 'Spisak igrača i službenih osoba (FSKS)', summary);
   }
 
