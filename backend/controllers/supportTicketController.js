@@ -1,5 +1,7 @@
 const db = require('../config/db');
 const { assertClubOwned } = require('../utils/clubScope');
+const { send: sendMail } = require('../config/mailer');
+const { newTicketNotificationHtml, ticketReplyEmailHtml } = require('../config/emailTemplates');
 
 exports.getAll = async (req, res) => {
   try {
@@ -43,8 +45,19 @@ exports.create = async (req, res) => {
         [result.insertId, req.user.id, body]
       );
     }
+
+    // Notify Klavio team by email (non-blocking)
+    const [clubRows] = await db.query('SELECT name FROM clubs WHERE id = ?', [req.user.club_id]);
+    const clubName = clubRows[0]?.name || 'Klub';
+    sendMail({
+      to: process.env.MAIL_USER || 'info@klavioclub.com',
+      subject: `Novi support tiket: ${subject}`,
+      text: `Novi tiket od ${req.user.name} (${clubName}): ${subject}\n\n${body || ''}`,
+      html: newTicketNotificationHtml(clubName, req.user.name, subject, body),
+    }).catch(err => console.error('New ticket notification mail error:', err.message));
+
     res.status(201).json({ id: result.insertId });
-  } catch (err) { res.status(500).json({ message: 'Server error' }); }
+  } catch (err) { console.error('Support ticket create error:', err.message); res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.getReplies = async (req, res) => {
@@ -82,16 +95,26 @@ exports.reply = async (req, res) => {
     );
     // Notify admin when staff replies
     if (isStaff) {
-      const [ticket] = await db.query('SELECT club_id, subject, created_by FROM support_tickets WHERE id=?', [req.params.id]);
+      const [ticket] = await db.query(
+        `SELECT st.club_id, st.subject, st.created_by, u.name AS user_name, u.email AS user_email
+         FROM support_tickets st JOIN users u ON u.id = st.created_by WHERE st.id=?`,
+        [req.params.id]
+      );
       if (ticket.length) {
         await db.query(
           'INSERT INTO notifications (user_id, club_id, title, message, type) VALUES (?,?,?,?,?)',
           [ticket[0].created_by, ticket[0].club_id, `💬 Odgovor na tiket: ${ticket[0].subject}`, body.slice(0, 200), 'info']
         );
+        sendMail({
+          to: ticket[0].user_email,
+          subject: `Odgovor na tiket: ${ticket[0].subject}`,
+          text: `Pozdrav ${ticket[0].user_name},\n\nStigao je odgovor na vaš tiket "${ticket[0].subject}":\n\n${body}`,
+          html: ticketReplyEmailHtml(ticket[0].user_name, ticket[0].subject, body),
+        }).catch(err => console.error('Ticket reply notification mail error:', err.message));
       }
     }
     res.json({ message: 'Odgovor poslan' });
-  } catch (err) { res.status(500).json({ message: 'Server error' }); }
+  } catch (err) { console.error('Support ticket reply error:', err.message); res.status(500).json({ message: 'Server error' }); }
 };
 
 exports.updateStatus = async (req, res) => {
