@@ -49,7 +49,7 @@ exports.create = async (req, res) => {
     const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
     const [userResult] = await conn.query(
-      'INSERT INTO users (name, email, password_hash, role, club_id, email_verified, verification_token, verification_expires) VALUES (?, ?, ?, ?, ?, 0, ?, ?)',
+      "INSERT INTO users (name, email, password_hash, role, club_id, email_verified, verification_token, verification_expires, token_purpose) VALUES (?, ?, ?, ?, ?, 0, ?, ?, 'invite')",
       [name, email, password_hash, 'coach', club_id, token, expires]
     );
     const [coachResult] = await conn.query(
