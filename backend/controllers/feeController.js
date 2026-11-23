@@ -47,6 +47,40 @@ exports.create = async (req, res) => {
   }
 };
 
+exports.bulkGenerate = async (req, res) => {
+  const { amount, period_start, period_end, due_date, payment_method, notes } = req.body;
+  if (!amount || !period_start || !period_end || !due_date) {
+    return res.status(400).json({ message: 'Iznos, period i datum dospijeća su obavezni' });
+  }
+  try {
+    const [members] = await db.query(
+      "SELECT id FROM members WHERE club_id = ? AND status = 'active'",
+      [req.user.club_id]
+    );
+    if (!members.length) return res.json({ created: 0, skipped: 0, message: 'Nema aktivnih članova' });
+
+    const [existing] = await db.query(
+      'SELECT member_id FROM membership_fees WHERE period_start = ? AND member_id IN (?)',
+      [period_start, members.map(m => m.id)]
+    );
+    const alreadyHas = new Set(existing.map(e => e.member_id));
+    const toCreate = members.filter(m => !alreadyHas.has(m.id));
+
+    if (toCreate.length) {
+      const values = toCreate.map(m => [m.id, amount, period_start, period_end, due_date, payment_method || null, notes || null, req.user.id]);
+      await db.query(
+        'INSERT INTO membership_fees (member_id, amount, period_start, period_end, due_date, payment_method, notes, created_by) VALUES ?',
+        [values]
+      );
+    }
+
+    res.status(201).json({ created: toCreate.length, skipped: alreadyHas.size });
+  } catch (err) {
+    console.error('Fee bulk generate error:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 exports.update = async (req, res) => {
   const { status, paid_date, payment_method, notes, amount } = req.body;
   try {
