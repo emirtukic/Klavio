@@ -1,23 +1,10 @@
 const path    = require('path');
-const fs      = require('fs');
 const multer  = require('multer');
 const db      = require('../config/db');
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = path.join(__dirname, '../../frontend/assets/uploads/member-docs');
-    fs.mkdirSync(dir, { recursive: true });
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    const ext  = path.extname(file.originalname).toLowerCase();
-    const safe = file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_').replace(ext, '');
-    cb(null, `${req.params.memberId}_${Date.now()}_${safe}${ext}`);
-  }
-});
+const { uploadToR2, deleteFromR2, keyFromUrl } = require('../config/r2');
 
 exports.upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 20 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowed = ['.pdf','.doc','.docx','.xls','.xlsx','.png','.jpg','.jpeg','.gif','.webp','.txt','.csv','.zip'];
@@ -56,14 +43,20 @@ exports.create = async (req, res) => {
   try {
     await db.query(ENSURE_TABLE);
     if (!req.file) return res.status(400).json({ message: 'Fajl nije pronađen' });
-    const fileUrl = `/assets/uploads/member-docs/${req.file.filename}`;
+    const ext  = path.extname(req.file.originalname).toLowerCase();
+    const safe = req.file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_').replace(ext, '');
+    const key  = `member-docs/${req.params.memberId}_${Date.now()}_${safe}${ext}`;
+    const fileUrl = await uploadToR2(key, req.file.buffer, req.file.mimetype);
     const name    = req.body.name || req.file.originalname;
     const [result] = await db.query(
       'INSERT INTO member_documents (member_id, club_id, name, file_url, file_size, mime_type, uploaded_by) VALUES (?,?,?,?,?,?,?)',
       [req.params.memberId, req.user.club_id, name, fileUrl, req.file.size, req.file.mimetype, req.user.id]
     );
     res.status(201).json({ id: result.insertId, name, file_url: fileUrl, file_size: req.file.size, mime_type: req.file.mimetype, created_at: new Date() });
-  } catch (err) { res.status(500).json({ message: 'Server error' }); }
+  } catch (err) {
+    console.error('Document upload error:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
 };
 
 exports.remove = async (req, res) => {
@@ -71,8 +64,8 @@ exports.remove = async (req, res) => {
     await db.query(ENSURE_TABLE);
     const [[doc]] = await db.query('SELECT * FROM member_documents WHERE id=? AND club_id=?', [req.params.id, req.user.club_id]);
     if (!doc) return res.status(404).json({ message: 'Dokument nije pronađen' });
-    const filePath = path.join(__dirname, '../../frontend', doc.file_url);
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    const key = keyFromUrl(doc.file_url);
+    if (key) await deleteFromR2(key).catch(err => console.error('R2 delete error:', err.message));
     await db.query('DELETE FROM member_documents WHERE id=?', [req.params.id]);
     res.json({ message: 'Dokument obrisan' });
   } catch (err) { res.status(500).json({ message: 'Server error' }); }

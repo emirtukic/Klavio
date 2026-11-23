@@ -1,22 +1,11 @@
 const path = require('path');
-const fs = require('fs');
 const multer = require('multer');
 const db = require('../config/db');
 const { imageFileFilter } = require('../middleware/imageUpload');
+const { uploadToR2, deleteFromR2, keyFromUrl } = require('../config/r2');
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = path.join(__dirname, '../../frontend/assets/uploads/gallery');
-    fs.mkdirSync(dir, { recursive: true });
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, `gallery_${Date.now()}_${Math.random().toString(36).slice(2, 7)}${ext}`);
-  }
-});
 exports.upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
   fileFilter: imageFileFilter
 });
@@ -40,22 +29,29 @@ exports.uploadPhoto = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'Nema fajla' });
     const { title, event_type, event_id } = req.body;
-    const url = `/assets/uploads/gallery/${req.file.filename}`;
+    const ext = path.extname(req.file.originalname).toLowerCase();
+    const filename = `gallery_${Date.now()}_${Math.random().toString(36).slice(2, 7)}${ext}`;
+    const url = await uploadToR2(`gallery/${filename}`, req.file.buffer, req.file.mimetype);
     const [r] = await db.query(
       'INSERT INTO gallery (club_id, uploaded_by, filename, url, title, event_type, event_id) VALUES (?,?,?,?,?,?,?)',
-      [req.user.club_id, req.user.id, req.file.filename, url, title||null, event_type||'other', event_id||null]
+      [req.user.club_id, req.user.id, filename, url, title||null, event_type||'other', event_id||null]
     );
     res.status(201).json({ id: r.insertId, url, title });
-  } catch (err) { res.status(500).json({ message: 'Server error' }); }
+  } catch (err) {
+    console.error('Gallery upload error:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
 };
 
 exports.remove = async (req, res) => {
   try {
     const [rows] = await db.query('SELECT * FROM gallery WHERE id=? AND club_id=?', [req.params.id, req.user.club_id]);
     if (!rows.length) return res.status(404).json({ message: 'Slika nije pronađena' });
-    const filePath = path.join(__dirname, '../../frontend/assets/uploads/gallery', rows[0].filename);
-    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    const key = keyFromUrl(rows[0].url) || `gallery/${rows[0].filename}`;
+    await deleteFromR2(key).catch(err => console.error('R2 delete error:', err.message));
     await db.query('DELETE FROM gallery WHERE id=?', [req.params.id]);
     res.json({ message: 'Slika obrisana' });
-  } catch (err) { res.status(500).json({ message: 'Server error' }); }
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
 };

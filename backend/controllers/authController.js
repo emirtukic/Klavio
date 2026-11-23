@@ -1,23 +1,16 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const path = require('path');
-const fs = require('fs');
 const multer = require('multer');
 const crypto = require('crypto');
 const db = require('../config/db');
 const { send: sendMail } = require('../config/mailer');
 const { verifyEmailHtml, welcomeEmailHtml, inviteEmailHtml, resetPasswordEmailHtml, newClubNotificationHtml } = require('../config/emailTemplates');
 const { imageFileFilter } = require('../middleware/imageUpload');
+const { uploadToR2 } = require('../config/r2');
 
-const avatarStorage = multer.diskStorage({
-  destination: path.join(__dirname, '../../frontend/assets/uploads/avatars'),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, `user_${req.user.id}${ext}`);
-  }
-});
 exports.avatarUpload = multer({
-  storage: avatarStorage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: imageFileFilter
 });
@@ -303,10 +296,12 @@ exports.updateProfile = async (req, res) => {
 exports.uploadAvatar = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'Nema fajla' });
-    const avatarUrl = `/assets/uploads/avatars/${req.file.filename}`;
+    const ext = path.extname(req.file.originalname).toLowerCase();
+    const avatarUrl = await uploadToR2(`avatars/user_${req.user.id}_${Date.now()}${ext}`, req.file.buffer, req.file.mimetype);
     await db.query('UPDATE users SET avatar_url = ? WHERE id = ?', [avatarUrl, req.user.id]);
     res.json({ message: 'Avatar ažuriran', avatar_url: avatarUrl });
   } catch (err) {
+    console.error('Avatar upload error:', err.message);
     res.status(500).json({ message: 'Server error' });
   }
 };

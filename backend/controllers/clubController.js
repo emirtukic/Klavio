@@ -1,24 +1,13 @@
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const path = require('path');
-const fs = require('fs');
 const multer = require('multer');
 const db = require('../config/db');
 const { imageFileFilter } = require('../middleware/imageUpload');
+const { uploadToR2 } = require('../config/r2');
 
-const logoStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = path.join(__dirname, '../../frontend/assets/uploads/clubs');
-    fs.mkdirSync(dir, { recursive: true });
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, `club_${req.params.id}${ext}`);
-  }
-});
 exports.logoUpload = multer({
-  storage: logoStorage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: imageFileFilter
 });
@@ -26,10 +15,12 @@ exports.logoUpload = multer({
 exports.uploadLogo = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ message: 'Nema fajla' });
-    const logoUrl = `/assets/uploads/clubs/${req.file.filename}`;
+    const ext = path.extname(req.file.originalname).toLowerCase();
+    const logoUrl = await uploadToR2(`clubs/club_${req.params.id}_${Date.now()}${ext}`, req.file.buffer, req.file.mimetype);
     await db.query('UPDATE clubs SET logo_url = ? WHERE id = ?', [logoUrl, req.params.id]);
     res.json({ message: 'Logo ažuriran', logo_url: logoUrl });
   } catch (err) {
+    console.error('Logo upload error:', err.message);
     res.status(500).json({ message: 'Server error' });
   }
 };
