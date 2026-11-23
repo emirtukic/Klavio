@@ -141,7 +141,7 @@ exports.createAdmin = async (req, res) => {
     const tempPassword = password || crypto.randomBytes(9).toString('base64url');
     const password_hash = await bcrypt.hash(tempPassword, 10);
     const [result] = await db.query(
-      "INSERT INTO users (name, email, password_hash, role, club_id) VALUES (?, ?, ?, 'admin', ?)",
+      "INSERT INTO users (name, email, password_hash, role, club_id, email_verified) VALUES (?, ?, ?, 'admin', ?, 1)",
       [name, email, password_hash, club_id]
     );
     res.status(201).json({ id: result.insertId, name, email, role: 'admin', club_id, temp_password: isGenerated ? tempPassword : undefined });
