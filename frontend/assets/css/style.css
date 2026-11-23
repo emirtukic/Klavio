@@ -14,9 +14,11 @@
   /* Per-club theming - overridden inline by applyBranding() */
   --club-sidebar: #1e293b;
   --club-accent:  #3b82f6;
-  /* RGB triplet (no rgba() wrapper) - flipped to a dark value by applyBranding()
-     when the club's sidebar color is too light for white text to stay readable. */
+  /* RGB triplet (no rgba() wrapper) - sidebar text stays white across all club colors. */
   --sidebar-fg: 255,255,255;
+  /* Set by applyBranding() to a dark halo when the club's color (e.g. bright red)
+     would otherwise wash out translucent white text. */
+  --sidebar-text-shadow: none;
 
   /* Sidebar tokens */
   --sidebar-bg:     var(--club-sidebar);
@@ -198,6 +200,7 @@ body {
   padding: var(--space-4) var(--space-5);
   border-bottom: 1px solid rgba(var(--sidebar-fg),0.07);
   color: rgb(var(--sidebar-fg)); font-size: var(--fs-body); font-weight: var(--fw-bold);
+  text-shadow: var(--sidebar-text-shadow);
   display: flex; align-items: center; gap: var(--space-3); white-space: nowrap;
 }
 .sidebar-brand-sa { padding: var(--space-3); border-bottom: none; display: block; }
@@ -217,6 +220,7 @@ body {
 
 .sidebar-nav .nav-link {
   color: var(--sidebar-text);
+  text-shadow: var(--sidebar-text-shadow);
   border-radius: var(--radius-sm);
   padding: 0.52rem 0.9rem;
   display: flex; align-items: center; gap: var(--space-2);
@@ -226,6 +230,10 @@ body {
 }
 .sidebar-nav .nav-link i {
   font-size: 1rem; width: 18px; flex-shrink: 0;
+}
+.sidebar-high-contrast .sidebar-nav .nav-link {
+  font-weight: var(--fw-semibold);
+  color: rgba(var(--sidebar-fg),0.9);
 }
 .sidebar-nav .nav-link:hover {
   background: var(--sidebar-hover);

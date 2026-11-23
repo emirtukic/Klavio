@@ -301,14 +301,13 @@ function expandSection(collapsible) {
   if (icon) { icon.classList.replace('bi-chevron-down','bi-chevron-up'); }
 }
 
-/* ── Pick black or white sidebar text, whichever stays readable on the
-   club's color. Our sidebar text is rendered at reduced opacity (not solid),
-   so we simulate that blend against the background and compare contrast -
-   a plain "is this color light or dark" check isn't safe for saturated hues
-   like red, where even technically-passing white text looks washed out. ── */
-function pickSidebarFg(hex) {
+/* ── Sidebar text always stays white; on bright/saturated club colors
+   (red, orange, yellow...) plain translucent white gets washed out, so we
+   boost it with a subtle dark halo + bolder weight instead of switching
+   to black (which looked muddy on red when tried). ── */
+function sidebarNeedsBoost(hex) {
   const m = /^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i.exec(hex || '');
-  if (!m) return '255,255,255';
+  if (!m) return false;
   const bg = [parseInt(m[1], 16), parseInt(m[2], 16), parseInt(m[3], 16)];
 
   const linear = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
@@ -316,12 +315,9 @@ function pickSidebarFg(hex) {
   const contrast = (l1, l2) => (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
   const blend = (fg, alpha) => bg.map((c, i) => c * (1 - alpha) + fg[i] * alpha);
 
-  const bgLum = luminance(bg);
-  // Sidebar text renders around 62% opacity - compare both options at that blend.
-  const whiteContrast = contrast(luminance(blend([255, 255, 255], 0.62)), bgLum);
-  const blackContrast = contrast(luminance(blend([0, 0, 0], 0.62)), bgLum);
-
-  return blackContrast > whiteContrast ? '15,23,42' : '255,255,255';
+  // Sidebar text renders around 62% opacity - check contrast at that blend.
+  const whiteContrast = contrast(luminance(blend([255, 255, 255], 0.62)), luminance(bg));
+  return whiteContrast < 3.5;
 }
 
 /* ── Branding (CSS vars only - no topbar badge) ── */
@@ -332,7 +328,9 @@ function applyBranding() {
   if (club.primary_color) {
     root.style.setProperty('--club-sidebar', club.primary_color);
     root.style.setProperty('--club-accent',  club.primary_color);
-    root.style.setProperty('--sidebar-fg',   pickSidebarFg(club.primary_color));
+    const boost = sidebarNeedsBoost(club.primary_color);
+    root.style.setProperty('--sidebar-text-shadow', boost ? '0 1px 3px rgba(0,0,0,0.55)' : 'none');
+    root.classList.toggle('sidebar-high-contrast', boost);
   }
 }
 
