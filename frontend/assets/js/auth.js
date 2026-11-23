@@ -6,9 +6,12 @@ function saveAuth(token, user, club, selection) {
   if (selection) localStorage.setItem('selection', JSON.stringify(selection)); else localStorage.removeItem('selection');
 }
 function getToken()     { return localStorage.getItem('token'); }
-function getUser()      { const u = localStorage.getItem('user');      return u ? JSON.parse(u) : null; }
-function getClub()      { const c = localStorage.getItem('club');      return c ? JSON.parse(c) : null; }
-function getSelection() { const s = localStorage.getItem('selection'); return s ? JSON.parse(s) : null; }
+// A JSON.parse failure here (corrupted localStorage) used to throw and silently
+// abort whatever caller was mid-way through (e.g. refreshTopbarAvatar after an
+// avatar upload, right before it could update the topbar/persist the new URL).
+function getUser()      { const u = localStorage.getItem('user');      try { return u ? JSON.parse(u) : null; } catch(e) { return null; } }
+function getClub()      { const c = localStorage.getItem('club');      try { return c ? JSON.parse(c) : null; } catch(e) { return null; } }
+function getSelection() { const s = localStorage.getItem('selection'); try { return s ? JSON.parse(s) : null; } catch(e) { return null; } }
 function isSuperAdminInClub() { return !!localStorage.getItem('sa_token'); }
 
 /* ── Auth ── */
@@ -39,6 +42,11 @@ async function switchToClub(clubId) {
     const res = await fetch(`/api/clubs/${clubId}/access`, { method:'POST', headers:{ 'Authorization':'Bearer '+getToken(), 'Content-Type':'application/json' } });
     if (!res.ok) { const d = await res.json(); throw new Error(d.message); }
     const data = await res.json();
+    // The access-token response rebuilds the user object from scratch and
+    // doesn't carry the avatar over - preserve it so the topbar doesn't
+    // silently revert to initials after switching into a club.
+    const prevAvatar = (getUser() || {}).avatar_url;
+    data.user.avatar_url = data.user.avatar_url || prevAvatar || null;
     localStorage.setItem('sa_token', getToken());
     saveAuth(data.token, data.user, data.club);
     window.location.href = '/pages/dashboard/admin.html';
@@ -49,13 +57,14 @@ async function switchToClub(clubId) {
 function exitClub() {
   const saToken = localStorage.getItem('sa_token');
   if (!saToken) return;
+  const prevAvatar = (getUser() || {}).avatar_url;
   localStorage.removeItem('sa_token');
   localStorage.removeItem('club');
   localStorage.removeItem('selection');
   localStorage.setItem('token', saToken);
   try {
     const p = JSON.parse(atob(saToken.split('.')[1]));
-    localStorage.setItem('user', JSON.stringify({ id:p.id, name:p.name, email:p.email, role:p.role, club_id:null }));
+    localStorage.setItem('user', JSON.stringify({ id:p.id, name:p.name, email:p.email, role:p.role, club_id:null, avatar_url: prevAvatar || null }));
   } catch(e) {}
   window.location.href = '/pages/dashboard/super-admin.html';
 }
