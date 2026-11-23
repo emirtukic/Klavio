@@ -47,30 +47,55 @@ exports.create = async (req, res) => {
   }
 };
 
+async function findOverlapping(clubId, period_start, period_end) {
+  const [members] = await db.query(
+    "SELECT id FROM members WHERE club_id = ? AND status = 'active'",
+    [clubId]
+  );
+  if (!members.length) return { members: [], overlapping: [] };
+
+  const [overlapping] = await db.query(
+    `SELECT mf.member_id, u.name
+     FROM membership_fees mf
+     JOIN members m ON mf.member_id = m.id
+     JOIN users u ON m.user_id = u.id
+     WHERE mf.member_id IN (?) AND mf.period_start <= ? AND mf.period_end >= ?`,
+    [members.map(m => m.id), period_end, period_start]
+  );
+  return { members, overlapping };
+}
+
+exports.bulkPreview = async (req, res) => {
+  const { period_start, period_end } = req.body;
+  if (!period_start || !period_end) {
+    return res.status(400).json({ message: 'Period je obavezan' });
+  }
+  try {
+    const { members, overlapping } = await findOverlapping(req.user.club_id, period_start, period_end);
+    res.json({
+      totalActive: members.length,
+      overlapping: overlapping.map(o => ({ id: o.member_id, name: o.name })),
+    });
+  } catch (err) {
+    console.error('Fee bulk preview error:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 exports.bulkGenerate = async (req, res) => {
-  const { amount, period_start, period_end, due_date, payment_method, notes } = req.body;
+  const { amount, period_start, period_end, due_date, payment_method, notes, includeOverlapIds } = req.body;
   if (!amount || !period_start || !period_end || !due_date) {
     return res.status(400).json({ message: 'Iznos, period i datum dospijeća su obavezni' });
   }
   try {
-    const [members] = await db.query(
-      "SELECT id FROM members WHERE club_id = ? AND status = 'active'",
-      [req.user.club_id]
-    );
+    const { members, overlapping } = await findOverlapping(req.user.club_id, period_start, period_end);
     if (!members.length) return res.json({ created: 0, skipped: 0, message: 'Nema aktivnih članova' });
 
-    // A member already covered for this period overlaps if their existing fee's
-    // range intersects the new range at all (not just an exact period_start match).
-    const [overlapping] = await db.query(
-      `SELECT mf.member_id, u.name
-       FROM membership_fees mf
-       JOIN members m ON mf.member_id = m.id
-       JOIN users u ON m.user_id = u.id
-       WHERE mf.member_id IN (?) AND mf.period_start <= ? AND mf.period_end >= ?`,
-      [members.map(m => m.id), period_end, period_start]
-    );
+    const includeIds = new Set(Array.isArray(includeOverlapIds) ? includeOverlapIds.map(Number) : []);
     const overlapIds = new Set(overlapping.map(o => o.member_id));
-    const toCreate = members.filter(m => !overlapIds.has(m.id));
+    // Create for everyone not overlapping, plus any overlapping member the admin explicitly chose to duplicate anyway.
+    const toCreate = members.filter(m => !overlapIds.has(m.id) || includeIds.has(m.id));
+    const skippedNames = overlapping.filter(o => !includeIds.has(o.member_id)).map(o => o.name);
 
     if (toCreate.length) {
       const values = toCreate.map(m => [m.id, amount, period_start, period_end, due_date, payment_method || null, notes || null, req.user.id]);
@@ -82,8 +107,8 @@ exports.bulkGenerate = async (req, res) => {
 
     res.status(201).json({
       created: toCreate.length,
-      skipped: overlapIds.size,
-      skippedNames: overlapping.map(o => o.name),
+      skipped: skippedNames.length,
+      skippedNames,
     });
   } catch (err) {
     console.error('Fee bulk generate error:', err.message);

@@ -215,6 +215,29 @@
   </div>
 </div>
 
+<!-- Overlap decision modal -->
+<div class="modal fade" id="overlapDecisionModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:14px;overflow:hidden;">
+      <div class="modal-header border-0 pb-1">
+        <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle text-warning me-2"></i>Preklapanje perioda</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted small">Sljedeći članovi već imaju članarinu koja se preklapa sa izabranim periodom. Za svakog odaberi da li ipak želiš dodati još jednu (duplo) ili ga preskočiti.</p>
+        <div id="overlapList" class="d-flex flex-column gap-2"></div>
+      </div>
+      <div class="modal-footer border-0 pt-1">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
+        <button type="button" class="btn btn-success" id="overlapConfirmBtn" onclick="confirmOverlapAndGenerate()">
+          <span id="overlapConfirmSpinner" class="spinner-border spinner-border-sm d-none me-1"></span>
+          Nastavi
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Quick-edit modal -->
 <div class="modal fade" id="feeEditModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
@@ -466,6 +489,8 @@ async function saveQuickEditFee() {
 }
 
 /* ── Bulk generate ── */
+let pendingBulkPayload = null;
+
 async function runBulkGenerate() {
   const amount      = parseFloat(document.getElementById('bgAmount').value);
   const period_start = document.getElementById('bgPeriodStart').value;
@@ -476,20 +501,53 @@ async function runBulkGenerate() {
   if (!amount || !period_start || !period_end || !due_date) {
     showToast('Popunite iznos, period i datum dospijeća', 'error'); return;
   }
+  pendingBulkPayload = { amount, period_start, period_end, due_date, payment_method, notes };
+
   const btn = document.getElementById('bulkGenerateBtn');
   const sp  = document.getElementById('bulkGenerateSpinner');
   btn.disabled = true; sp.classList.remove('d-none');
   try {
-    const r = await apiPost('/fees/bulk-generate', { amount, period_start, period_end, due_date, payment_method, notes });
-    bootstrap.Modal.getInstance(document.getElementById('bulkGenerateModal')).hide();
-    showToast(`Kreirano ${r.created} članarina`, 'success');
-    if (r.skipped) {
-      const names = (r.skippedNames || []).join(', ');
-      alert(`Preskočeno ${r.skipped} (već imaju članarinu koja se preklapa sa ovim periodom):\n\n${names}`);
+    const preview = await apiPost('/fees/bulk-generate/preview', { period_start, period_end });
+    if (preview.overlapping.length) {
+      bootstrap.Modal.getInstance(document.getElementById('bulkGenerateModal')).hide();
+      showOverlapDecision(preview.overlapping);
+    } else {
+      await submitBulkGenerate();
+      bootstrap.Modal.getInstance(document.getElementById('bulkGenerateModal')).hide();
     }
-    load();
   } catch(e) { showToast(e.message, 'error'); }
   finally { btn.disabled = false; sp.classList.add('d-none'); }
+}
+
+function showOverlapDecision(overlapping) {
+  document.getElementById('overlapList').innerHTML = overlapping.map(o => `
+    <div class="form-check form-switch border rounded-3 px-3 py-2">
+      <input class="form-check-input" type="checkbox" value="${o.id}" id="ov-${o.id}">
+      <label class="form-check-label w-100" for="ov-${o.id}">
+        <strong>${o.name}</strong> <span class="text-muted small d-block">već ima članarinu za ovaj period - označi da ipak dodaš još jednu (duplo)</span>
+      </label>
+    </div>
+  `).join('');
+  new bootstrap.Modal(document.getElementById('overlapDecisionModal')).show();
+}
+
+async function confirmOverlapAndGenerate() {
+  const includeOverlapIds = Array.from(document.querySelectorAll('#overlapList input:checked')).map(el => parseInt(el.value));
+  const btn = document.getElementById('overlapConfirmBtn');
+  const sp  = document.getElementById('overlapConfirmSpinner');
+  btn.disabled = true; sp.classList.remove('d-none');
+  try {
+    await submitBulkGenerate(includeOverlapIds);
+    bootstrap.Modal.getInstance(document.getElementById('overlapDecisionModal')).hide();
+  } catch(e) { showToast(e.message, 'error'); }
+  finally { btn.disabled = false; sp.classList.add('d-none'); }
+}
+
+async function submitBulkGenerate(includeOverlapIds) {
+  const r = await apiPost('/fees/bulk-generate', { ...pendingBulkPayload, includeOverlapIds: includeOverlapIds || [] });
+  showToast(`Kreirano ${r.created} članarina`, 'success');
+  if (r.skipped) showToast(`Preskočeno ${r.skipped}: ${(r.skippedNames || []).join(', ')}`, 'warning');
+  load();
 }
 
 /* ── Per-row reminder ── */

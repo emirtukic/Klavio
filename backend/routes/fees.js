@@ -8,6 +8,7 @@ router.get('/stats',           auth, role('super_admin', 'admin'), ctrl.getStats
 router.get('/member/:memberId', auth, ctrl.getMemberFees);
 router.get('/',                auth, role('super_admin', 'admin'), ctrl.getAll);
 router.post('/',               auth, role('super_admin', 'admin'), log('create', 'Članarina'), ctrl.create);
+router.post('/bulk-generate/preview', auth, role('super_admin', 'admin'), ctrl.bulkPreview);
 router.post('/bulk-generate',  auth, role('super_admin', 'admin'), log('create', 'Članarina (masovno)'), ctrl.bulkGenerate);
 router.put('/:id/pay',         auth, role('super_admin', 'admin'), log('update', 'Članarina'), ctrl.markPaid);
 router.put('/:id',             auth, role('super_admin', 'admin'), log('update', 'Članarina'), ctrl.update);
