@@ -1,4 +1,4 @@
-const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, PutObjectCommand, DeleteObjectCommand, ListObjectsV2Command } = require('@aws-sdk/client-s3');
 
 // Cloudflare R2 is S3-compatible, so the regular AWS S3 client works against
 // R2's endpoint without any special SDK. Files are uploaded here instead of
@@ -36,4 +36,27 @@ function keyFromUrl(url) {
   return url.slice(PUBLIC_URL.length + 1);
 }
 
-module.exports = { uploadToR2, deleteFromR2, keyFromUrl };
+// Separate, non-public bucket for DB backups - these contain password hashes
+// and personal data, so they must never be reachable through a public URL
+// the way the uploads bucket is.
+const BACKUP_BUCKET = process.env.R2_BACKUP_BUCKET_NAME;
+
+async function uploadBackup(key, buffer, contentType) {
+  await client.send(new PutObjectCommand({
+    Bucket: BACKUP_BUCKET,
+    Key: key,
+    Body: buffer,
+    ContentType: contentType,
+  }));
+}
+
+async function listBackups(prefix) {
+  const out = await client.send(new ListObjectsV2Command({ Bucket: BACKUP_BUCKET, Prefix: prefix }));
+  return out.Contents || [];
+}
+
+async function deleteBackup(key) {
+  await client.send(new DeleteObjectCommand({ Bucket: BACKUP_BUCKET, Key: key }));
+}
+
+module.exports = { uploadToR2, deleteFromR2, keyFromUrl, uploadBackup, listBackups, deleteBackup };

@@ -3,11 +3,24 @@ const cors = require('cors');
 const path = require('path');
 const cron = require('node-cron');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
+const db = require('./config/db');
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// Lightweight endpoint for external uptime monitors to ping - checks the DB
+// connection too, since "server up but DB unreachable" is the failure mode
+// that actually matters for this app.
+app.get('/api/health', async (req, res) => {
+  try {
+    await db.query('SELECT 1');
+    res.json({ status: 'ok' });
+  } catch (err) {
+    res.status(503).json({ status: 'error', message: err.message });
+  }
+});
 
 // Clean URL for the registration page (file has no extension on disk,
 // so express.static can't guess its content type on its own).
@@ -78,7 +91,6 @@ cron.schedule('0 8 * * *', () => {
 });
 
 // Daily midnight - mark expired subscriptions as overdue
-const db = require('./config/db');
 cron.schedule('0 0 * * *', async () => {
   try {
     const [result] = await db.query(`
@@ -94,6 +106,13 @@ cron.schedule('0 0 * * *', async () => {
   } catch (err) {
     console.error('[cron] Subscription expiry check failed:', err.message);
   }
+});
+
+// Daily 03:00 - full database backup to R2 (private bucket, not the public uploads one)
+const { runFullBackupSafely } = require('./services/dbBackupService');
+cron.schedule('0 3 * * *', () => {
+  console.log('[cron] Running nightly full DB backup...');
+  runFullBackupSafely().catch(() => {}); // already logged + alerted inside
 });
 
 // Every 5 min - auto-end live matches nobody closed after 90 minutes
