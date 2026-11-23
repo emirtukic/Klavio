@@ -14,11 +14,14 @@
   /* Per-club theming - overridden inline by applyBranding() */
   --club-sidebar: #1e293b;
   --club-accent:  #3b82f6;
+  /* RGB triplet (no rgba() wrapper) - flipped to a dark value by applyBranding()
+     when the club's sidebar color is too light for white text to stay readable. */
+  --sidebar-fg: 255,255,255;
 
   /* Sidebar tokens */
   --sidebar-bg:     var(--club-sidebar);
-  --sidebar-text:   rgba(255,255,255,0.62);
-  --sidebar-hover:  rgba(255,255,255,0.09);
+  --sidebar-text:   rgba(var(--sidebar-fg),0.62);
+  --sidebar-hover:  rgba(var(--sidebar-fg),0.09);
   --sidebar-active: var(--club-accent);
 
   /* ── Type scale ── */
@@ -193,13 +196,13 @@ body {
 
 .sidebar-brand {
   padding: var(--space-4) var(--space-5);
-  border-bottom: 1px solid rgba(255,255,255,0.07);
-  color: var(--neutral-0); font-size: var(--fs-body); font-weight: var(--fw-bold);
+  border-bottom: 1px solid rgba(var(--sidebar-fg),0.07);
+  color: rgb(var(--sidebar-fg)); font-size: var(--fs-body); font-weight: var(--fw-bold);
   display: flex; align-items: center; gap: var(--space-3); white-space: nowrap;
 }
 .sidebar-brand-sa { padding: var(--space-3); border-bottom: none; display: block; }
 .sidebar-brand-sa + nav.sidebar-nav { padding-top: 0; }
-.sidebar-brand i { font-size: 1.4rem; color: var(--sidebar-active); }
+.sidebar-brand i { font-size: 1.4rem; color: rgb(var(--sidebar-fg)); }
 
 .sidebar-nav { flex: 1; padding: var(--space-2) 0; }
 
@@ -226,27 +229,27 @@ body {
 }
 .sidebar-nav .nav-link:hover {
   background: var(--sidebar-hover);
-  color: rgba(255,255,255,0.92);
+  color: rgba(var(--sidebar-fg),0.92);
 }
 .sidebar-nav .nav-link.active {
-  background: rgba(255,255,255,0.10);
-  color: rgba(255,255,255,0.96);
+  background: rgba(var(--sidebar-fg),0.10);
+  color: rgba(var(--sidebar-fg),0.96);
   font-weight: var(--fw-semibold);
   /* Inset left bar using box-shadow - no layout shift */
-  box-shadow: inset -3px 0 0 0 transparent, -3px 0 0 0 rgba(255,255,255,0.75);
+  box-shadow: inset -3px 0 0 0 transparent, -3px 0 0 0 rgba(var(--sidebar-fg),0.75);
 }
-.sidebar-nav .nav-link.active i { color: rgba(255,255,255,0.96); }
+.sidebar-nav .nav-link.active i { color: rgba(var(--sidebar-fg),0.96); }
 
 .sidebar-footer {
   padding: var(--space-3);
-  border-top: 1px solid rgba(255,255,255,0.07);
+  border-top: 1px solid rgba(var(--sidebar-fg),0.07);
 }
 .sidebar-footer .nav-link {
   color: var(--sidebar-text); border-radius: var(--radius-sm);
   padding: var(--space-2) var(--space-4); font-size: var(--fs-sm);
   transition: background var(--t-fast), color var(--t-fast);
 }
-.sidebar-footer .nav-link:hover { background: var(--sidebar-hover); color: var(--neutral-0); }
+.sidebar-footer .nav-link:hover { background: var(--sidebar-hover); color: rgb(var(--sidebar-fg)); }
 
 /* ══════════════════════════════════════════
    MAIN CONTENT
@@ -641,6 +644,10 @@ tbody tr { animation: rowFadeIn 0.2s ease both; }
   background: var(--neutral-0) !important;
   border-color: var(--neutral-100) !important;
 }
+/* Bootstrap's .card sets its own text color (--bs-card-color) which doesn't
+   follow our neutral scale, so any label without a more specific override
+   (e.g. plain .fw-semibold rows) stays dark-on-dark. Fix at the source. */
+[data-theme="dark"] .card-body { color: var(--neutral-900); }
 [data-theme="dark"] .card-header {
   background: var(--neutral-0) !important;
   border-bottom-color: var(--neutral-100) !important;
