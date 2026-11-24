@@ -454,9 +454,12 @@ function toggleStats() {
 async function loadPlayerStats(matchId) {
   document.getElementById('psBody').innerHTML =
     '<tr><td colspan="7" class="text-center py-3 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Učitavanje...</td></tr>';
+  // Only members of this match's own selection belong in its stat sheet.
+  const match = allMatches.find(x => x.id === matchId);
+  const membersUrl = match?.selection_id ? '/members?selection_id=' + match.selection_id : '/members';
   try {
     const [members, existing] = await Promise.all([
-      apiGet('/members'),
+      apiGet(membersUrl),
       apiGet('/stats/match/' + matchId).catch(() => [])
     ]);
     psMembers = members;
