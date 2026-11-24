@@ -108,6 +108,11 @@
           </select>
         </div>
         <div class="col-6 col-sm-auto">
+          <select class="form-select form-select-sm" id="fSelection" onchange="feePage=1;renderTable()">
+            <option value="">Sve selekcije</option>
+          </select>
+        </div>
+        <div class="col-6 col-sm-auto">
           <input type="date" class="form-control form-control-sm" id="fFrom" onchange="feePage=1;renderTable()" title="Dospijeće od">
         </div>
         <div class="col-6 col-sm-auto">
@@ -141,6 +146,7 @@
             <tr>
               <th class="cb-col" id="thCb"><input type="checkbox" class="form-check-input" id="feeSelectAll" onchange="toggleFeeSelectAll(this.checked)"></th>
               <th>Član</th>
+              <th>Selekcija</th>
               <th>Period</th>
               <th>Iznos</th>
               <th>Dospijeće</th>
@@ -313,12 +319,19 @@ let feePage = 1;
 let selectedFeeIds = new Set();
 
 async function loadSelections() {
-  if (!isAdmin) return;
-  try {
-    const selections = await apiGet('/selections');
-    document.getElementById('bgSelection').insertAdjacentHTML('beforeend',
-      selections.map(s => `<option value="${s.id}">${escHtml(s.name)}</option>`).join(''));
-  } catch (_) {}
+  if (isAdmin) {
+    try {
+      const selections = await apiGet('/selections');
+      const opts = selections.map(s => `<option value="${s.id}">${escHtml(s.name)}</option>`).join('');
+      document.getElementById('bgSelection').insertAdjacentHTML('beforeend', opts);
+      document.getElementById('fSelection').insertAdjacentHTML('beforeend', opts);
+    } catch (_) {}
+  } else {
+    // Coach - filter is scoped to the selection(s) they already belong to.
+    const mine = getSelections();
+    document.getElementById('fSelection').insertAdjacentHTML('beforeend',
+      mine.map(s => `<option value="${s.id}">${escHtml(s.name)}</option>`).join(''));
+  }
 }
 
 async function load() {
@@ -337,6 +350,7 @@ async function load() {
 function filtered() {
   const q   = (document.getElementById('fSearch').value || '').toLowerCase();
   const st  = document.getElementById('fStatus').value;
+  const sel = document.getElementById('fSelection').value;
   const fr  = document.getElementById('fFrom').value;
   const to  = document.getElementById('fTo').value;
   const min = parseFloat(document.getElementById('fAmtMin').value) || 0;
@@ -344,11 +358,13 @@ function filtered() {
   return allFees.filter(f => {
     const dd = (f.due_date || '').slice(0,10);
     const amt = parseFloat(f.amount || 0);
+    const selIds = (f.selection_ids || '').toString().split(',').filter(Boolean);
     return (
-      (!q  || (f.member_name||'').toLowerCase().includes(q)) &&
-      (!st || f.status === st) &&
-      (!fr || dd >= fr) &&
-      (!to || dd <= to) &&
+      (!q   || (f.member_name||'').toLowerCase().includes(q)) &&
+      (!st  || f.status === st) &&
+      (!sel || selIds.includes(sel)) &&
+      (!fr  || dd >= fr) &&
+      (!to  || dd <= to) &&
       amt >= min && amt <= max
     );
   });
@@ -357,6 +373,7 @@ function filtered() {
 function renderTable() {
   const rows  = filtered();
   const anyFilter = document.getElementById('fSearch').value || document.getElementById('fStatus').value ||
+    document.getElementById('fSelection').value ||
     document.getElementById('fFrom').value || document.getElementById('fTo').value ||
     document.getElementById('fAmtMin').value || document.getElementById('fAmtMax').value;
   const pages = Math.ceil(rows.length / FEE_PAGE_SIZE) || 1;
@@ -370,6 +387,7 @@ function renderTable() {
     <tr id="fee-row-${f.id}" class="${rowSel}">
       ${isAdmin ? `<td class="cb-col"><input type="checkbox" class="form-check-input" data-id="${f.id}" ${checked} onchange="toggleFeeRow(${f.id},this.checked)"></td>` : ''}
       <td data-label="Član" class="fw-semibold">${f.member_name}</td>
+      <td data-label="Selekcija" class="small text-muted">${escHtml(f.selection_names) || '-'}</td>
       <td data-label="Period" class="small text-muted">${formatDate(f.period_start)} - ${formatDate(f.period_end)}</td>
       <td data-label="Iznos" class="fw-semibold">${parseFloat(f.amount).toFixed(2)} KM</td>
       <td data-label="Dospijeće">${formatDate(f.due_date)}</td>
@@ -383,7 +401,7 @@ function renderTable() {
       </td>` : ''}
     </tr>`;
   }).join('') :
-  `<tr><td colspan="${isAdmin ? 8 : 6}" class="text-center py-5">
+  `<tr><td colspan="${isAdmin ? 9 : 7}" class="text-center py-5">
     <i class="bi bi-${anyFilter ? 'search' : 'cash-coin'} fs-2 d-block mb-2 text-muted opacity-25"></i>
     <div class="fw-semibold text-muted mb-1">${anyFilter ? 'Nema pronađenih članarina' : 'Još nema unesenih članarina'}</div>
     <div class="small text-muted">${anyFilter ? 'Prilagodite filtere za pretragu.' : (isAdmin ? 'Dodajte prvu članarinu kluba.' : '')}</div>
@@ -415,6 +433,7 @@ function goFeePage(p) { feePage = p; renderTable(); window.scrollTo(0, 0); }
 function resetFilters() {
   ['fSearch','fFrom','fTo','fAmtMin','fAmtMax'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('fStatus').value = '';
+  document.getElementById('fSelection').value = '';
   feePage = 1;
   renderTable();
 }

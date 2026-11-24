@@ -11,7 +11,9 @@ exports.getAll = async (req, res) => {
     const params = [req.user.club_id];
     if (req.user.role === 'coach' && ids.length) params.push(ids);
     const [rows] = await db.query(`
-      SELECT mf.*, u.name as member_name, m.membership_number
+      SELECT mf.*, u.name as member_name, m.membership_number,
+        (SELECT GROUP_CONCAT(ms.selection_id) FROM member_selections ms WHERE ms.member_id=m.id) as selection_ids,
+        (SELECT GROUP_CONCAT(s.name ORDER BY s.name SEPARATOR ', ') FROM member_selections ms JOIN selections s ON s.id=ms.selection_id WHERE ms.member_id=m.id) as selection_names
       FROM membership_fees mf
       JOIN members m ON mf.member_id = m.id
       JOIN users u ON m.user_id = u.id
