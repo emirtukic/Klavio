@@ -171,11 +171,13 @@ function buildSidebar() {
   const club = getClub();
 
   const sel = getSelection();
+  const mySelections = getSelections();
+  const selLabel = mySelections.length > 1 ? mySelections.map(s => s.name).join(', ') : (sel ? sel.name : null);
   const clubSub = club
     ? `<div style="font-size:0.7rem;opacity:0.5;font-weight:400;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(club.name)}</div>`
     : '';
-  const selSub = sel
-    ? `<div style="font-size:0.65rem;opacity:0.4;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(sel.name)}</div>`
+  const selSub = selLabel
+    ? `<div style="font-size:0.65rem;opacity:0.4;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${escHtml(selLabel)}">${escHtml(selLabel)}</div>`
     : '';
 
   // Pick nav config
