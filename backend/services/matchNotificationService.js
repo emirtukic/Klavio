@@ -114,6 +114,7 @@ exports.notifyTrainingCreated = async (session, clubId, selectionId, creatorUser
        <p><strong>Naziv:</strong> ${session.title}</p>
        <p><strong>Datum i vrijeme:</strong> ${when} - ${session.end_time || ''}</p>
        <p><strong>Lokacija:</strong> ${session.location || 'TBD'}</p>
+       ${session.description ? `<p><strong>Opis:</strong> ${session.description}</p>` : ''}
        <p style="margin-top:16px;"><a href="${process.env.APP_URL || 'http://localhost:3000'}/pages/training/schedule.html" style="background:#3b82f6;color:#fff;padding:8px 18px;border-radius:6px;text-decoration:none;font-weight:600;">Pogledaj raspored</a></p>`
     );
 

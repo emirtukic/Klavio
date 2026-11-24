@@ -5,7 +5,9 @@ const { notifyTrainingCreated } = require('../services/matchNotificationService'
 function selScope(req) {
   if (req.user.role === 'coach' || req.user.role === 'member') {
     const ids = req.user.selection_ids || [];
-    return ids.length ? { clause: ' AND ts.selection_id IN (?)', param: ids } : { clause: '', param: null };
+    // Sessions tied to no selection (whole-club) stay visible to everyone;
+    // sessions tied to a selection are only visible to its own members/coaches.
+    return ids.length ? { clause: ' AND (ts.selection_id IN (?) OR ts.selection_id IS NULL)', param: ids } : { clause: '', param: null };
   }
   const selId = req.query.selection_id || null;
   return selId ? { clause: ' AND ts.selection_id = ?', param: selId } : { clause: '', param: null };
@@ -76,7 +78,7 @@ exports.create = async (req, res) => {
       [coachId, title, description, location, session_date, start_time, end_time, max_participants || 20, club_id, selId]
     );
     notifyTrainingCreated(
-      { title, location, session_date, start_time, end_time },
+      { title, description, location, session_date, start_time, end_time },
       club_id, selId, req.user.id
     ).catch(() => {});
     res.status(201).json({ id: result.insertId });
@@ -133,10 +135,13 @@ exports.getMySchedule = async (req, res) => {
         WHERE ts.coach_id = ? AND ts.club_id = ? ORDER BY ts.session_date, ts.start_time`;
       params = [coaches[0].id, club_id];
     } else {
+      // Member: only trainings for the selection(s) they belong to (or
+      // whole-club sessions with no selection), not every team's training.
+      const sel = selScope(req);
       query = `SELECT ts.*, u.name as coach_name FROM training_sessions ts
         JOIN coaches c ON ts.coach_id = c.id JOIN users u ON c.user_id = u.id
-        WHERE ts.status='scheduled' AND ts.club_id = ? ORDER BY ts.session_date, ts.start_time`;
-      params = [club_id];
+        WHERE ts.status='scheduled' AND ts.club_id = ?${sel.clause} ORDER BY ts.session_date, ts.start_time`;
+      params = sel.param ? [club_id, sel.param] : [club_id];
     }
     const [rows] = await db.query(query, params);
     res.json(rows);
