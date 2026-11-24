@@ -3,14 +3,21 @@ const { assertClubOwned } = require('../utils/clubScope');
 
 exports.getAll = async (req, res) => {
   try {
+    // A coach only sees fees for members of the selection(s) they belong to.
+    const ids = req.user.selection_ids || [];
+    const coachFilter = req.user.role === 'coach'
+      ? (ids.length ? ' AND EXISTS (SELECT 1 FROM member_selections ms WHERE ms.member_id=m.id AND ms.selection_id IN (?))' : ' AND 1=0')
+      : '';
+    const params = [req.user.club_id];
+    if (req.user.role === 'coach' && ids.length) params.push(ids);
     const [rows] = await db.query(`
       SELECT mf.*, u.name as member_name, m.membership_number
       FROM membership_fees mf
       JOIN members m ON mf.member_id = m.id
       JOIN users u ON m.user_id = u.id
-      WHERE m.club_id = ?
+      WHERE m.club_id = ?${coachFilter}
       ORDER BY mf.due_date DESC
-    `, [req.user.club_id]);
+    `, params);
     res.json(rows);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
@@ -205,6 +212,12 @@ exports.remove = async (req, res) => {
 
 exports.getStats = async (req, res) => {
   try {
+    const ids = req.user.selection_ids || [];
+    const coachFilter = req.user.role === 'coach'
+      ? (ids.length ? ' AND EXISTS (SELECT 1 FROM member_selections ms WHERE ms.member_id=m.id AND ms.selection_id IN (?))' : ' AND 1=0')
+      : '';
+    const params = [req.user.club_id];
+    if (req.user.role === 'coach' && ids.length) params.push(ids);
     const [stats] = await db.query(`
       SELECT
         COUNT(*) as total,
@@ -215,8 +228,8 @@ exports.getStats = async (req, res) => {
         SUM(CASE WHEN mf.status!='paid' THEN mf.amount ELSE 0 END) as total_outstanding
       FROM membership_fees mf
       JOIN members m ON mf.member_id = m.id
-      WHERE m.club_id = ?
-    `, [req.user.club_id]);
+      WHERE m.club_id = ?${coachFilter}
+    `, params);
     res.json(stats[0]);
   } catch (err) {
     res.status(500).json({ message: 'Server error' });

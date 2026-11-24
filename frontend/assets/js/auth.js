@@ -135,6 +135,7 @@ const NAV = {
     { href:'/pages/matches/list.html',         icon:'trophy',            label:'Utakmice' },
     { href:'/pages/matches/live.html',         icon:'broadcast',         label:'Live utakmica', highlight: true },
     { href:'/pages/members/list.html',         icon:'people',            label:'Igrači' },
+    { href:'/pages/fees/list.html',            icon:'cash-coin',         label:'Članarine' },
     { href:'/pages/lineup/index.html',         icon:'grid-3x3-gap',      label:'Postava' },
     { href:'/pages/statistics/index.html',     icon:'graph-up',          label:'Statistike' },
     { href:'/pages/development/index.html',    icon:'person-lines-fill', label:'Razvoj igrača' },
