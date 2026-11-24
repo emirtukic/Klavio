@@ -6,7 +6,7 @@ const db = require('../config/db');
 const { send: sendMail } = require('../config/mailer');
 const { verifyEmailHtml, welcomeEmailHtml, inviteEmailHtml, resetPasswordEmailHtml, newClubNotificationHtml } = require('../config/emailTemplates');
 const { imageFileFilter } = require('../middleware/imageUpload');
-const { uploadToR2 } = require('../config/r2');
+const { uploadToR2, deleteFromR2, keyFromUrl } = require('../config/r2');
 const { detectImageType } = require('../utils/fileSignature');
 
 exports.avatarUpload = multer({
@@ -314,8 +314,13 @@ exports.uploadAvatar = async (req, res) => {
     if (!req.file) return res.status(400).json({ message: 'Nema fajla' });
     const type = detectImageType(req.file.buffer);
     if (!type) return res.status(400).json({ message: 'Fajl nije validna slika' });
+    const [[prev]] = await db.query('SELECT avatar_url FROM users WHERE id = ?', [req.user.id]);
     const avatarUrl = await uploadToR2(`avatars/user_${req.user.id}_${Date.now()}${type.ext}`, req.file.buffer, type.mime);
     await db.query('UPDATE users SET avatar_url = ? WHERE id = ?', [avatarUrl, req.user.id]);
+    if (prev?.avatar_url) {
+      const oldKey = keyFromUrl(prev.avatar_url);
+      if (oldKey) deleteFromR2(oldKey).catch(err => console.error('R2 delete error:', err.message));
+    }
     res.json({ message: 'Avatar ažuriran', avatar_url: avatarUrl });
   } catch (err) {
     console.error('Avatar upload error:', err.message);

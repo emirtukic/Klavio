@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const multer = require('multer');
 const db = require('../config/db');
 const { imageFileFilter } = require('../middleware/imageUpload');
-const { uploadToR2 } = require('../config/r2');
+const { uploadToR2, deleteFromR2, keyFromUrl } = require('../config/r2');
 const { detectImageType } = require('../utils/fileSignature');
 
 exports.logoUpload = multer({
@@ -17,8 +17,13 @@ exports.uploadLogo = async (req, res) => {
     if (!req.file) return res.status(400).json({ message: 'Nema fajla' });
     const type = detectImageType(req.file.buffer);
     if (!type) return res.status(400).json({ message: 'Fajl nije validna slika' });
+    const [[prev]] = await db.query('SELECT logo_url FROM clubs WHERE id = ?', [req.params.id]);
     const logoUrl = await uploadToR2(`clubs/club_${req.params.id}_${Date.now()}${type.ext}`, req.file.buffer, type.mime);
     await db.query('UPDATE clubs SET logo_url = ? WHERE id = ?', [logoUrl, req.params.id]);
+    if (prev?.logo_url) {
+      const oldKey = keyFromUrl(prev.logo_url);
+      if (oldKey) deleteFromR2(oldKey).catch(err => console.error('R2 delete error:', err.message));
+    }
     res.json({ message: 'Logo ažuriran', logo_url: logoUrl });
   } catch (err) {
     console.error('Logo upload error:', err.message);
