@@ -43,9 +43,13 @@ exports.create = async (req, res) => {
   // Picking several selections on the create form assigns the coach to all
   // of them at once; selection_id (the first/primary one) still populates
   // the primary column exactly as before.
-  const allSelIds = Array.isArray(selection_ids) && selection_ids.length
+  const requestedSelIds = Array.isArray(selection_ids) && selection_ids.length
     ? [...new Set(selection_ids.map(Number))]
     : (selection_id ? [Number(selection_id)] : []);
+  // Only ever assign selections that actually belong to this admin's own club.
+  const allSelIds = requestedSelIds.length
+    ? (await db.query('SELECT id FROM selections WHERE id IN (?) AND club_id = ?', [requestedSelIds, club_id]))[0].map(r => r.id)
+    : [];
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();

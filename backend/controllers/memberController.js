@@ -65,9 +65,13 @@ exports.create = async (req, res) => {
   // Picking several selections on the create form assigns the member to all
   // of them at once; selection_id (the first/primary one) still populates
   // the primary column exactly as before.
-  const allSelIds = Array.isArray(selection_ids) && selection_ids.length
+  const requestedSelIds = Array.isArray(selection_ids) && selection_ids.length
     ? [...new Set(selection_ids.map(Number))]
     : (selection_id ? [Number(selection_id)] : []);
+  // Only ever assign selections that actually belong to this admin's own club.
+  const allSelIds = requestedSelIds.length
+    ? (await db.query('SELECT id FROM selections WHERE id IN (?) AND club_id = ?', [requestedSelIds, club_id]))[0].map(r => r.id)
+    : [];
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
@@ -115,6 +119,12 @@ exports.create = async (req, res) => {
 
 exports.update = async (req, res) => {
   const { name, email, phone, date_of_birth, address, status, is_active, position, jersey_number, selection_id } = req.body;
+  // Only ever assign a selection that actually belongs to this admin's own club.
+  let safeSelId = null;
+  if (selection_id) {
+    const [sels] = await db.query('SELECT id FROM selections WHERE id = ? AND club_id = ?', [selection_id, req.user.club_id]);
+    if (sels.length) safeSelId = sels[0].id;
+  }
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
@@ -127,12 +137,12 @@ exports.update = async (req, res) => {
     );
     await conn.query(
       'UPDATE members SET phone=COALESCE(?,phone), date_of_birth=COALESCE(?,date_of_birth), address=COALESCE(?,address), status=COALESCE(?,status), position=COALESCE(?,position), jersey_number=COALESCE(?,jersey_number), selection_id=? WHERE id=?',
-      [phone, date_of_birth, address, status, position||null, jersey_number||null, selection_id||null, req.params.id]
+      [phone, date_of_birth, address, status, position||null, jersey_number||null, safeSelId, req.params.id]
     );
     // Setting a primary selection always ensures membership in it too; it
     // never removes any other (additional) selections assigned elsewhere.
-    if (selection_id) {
-      await conn.query('INSERT IGNORE INTO member_selections (member_id, selection_id) VALUES (?, ?)', [req.params.id, selection_id]);
+    if (safeSelId) {
+      await conn.query('INSERT IGNORE INTO member_selections (member_id, selection_id) VALUES (?, ?)', [req.params.id, safeSelId]);
     }
     await conn.commit();
     res.json({ message: 'Član ažuriran' });
@@ -156,14 +166,20 @@ exports.bulkAction = async (req, res) => {
         [value, ...ids, req.user.club_id]
       );
     } else if (action === 'selection') {
+      // Only ever assign a selection that actually belongs to this admin's own club.
+      let safeValue = null;
+      if (value) {
+        const [sels] = await db.query('SELECT id FROM selections WHERE id = ? AND club_id = ?', [value, req.user.club_id]);
+        if (sels.length) safeValue = sels[0].id;
+      }
       await db.query(
         `UPDATE members SET selection_id = ? WHERE id IN (${placeholders}) AND club_id = ?`,
-        [value || null, ...ids, req.user.club_id]
+        [safeValue, ...ids, req.user.club_id]
       );
-      if (value) {
+      if (safeValue) {
         await db.query(
           `INSERT IGNORE INTO member_selections (member_id, selection_id) SELECT id, ? FROM members WHERE id IN (${placeholders}) AND club_id = ?`,
-          [value, ...ids, req.user.club_id]
+          [safeValue, ...ids, req.user.club_id]
         );
       }
     } else if (action === 'delete') {
