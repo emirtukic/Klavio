@@ -83,6 +83,46 @@ exports.notifyMatchCreated = async (match, clubId, selectionId, creatorUserId) =
 };
 
 /**
+ * Fired immediately when a training session is created.
+ * Notifies all members and coaches of the session's selection (excluding the creator).
+ */
+exports.notifyTrainingCreated = async (session, clubId, selectionId, creatorUserId) => {
+  if (!selectionId) return;
+  try {
+    const title = '🏃 Novi trening zakazan';
+    const when  = `${fmtDate(session.session_date + 'T' + session.start_time)}`;
+    const msg   = `${session.title} · ${when} · ${session.location || 'TBD'}`;
+    const link  = '/pages/training/schedule.html';
+
+    const [members] = await db.query(
+      `SELECT u.id, u.email FROM members m JOIN users u ON m.user_id = u.id
+       WHERE m.club_id = ? AND EXISTS (SELECT 1 FROM member_selections ms WHERE ms.member_id=m.id AND ms.selection_id=?) AND u.is_active = TRUE AND u.id != ?`,
+      [clubId, selectionId, creatorUserId]
+    );
+
+    const [coaches] = await db.query(
+      `SELECT u.id, u.email FROM coaches c JOIN users u ON c.user_id = u.id
+       WHERE c.club_id = ? AND EXISTS (SELECT 1 FROM coach_selections cs WHERE cs.coach_id=c.id AND cs.selection_id=?) AND u.is_active = TRUE AND u.id != ?`,
+      [clubId, selectionId, creatorUserId]
+    );
+
+    const emailHtml = matchEmailHtml(title,
+      `<p><strong>Naziv:</strong> ${session.title}</p>
+       <p><strong>Datum i vrijeme:</strong> ${when} - ${session.end_time || ''}</p>
+       <p><strong>Lokacija:</strong> ${session.location || 'TBD'}</p>
+       <p style="margin-top:16px;"><a href="${process.env.APP_URL || 'http://localhost:3000'}/pages/training/schedule.html" style="background:#3b82f6;color:#fff;padding:8px 18px;border-radius:6px;text-decoration:none;font-weight:600;">Pogledaj raspored</a></p>`
+    );
+
+    for (const u of [...members, ...coaches]) {
+      await insertNotif(u.id, clubId, title, msg, 'info', link);
+      sendEmail(u.email, title, emailHtml);
+    }
+  } catch (err) {
+    console.error('[notif] notifyTrainingCreated error:', err.message);
+  }
+};
+
+/**
  * Run once a day (cron). Finds every match scheduled for tomorrow
  * and sends role-appropriate reminders.
  */

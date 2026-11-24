@@ -1,5 +1,6 @@
 const db = require('../config/db');
 const { assertClubOwned } = require('../utils/clubScope');
+const { notifyTrainingCreated } = require('../services/matchNotificationService');
 
 function selScope(req) {
   if (req.user.role === 'coach' || req.user.role === 'member') {
@@ -74,6 +75,10 @@ exports.create = async (req, res) => {
       'INSERT INTO training_sessions (coach_id, title, description, location, session_date, start_time, end_time, max_participants, club_id, selection_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [coachId, title, description, location, session_date, start_time, end_time, max_participants || 20, club_id, selId]
     );
+    notifyTrainingCreated(
+      { title, location, session_date, start_time, end_time },
+      club_id, selId, req.user.id
+    ).catch(() => {});
     res.status(201).json({ id: result.insertId });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
