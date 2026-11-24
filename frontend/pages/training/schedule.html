@@ -251,7 +251,9 @@ function renderTable() {
   const rows = filtered();
   document.getElementById('trainingCount').textContent = rows.length + ' treninga';
   document.getElementById('tableBody').innerHTML = rows.length ? rows.map(s => {
-    const isPast = s.status === 'completed' || new Date(s.session_date) < new Date();
+    // Compare against the session's actual end time, not just its date -
+    // a session later today was being treated as already past.
+    const isPast = s.status === 'completed' || new Date(s.session_date + 'T' + (s.end_time || s.start_time)) < new Date();
 
     // Attendance / RSVP cell
     let attendanceCell = '';
@@ -264,10 +266,12 @@ function renderTable() {
             ${cnt} prisutnih
           </span>`;
       } else {
-        // Show RSVP count for upcoming sessions
+        // Show RSVP count for upcoming sessions (registered_count is saved
+        // attendance, which doesn't exist yet before the session happens -
+        // rsvp_yes_count is who's actually confirmed they're coming).
         attendanceCell = `
-          <span class="rsvp-summary">
-            <i class="bi bi-people me-1"></i>${s.registered_count || 0} potvrđeno
+          <span class="rsvp-summary" onclick="openAttendance(${s.id})" style="cursor:pointer" title="Upravljaj prisustvom">
+            <i class="bi bi-people me-1"></i>${s.rsvp_yes_count || 0} potvrđeno
           </span>`;
       }
     } else if (isMember) {

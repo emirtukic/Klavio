@@ -19,7 +19,8 @@ exports.getAll = async (req, res) => {
     const params = [req.user.club_id];
     if (sel.param) params.push(sel.param);
     const [rows] = await db.query(`
-      SELECT ts.*, u.name as coach_name, s.name as selection_name, COUNT(ta.id) as registered_count
+      SELECT ts.*, u.name as coach_name, s.name as selection_name, COUNT(ta.id) as registered_count,
+        (SELECT COUNT(*) FROM member_availability ma WHERE ma.event_type='training' AND ma.event_id=ts.id AND ma.status='yes') as rsvp_yes_count
       FROM training_sessions ts
       JOIN coaches c ON ts.coach_id = c.id
       JOIN users u ON c.user_id = u.id
@@ -139,10 +140,13 @@ exports.getMySchedule = async (req, res) => {
     if (req.user.role === 'coach') {
       const [coaches] = await db.query('SELECT id FROM coaches WHERE user_id = ? AND club_id = ?', [req.user.id, club_id]);
       if (!coaches.length) return res.json([]);
-      query = `SELECT ts.*, u.name as coach_name, s.name as selection_name FROM training_sessions ts
+      query = `SELECT ts.*, u.name as coach_name, s.name as selection_name, COUNT(ta.id) as registered_count,
+          (SELECT COUNT(*) FROM member_availability ma WHERE ma.event_type='training' AND ma.event_id=ts.id AND ma.status='yes') as rsvp_yes_count
+        FROM training_sessions ts
         JOIN coaches c ON ts.coach_id = c.id JOIN users u ON c.user_id = u.id
         LEFT JOIN selections s ON ts.selection_id = s.id
-        WHERE ts.coach_id = ? AND ts.club_id = ? ORDER BY ts.session_date, ts.start_time`;
+        LEFT JOIN training_attendance ta ON ts.id = ta.session_id
+        WHERE ts.coach_id = ? AND ts.club_id = ? GROUP BY ts.id ORDER BY ts.session_date, ts.start_time`;
       params = [coaches[0].id, club_id];
     } else {
       // Member: only trainings for the selection(s) they belong to (or
