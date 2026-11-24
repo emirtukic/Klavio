@@ -53,7 +53,24 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // Static assets (css/js/img): cache-first
+  // JS/CSS: network-first, same reasoning as HTML above - these are app code,
+  // not static art, and a stale cached copy after a deploy can silently run
+  // old (buggy) logic indefinitely since a plain reload doesn't bypass the SW.
+  const isCode = /\.(js|css)$/.test(url.pathname);
+  if (isCode) {
+    e.respondWith(
+      fetch(e.request).then(res => {
+        if (res && res.status === 200) {
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(e.request, clone));
+        }
+        return res;
+      }).catch(() => caches.match(e.request))
+    );
+    return;
+  }
+
+  // Other static assets (img etc.): cache-first
   e.respondWith(
     caches.match(e.request).then(cached => {
       if (cached) return cached;
