@@ -364,9 +364,11 @@ async function openAttendance(sessionId) {
   const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('attendanceModal'));
   modal.show();
 
+  // Only members of this session's own selection belong in its attendance list.
+  const membersUrl = s?.selection_id ? '/members?selection_id=' + s.selection_id : '/members';
   try {
     const [members, sessionDetail, rsvps] = await Promise.all([
-      apiGet('/members'),
+      apiGet(membersUrl),
       apiGet('/training/' + sessionId),
       apiGet('/availability/training/' + sessionId).catch(() => [])
     ]);
