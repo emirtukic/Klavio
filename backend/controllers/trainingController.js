@@ -2,8 +2,10 @@ const db = require('../config/db');
 const { assertClubOwned } = require('../utils/clubScope');
 
 function selScope(req) {
-  if ((req.user.role === 'coach' || req.user.role === 'member') && req.user.selection_id)
-    return { clause: ' AND ts.selection_id = ?', param: req.user.selection_id };
+  if (req.user.role === 'coach' || req.user.role === 'member') {
+    const ids = req.user.selection_ids || [];
+    return ids.length ? { clause: ' AND ts.selection_id IN (?)', param: ids } : { clause: '', param: null };
+  }
   const selId = req.query.selection_id || null;
   return selId ? { clause: ' AND ts.selection_id = ?', param: selId } : { clause: '', param: null };
 }
@@ -63,7 +65,10 @@ exports.create = async (req, res) => {
       const [coaches] = await db.query('SELECT id, selection_id FROM coaches WHERE user_id = ? AND club_id = ?', [req.user.id, club_id]);
       if (!coaches.length) return res.status(403).json({ message: 'Profil trenera nije pronađen' });
       coachId = coaches[0].id;
-      selId = coaches[0].selection_id;
+      // Let a coach in more than one selection pick which one this session is
+      // for; default to their primary selection.
+      const ids = req.user.selection_ids || [];
+      selId = (selection_id && ids.includes(Number(selection_id))) ? Number(selection_id) : coaches[0].selection_id;
     }
     const [result] = await db.query(
       'INSERT INTO training_sessions (coach_id, title, description, location, session_date, start_time, end_time, max_participants, club_id, selection_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',

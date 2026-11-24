@@ -240,6 +240,16 @@
           document.getElementById('coachBannerText').textContent = `Oprema će biti dodijeljena selekciji: ${selName}.`;
         }
         document.getElementById('coachBanner').classList.remove('d-none');
+
+        const mine = getSelections();
+        if (mine.length > 1) {
+          // Coach belongs to more than one selection - let them pick which
+          // one a new item is for, instead of always defaulting to primary.
+          document.getElementById('coachBanner').classList.add('d-none');
+          const selSel = document.getElementById('fSelection');
+          mine.forEach(s => selSel.add(new Option(s.name, s.id)));
+          document.getElementById('fSelectionWrap').classList.remove('d-none');
+        }
       }
 
       render(allEquipment);
@@ -383,6 +393,9 @@
     if (isAdmin) {
       payload.selection_id = document.getElementById('fSelection').value || null;
       payload.assigned_by  = document.getElementById('fCoach').value     || null;
+    } else if (isCoach && !document.getElementById('fSelectionWrap').classList.contains('d-none')) {
+      // Coach in more than one selection picked which one this item is for.
+      payload.selection_id = document.getElementById('fSelection').value || null;
     }
 
     const spinner = document.getElementById('saveSpinner');

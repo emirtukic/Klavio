@@ -3,9 +3,11 @@ const { notifyMatchCreated } = require('../services/matchNotificationService');
 
 function selScope(req) {
   if (req.user.role === 'coach' || req.user.role === 'member') {
-    // always restrict; no selection assigned → show nothing
-    if (req.user.selection_id)
-      return { clause: ' AND selection_id = ?', param: req.user.selection_id };
+    // Restrict to every selection this person belongs to (primary + any
+    // additional ones); only truly show nothing if they have none at all.
+    const ids = req.user.selection_ids || [];
+    if (ids.length)
+      return { clause: ' AND selection_id IN (?)', param: ids };
     return { clause: ' AND 1=0', param: null };
   }
   // Admins may optionally filter by selection via query param
@@ -44,12 +46,16 @@ exports.getOne = async (req, res) => {
 
 exports.create = async (req, res) => {
   const { opponent, location, match_date, match_type, home_away, notes, selection_id } = req.body;
-  // Coaches are locked to their own selection; admins choose freely
-  const selId = req.user.role === 'coach'
-    ? req.user.selection_id
-    : (selection_id || null);
-  if (req.user.role === 'coach' && !selId)
-    return res.status(400).json({ message: 'Trener mora biti dodijeljen selekciji' });
+  // A coach picks which of their own selections this match is for (defaults
+  // to their primary one); admins choose freely from any club selection.
+  let selId;
+  if (req.user.role === 'coach') {
+    const ids = req.user.selection_ids || [];
+    selId = (selection_id && ids.includes(Number(selection_id))) ? Number(selection_id) : req.user.selection_id;
+    if (!selId) return res.status(400).json({ message: 'Trener mora biti dodijeljen selekciji' });
+  } else {
+    selId = selection_id || null;
+  }
   try {
     const [result] = await db.query(
       'INSERT INTO matches (opponent, location, match_date, match_type, home_away, notes, club_id, selection_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
@@ -67,9 +73,10 @@ exports.create = async (req, res) => {
 
 exports.update = async (req, res) => {
   const { opponent, location, match_date, match_type, home_away, result, goals_for, goals_against, notes } = req.body;
-  const coachClause = (req.user.role === 'coach' && req.user.selection_id) ? ' AND selection_id = ?' : '';
+  const ids = req.user.selection_ids || [];
+  const coachClause = (req.user.role === 'coach' && ids.length) ? ' AND selection_id IN (?)' : '';
   const params = [opponent, location, match_date, match_type, home_away, result, goals_for, goals_against, notes, req.params.id, req.user.club_id];
-  if (coachClause) params.push(req.user.selection_id);
+  if (coachClause) params.push(ids);
   try {
     await db.query(
       `UPDATE matches SET opponent=COALESCE(?,opponent), location=COALESCE(?,location), match_date=COALESCE(?,match_date), match_type=COALESCE(?,match_type), home_away=COALESCE(?,home_away), result=COALESCE(?,result), goals_for=COALESCE(?,goals_for), goals_against=COALESCE(?,goals_against), notes=COALESCE(?,notes) WHERE id=? AND club_id=?${coachClause}`,
@@ -82,9 +89,10 @@ exports.update = async (req, res) => {
 };
 
 exports.remove = async (req, res) => {
-  const coachClause = (req.user.role === 'coach' && req.user.selection_id) ? ' AND selection_id = ?' : '';
+  const ids = req.user.selection_ids || [];
+  const coachClause = (req.user.role === 'coach' && ids.length) ? ' AND selection_id IN (?)' : '';
   const params = [req.params.id, req.user.club_id];
-  if (coachClause) params.push(req.user.selection_id);
+  if (coachClause) params.push(ids);
   try {
     await db.query(`DELETE FROM matches WHERE id = ? AND club_id = ?${coachClause}`, params);
     res.json({ message: 'Utakmica obrisana' });

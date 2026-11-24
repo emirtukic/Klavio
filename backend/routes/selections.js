@@ -7,6 +7,7 @@ const { log } = require('../controllers/activityController');
 const admin = role('super_admin', 'admin');
 
 router.get('/',                           auth, admin, ctrl.getAll);
+router.get('/mine',                       auth, ctrl.getMine);
 router.post('/',                          auth, admin, log('create', 'Selekcija'), ctrl.create);
 router.get('/:id',                        auth, admin, ctrl.getOne);
 router.put('/:id',                        auth, admin, log('update', 'Selekcija'), ctrl.update);

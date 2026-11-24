@@ -11,10 +11,27 @@ module.exports = async (req, res, next) => {
     if (req.user.club_id && (req.user.role === 'coach' || req.user.role === 'member')) {
       const table = req.user.role === 'coach' ? 'coaches' : 'members';
       const [rows] = await db.query(
-        `SELECT selection_id FROM ${table} WHERE user_id = ? AND club_id = ?`,
+        `SELECT id, selection_id FROM ${table} WHERE user_id = ? AND club_id = ?`,
         [req.user.id, req.user.club_id]
       );
       req.user.selection_id = rows[0]?.selection_id ?? null;
+
+      // selection_ids = primary + any additional selections this person was
+      // assigned to - used by read sites that decide what they're allowed to
+      // see, kept separate from the untouched single selection_id above so
+      // every existing single-selection read site is unaffected.
+      req.user.selection_ids = [];
+      if (rows[0]) {
+        const joinTable = req.user.role === 'coach' ? 'coach_selections' : 'member_selections';
+        const idCol = req.user.role === 'coach' ? 'coach_id' : 'member_id';
+        const [joined] = await db.query(
+          `SELECT selection_id FROM ${joinTable} WHERE ${idCol} = ?`,
+          [rows[0].id]
+        );
+        req.user.selection_ids = [...new Set(
+          [req.user.selection_id, ...joined.map(j => j.selection_id)].filter(Boolean)
+        )];
+      }
     }
 
     // Check club status and subscription for non-super_admin users

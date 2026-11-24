@@ -6,9 +6,20 @@ const { inviteEmailHtml } = require('../config/emailTemplates');
 
 function selScopeWhere(req, alias) {
   const a = alias ? alias + '.' : '';
-  const selId = (req.user.role === 'coach' && req.user.selection_id)
-    ? req.user.selection_id
-    : (req.query.selection_id || null);
+  if (req.user.role === 'coach') {
+    const ids = req.user.selection_ids || [];
+    if (!ids.length) return { clause: ' AND 1=0', param: null };
+    // A coach with one query-param pick sees just that selection (matching
+    // how admins already filter); otherwise sees members of every selection
+    // they belong to.
+    const picked = req.query.selection_id ? Number(req.query.selection_id) : null;
+    const useIds = (picked && ids.includes(picked)) ? [picked] : ids;
+    return {
+      clause: ` AND EXISTS (SELECT 1 FROM member_selections ms2 WHERE ms2.member_id=${a}id AND ms2.selection_id IN (?))`,
+      param: useIds,
+    };
+  }
+  const selId = req.query.selection_id || null;
   return selId ? { clause: ` AND ${a}selection_id = ?`, param: selId } : { clause: '', param: null };
 }
 
@@ -67,6 +78,9 @@ exports.create = async (req, res) => {
       'INSERT INTO members (user_id, membership_number, phone, date_of_birth, address, join_date, club_id, position, jersey_number, selection_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
       [userResult.insertId, membership_number, phone, date_of_birth, address, join_date || new Date().toISOString().split('T')[0], club_id, position||null, jersey_number||null, selection_id||null]
     );
+    if (selection_id) {
+      await conn.query('INSERT IGNORE INTO member_selections (member_id, selection_id) VALUES (?, ?)', [memberResult.insertId, selection_id]);
+    }
     await conn.commit();
 
     // Send welcome email (non-blocking)
@@ -108,6 +122,11 @@ exports.update = async (req, res) => {
       'UPDATE members SET phone=COALESCE(?,phone), date_of_birth=COALESCE(?,date_of_birth), address=COALESCE(?,address), status=COALESCE(?,status), position=COALESCE(?,position), jersey_number=COALESCE(?,jersey_number), selection_id=? WHERE id=?',
       [phone, date_of_birth, address, status, position||null, jersey_number||null, selection_id||null, req.params.id]
     );
+    // Setting a primary selection always ensures membership in it too; it
+    // never removes any other (additional) selections assigned elsewhere.
+    if (selection_id) {
+      await conn.query('INSERT IGNORE INTO member_selections (member_id, selection_id) VALUES (?, ?)', [req.params.id, selection_id]);
+    }
     await conn.commit();
     res.json({ message: 'Član ažuriran' });
   } catch (err) {
@@ -134,6 +153,12 @@ exports.bulkAction = async (req, res) => {
         `UPDATE members SET selection_id = ? WHERE id IN (${placeholders}) AND club_id = ?`,
         [value || null, ...ids, req.user.club_id]
       );
+      if (value) {
+        await db.query(
+          `INSERT IGNORE INTO member_selections (member_id, selection_id) SELECT id, ? FROM members WHERE id IN (${placeholders}) AND club_id = ?`,
+          [value, ...ids, req.user.club_id]
+        );
+      }
     } else if (action === 'delete') {
       const [members] = await db.query(
         `SELECT user_id FROM members WHERE id IN (${placeholders}) AND club_id = ?`,

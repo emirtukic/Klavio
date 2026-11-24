@@ -1069,6 +1069,17 @@
       const selName = sel ? sel.name : null;
       document.getElementById('pageTitle').textContent = 'Statistike' + (selName ? ' - ' + selName : '');
       document.getElementById('pageSubtitle').textContent = 'Statistike igrača vaše selekcije';
+
+      const mine = getSelections();
+      if (mine.length > 1) {
+        // Coach in more than one selection can filter between them, like admins do.
+        document.getElementById('selectionSwitcher').classList.remove('d-none');
+        const selEl = document.getElementById('selectionFilter');
+        selEl.innerHTML = '';
+        mine.forEach(s => selEl.insertAdjacentHTML('beforeend',
+          `<option value="${s.id}"${sel && s.id === sel.id ? ' selected' : ''}>${escHtml(s.name)}</option>`));
+        currentSelectionId = sel ? sel.id : mine[0].id;
+      }
     }
 
     if (isAdmin) {

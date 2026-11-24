@@ -527,11 +527,11 @@ function populateAddDropdowns() {
   document.getElementById('addMemberSelect').innerHTML =
     '<option value="">- Odaberi igrača -</option>' +
     allMembers.filter(m => !assignedM.has(m.id)).map(m =>
-      `<option value="${m.id}">${m.name}${m.selection_id ? ' (druga selekcija)' : ''}</option>`).join('');
+      `<option value="${m.id}">${m.name}${m.selection_id ? ' (već i u drugoj selekciji)' : ''}</option>`).join('');
   document.getElementById('addCoachSelect').innerHTML =
     '<option value="">- Odaberi trenera -</option>' +
     allCoaches.filter(c => !assignedC.has(c.id)).map(c =>
-      `<option value="${c.id}">${c.name}${c.selection_id ? ' (druga selekcija)' : ''}</option>`).join('');
+      `<option value="${c.id}">${c.name}${c.selection_id ? ' (već i u drugoj selekciji)' : ''}</option>`).join('');
 }
 
 async function addMember() {

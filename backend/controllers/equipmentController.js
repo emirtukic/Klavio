@@ -5,8 +5,9 @@ exports.getAll = async (req, res) => {
     const params = [req.user.club_id];
     let selFilter = '';
     if (req.user.role === 'coach') {
-      selFilter = ' AND e.selection_id = ?';
-      params.push(req.user.selection_id || 0);
+      const ids = req.user.selection_ids || [];
+      if (ids.length) { selFilter = ' AND e.selection_id IN (?)'; params.push(ids); }
+      else selFilter = ' AND 1=0';
     }
     const [rows] = await db.query(`
       SELECT e.*,
@@ -34,7 +35,8 @@ exports.create = async (req, res) => {
   let assigned_by  = req.body.assigned_by  || null;
 
   if (req.user.role === 'coach') {
-    selection_id = req.user.selection_id || null;
+    const ids = req.user.selection_ids || [];
+    selection_id = (selection_id && ids.includes(Number(selection_id))) ? Number(selection_id) : (req.user.selection_id || null);
     const [cRows] = await db.query(
       'SELECT id FROM coaches WHERE user_id = ? AND club_id = ?',
       [req.user.id, req.user.club_id]
@@ -60,12 +62,12 @@ exports.update = async (req, res) => {
   let assigned_by  = req.body.assigned_by  !== undefined ? (req.body.assigned_by  || null) : undefined;
 
   if (req.user.role === 'coach') {
-    const [check] = await db.query(
-      'SELECT id FROM equipment WHERE id = ? AND club_id = ? AND selection_id = ?',
-      [req.params.id, req.user.club_id, req.user.selection_id || 0]
-    );
+    const ids = req.user.selection_ids || [];
+    const [check] = ids.length
+      ? await db.query('SELECT id FROM equipment WHERE id = ? AND club_id = ? AND selection_id IN (?)', [req.params.id, req.user.club_id, ids])
+      : [[]];
     if (!check.length) return res.status(403).json({ message: 'Access denied' });
-    selection_id = req.user.selection_id;
+    selection_id = undefined; // leave the item's existing selection untouched
     const [cRows] = await db.query(
       'SELECT id FROM coaches WHERE user_id = ? AND club_id = ?',
       [req.user.id, req.user.club_id]
@@ -111,8 +113,11 @@ exports.remove = async (req, res) => {
     let query = 'DELETE FROM equipment WHERE id = ? AND club_id = ?';
     const params = [req.params.id, req.user.club_id];
     if (req.user.role === 'coach') {
-      query = 'DELETE FROM equipment WHERE id = ? AND club_id = ? AND selection_id = ?';
-      params.push(req.user.selection_id || 0);
+      const ids = req.user.selection_ids || [];
+      query = ids.length
+        ? 'DELETE FROM equipment WHERE id = ? AND club_id = ? AND selection_id IN (?)'
+        : 'DELETE FROM equipment WHERE id = ? AND club_id = ? AND 1=0';
+      if (ids.length) params.push(ids);
     }
     await db.query(query, params);
     res.json({ message: 'Oprema obrisana' });

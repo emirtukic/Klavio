@@ -56,6 +56,9 @@ exports.create = async (req, res) => {
       'INSERT INTO coaches (user_id, specialization, phone, bio, club_id, selection_id) VALUES (?, ?, ?, ?, ?, ?)',
       [userResult.insertId, specialization, phone, bio, club_id, selection_id || null]
     );
+    if (selection_id) {
+      await conn.query('INSERT IGNORE INTO coach_selections (coach_id, selection_id) VALUES (?, ?)', [coachResult.insertId, selection_id]);
+    }
     await conn.commit();
 
     // Send welcome email (non-blocking)

@@ -89,16 +89,26 @@
   const mySel = getSelection(); // { id, name } stored at login, or null
 
   if (isCoach) {
-    if (mySel) {
-      selWrap.innerHTML = `
-        <label class="form-label">Selekcija</label>
-        <input type="text" class="form-control" value="${mySel.name}" disabled>
-        <input type="hidden" name="selection_id" value="${mySel.id}">`;
-    } else {
-      selWrap.innerHTML = `
-        <label class="form-label">Selekcija</label>
-        <div class="alert alert-warning py-2 small mb-0">Niste dodijeljeni nijednoj selekciji.</div>`;
-    }
+    apiGet('/selections/mine').then(mine => {
+      if (mine.length > 1) {
+        // Coach belongs to more than one selection - let them pick which one.
+        selWrap.innerHTML = `
+          <label class="form-label">Selekcija</label>
+          <select class="form-select" name="selection_id" id="selectionSelect"></select>`;
+        const sel = document.getElementById('selectionSelect');
+        mine.forEach(s => sel.insertAdjacentHTML('beforeend',
+          `<option value="${s.id}"${mySel && s.id === mySel.id ? ' selected' : ''}>${escHtml(s.name)}</option>`));
+      } else if (mine.length === 1) {
+        selWrap.innerHTML = `
+          <label class="form-label">Selekcija</label>
+          <input type="text" class="form-control" value="${escHtml(mine[0].name)}" disabled>
+          <input type="hidden" name="selection_id" value="${mine[0].id}">`;
+      } else {
+        selWrap.innerHTML = `
+          <label class="form-label">Selekcija</label>
+          <div class="alert alert-warning py-2 small mb-0">Niste dodijeljeni nijednoj selekciji.</div>`;
+      }
+    }).catch(() => {});
   } else {
     // Admins load all selections
     apiGet('/selections').then(sels => {

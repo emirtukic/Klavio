@@ -30,12 +30,12 @@ async function fetchEvents(matchId) {
 /* ─── GET /api/live-match/active ──────────────────────────────────── */
 async function getActive(req, res) {
   try {
-    const { role, club_id, selection_id } = req.user;
+    const { role, club_id, selection_ids } = req.user;
     const params = [club_id];
     let selFilter = '';
-    if ((role === 'coach' || role === 'member') && selection_id) {
-      selFilter = 'AND m.selection_id = ?';
-      params.push(selection_id);
+    if ((role === 'coach' || role === 'member') && (selection_ids || []).length) {
+      selFilter = 'AND m.selection_id IN (?)';
+      params.push(selection_ids);
     }
 
     const [rows] = await db.query(`
@@ -397,7 +397,8 @@ async function loadPlayers(matchId, selectionId, clubId) {
     SELECT m.id AS member_id, u.name,
            NULL AS position, 1 AS is_starter, NULL AS jersey_number
     FROM members m JOIN users u ON u.id = m.user_id
-    WHERE m.selection_id=? AND m.club_id=? AND m.status='active'
+    WHERE EXISTS (SELECT 1 FROM member_selections ms2 WHERE ms2.member_id=m.id AND ms2.selection_id=?)
+      AND m.club_id=? AND m.status='active'
     ORDER BY u.name`, [selectionId, clubId]);
   return all;
 }

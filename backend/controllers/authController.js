@@ -41,25 +41,40 @@ exports.login = async (req, res) => {
     // Fetch selection for coaches
     let selectionId = null;
     let selection = null;
+    let selections = []; // every selection this person belongs to (primary + additional)
     if (user.role === 'coach' && user.club_id) {
       const [coachRows] = await db.query(
-        'SELECT c.selection_id, s.name as selection_name FROM coaches c LEFT JOIN selections s ON c.selection_id = s.id WHERE c.user_id = ? AND c.club_id = ?',
+        'SELECT c.id, c.selection_id, s.name as selection_name FROM coaches c LEFT JOIN selections s ON c.selection_id = s.id WHERE c.user_id = ? AND c.club_id = ?',
         [user.id, user.club_id]
       );
       if (coachRows.length && coachRows[0].selection_id) {
         selectionId = coachRows[0].selection_id;
         selection = { id: selectionId, name: coachRows[0].selection_name };
       }
+      if (coachRows.length) {
+        const [rows] = await db.query(
+          'SELECT s.id, s.name FROM coach_selections cs JOIN selections s ON s.id = cs.selection_id WHERE cs.coach_id = ? ORDER BY s.name',
+          [coachRows[0].id]
+        );
+        selections = rows;
+      }
     }
 
     if (user.role === 'member' && user.club_id) {
       const [memberRows] = await db.query(
-        'SELECT m.selection_id, s.name as selection_name FROM members m LEFT JOIN selections s ON m.selection_id = s.id WHERE m.user_id = ? AND m.club_id = ?',
+        'SELECT m.id, m.selection_id, s.name as selection_name FROM members m LEFT JOIN selections s ON m.selection_id = s.id WHERE m.user_id = ? AND m.club_id = ?',
         [user.id, user.club_id]
       );
       if (memberRows.length && memberRows[0].selection_id) {
         selectionId = memberRows[0].selection_id;
         selection = { id: selectionId, name: memberRows[0].selection_name };
+      }
+      if (memberRows.length) {
+        const [rows] = await db.query(
+          'SELECT s.id, s.name FROM member_selections ms JOIN selections s ON s.id = ms.selection_id WHERE ms.member_id = ? ORDER BY s.name',
+          [memberRows[0].id]
+        );
+        selections = rows;
       }
     }
 
@@ -73,7 +88,8 @@ exports.login = async (req, res) => {
       token,
       user: { id: user.id, name: user.name, email: user.email, role: user.role, club_id: user.club_id || null, avatar_url: user.avatar_url || null },
       club,
-      selection
+      selection,
+      selections
     });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });

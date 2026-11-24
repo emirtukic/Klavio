@@ -90,7 +90,17 @@
 
   if (user.role === 'coach') {
     document.getElementById('coachField').classList.add('d-none');
-    document.getElementById('selectionField').classList.add('d-none');
+    apiGet('/selections/mine').then(mine => {
+      if (mine.length > 1) {
+        // Coach belongs to more than one selection - let them pick which one
+        // this session is for, instead of hiding the field entirely.
+        const sel = document.getElementById('selectionSelect');
+        sel.innerHTML = '';
+        mine.forEach(s => sel.insertAdjacentHTML('beforeend', `<option value="${s.id}">${escHtml(s.name)}</option>`));
+      } else {
+        document.getElementById('selectionField').classList.add('d-none');
+      }
+    }).catch(() => document.getElementById('selectionField').classList.add('d-none'));
   } else {
     apiGet('/coaches').then(coaches => {
       const sel = document.querySelector('select[name=coach_id]');

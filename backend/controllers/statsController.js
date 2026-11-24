@@ -1,6 +1,19 @@
 const db = require('../config/db');
 const { assertClubOwned } = require('../utils/clubScope');
 
+// A coach/member in more than one selection can filter stats to one at a
+// time (like admins already could), picking from only the selections they
+// belong to; defaults to their primary selection if none is picked.
+function resolveSelId(req) {
+  if (req.user.role === 'coach' || req.user.role === 'member') {
+    const ids = req.user.selection_ids || [];
+    const picked = req.query.selection_id ? Number(req.query.selection_id) : null;
+    if (picked && ids.includes(picked)) return picked;
+    return req.user.selection_id || ids[0] || null;
+  }
+  return req.query.selection_id || null;
+}
+
 exports.getPlayerStats = async (req, res) => {
   try {
     const memberId = req.params.memberId;
@@ -24,14 +37,15 @@ exports.getPlayerStats = async (req, res) => {
 
 exports.getClubStats = async (req, res) => {
   try {
-    const selId = (req.user.role === 'coach' || req.user.role === 'member')
-      ? (req.user.selection_id || null)
-      : (req.query.selection_id || null);
+    const selId = resolveSelId(req);
 
     if (req.user.role === 'coach' && !selId) {
       return res.json({ topScorers: [], attendance: [], matchResults: [] });
     }
-    const mSel = selId ? ' AND m.selection_id = ?' : '';
+    // EXISTS against the join table (not m.selection_id) so a member who
+    // belongs to this selection as an additional (non-primary) one is still
+    // counted - one placeholder, so param-array positions stay unchanged.
+    const mSel = selId ? ' AND EXISTS (SELECT 1 FROM member_selections ms2 WHERE ms2.member_id=m.id AND ms2.selection_id=?)' : '';
     const sSel = selId ? ' AND selection_id = ?' : '';
 
     const scorerParams = [req.user.club_id];
@@ -109,9 +123,7 @@ exports.getMatchStats = async (req, res) => {
 
 exports.getOverview = async (req, res) => {
   try {
-    const selId = (req.user.role === 'coach' || req.user.role === 'member')
-      ? (req.user.selection_id || null)
-      : (req.query.selection_id || null);
+    const selId = resolveSelId(req);
 
     if (req.user.role === 'coach' && !selId) {
       return res.json({ matches_played: 0, goals_for: 0, goals_against: 0, wins: 0, draws: 0, losses: 0, win_pct: 0, training_sessions: 0, avg_attendance_pct: 0 });
@@ -157,9 +169,7 @@ exports.getOverview = async (req, res) => {
 
 exports.getAttendanceStats = async (req, res) => {
   try {
-    const selId = (req.user.role === 'coach' || req.user.role === 'member')
-      ? (req.user.selection_id || null)
-      : (req.query.selection_id || null);
+    const selId = resolveSelId(req);
 
     if (req.user.role === 'coach' && !selId) {
       return res.json([]);
@@ -181,7 +191,7 @@ exports.getAttendanceStats = async (req, res) => {
       LEFT JOIN training_attendance ta ON ta.member_id = m.id
         AND ta.session_id IN (SELECT id FROM training_sessions WHERE club_id = ?${selId ? ' AND selection_id = ?' : ''})
       LEFT JOIN selections s ON m.selection_id = s.id
-      WHERE m.club_id = ?${selId ? ' AND m.selection_id = ?' : ''}
+      WHERE m.club_id = ?${selId ? ' AND EXISTS (SELECT 1 FROM member_selections ms2 WHERE ms2.member_id=m.id AND ms2.selection_id=?)' : ''}
       GROUP BY m.id, s.name ORDER BY u.name
     `, params);
     res.json(rows);

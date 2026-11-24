@@ -56,13 +56,13 @@ exports.notifyMatchCreated = async (match, clubId, selectionId, creatorUserId) =
 
     const [members] = await db.query(
       `SELECT u.id, u.email FROM members m JOIN users u ON m.user_id = u.id
-       WHERE m.club_id = ? AND m.selection_id = ? AND u.is_active = TRUE AND u.id != ?`,
+       WHERE m.club_id = ? AND EXISTS (SELECT 1 FROM member_selections ms WHERE ms.member_id=m.id AND ms.selection_id=?) AND u.is_active = TRUE AND u.id != ?`,
       [clubId, selectionId, creatorUserId]
     );
 
     const [coaches] = await db.query(
       `SELECT u.id, u.email FROM coaches c JOIN users u ON c.user_id = u.id
-       WHERE c.club_id = ? AND c.selection_id = ? AND u.is_active = TRUE AND u.id != ?`,
+       WHERE c.club_id = ? AND EXISTS (SELECT 1 FROM coach_selections cs WHERE cs.coach_id=c.id AND cs.selection_id=?) AND u.is_active = TRUE AND u.id != ?`,
       [clubId, selectionId, creatorUserId]
     );
 
@@ -117,7 +117,7 @@ exports.sendDayBeforeReminders = async () => {
       if (match.selection_id) {
         const [members] = await db.query(
           `SELECT u.id, u.email FROM members m JOIN users u ON m.user_id = u.id
-           WHERE m.club_id = ? AND m.selection_id = ? AND u.is_active = TRUE`,
+           WHERE m.club_id = ? AND EXISTS (SELECT 1 FROM member_selections ms WHERE ms.member_id=m.id AND ms.selection_id=?) AND u.is_active = TRUE`,
           [match.club_id, match.selection_id]
         );
         for (const u of members) {
@@ -132,7 +132,7 @@ exports.sendDayBeforeReminders = async () => {
         // ── Coaches ──
         const [coaches] = await db.query(
           `SELECT u.id, u.email FROM coaches c JOIN users u ON c.user_id = u.id
-           WHERE c.club_id = ? AND c.selection_id = ? AND u.is_active = TRUE`,
+           WHERE c.club_id = ? AND EXISTS (SELECT 1 FROM coach_selections cs WHERE cs.coach_id=c.id AND cs.selection_id=?) AND u.is_active = TRUE`,
           [match.club_id, match.selection_id]
         );
         for (const u of coaches) {

@@ -98,7 +98,7 @@
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.message || 'Prijava neuspješna');
-        saveAuth(data.token, data.user, data.club, data.selection);
+        saveAuth(data.token, data.user, data.club, data.selection, data.selections);
         redirectToDashboard(data.user.role);
       } catch (err) {
         alertEl.textContent = err.message;

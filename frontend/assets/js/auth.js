@@ -1,9 +1,10 @@
 ﻿/* ── Storage helpers ── */
-function saveAuth(token, user, club, selection) {
+function saveAuth(token, user, club, selection, selections) {
   localStorage.setItem('token', token);
   localStorage.setItem('user', JSON.stringify(user));
   if (club) localStorage.setItem('club', JSON.stringify(club)); else localStorage.removeItem('club');
   if (selection) localStorage.setItem('selection', JSON.stringify(selection)); else localStorage.removeItem('selection');
+  if (selections && selections.length) localStorage.setItem('selections', JSON.stringify(selections)); else localStorage.removeItem('selections');
 }
 function getToken()     { return localStorage.getItem('token'); }
 // A JSON.parse failure here (corrupted localStorage) used to throw and silently
@@ -12,11 +13,14 @@ function getToken()     { return localStorage.getItem('token'); }
 function getUser()      { const u = localStorage.getItem('user');      try { return u ? JSON.parse(u) : null; } catch(e) { return null; } }
 function getClub()      { const c = localStorage.getItem('club');      try { return c ? JSON.parse(c) : null; } catch(e) { return null; } }
 function getSelection() { const s = localStorage.getItem('selection'); try { return s ? JSON.parse(s) : null; } catch(e) { return null; } }
+// Every selection this person belongs to (primary + any additional ones),
+// used by dropdowns that let someone in >1 selection pick/filter between them.
+function getSelections() { const s = localStorage.getItem('selections'); try { return s ? JSON.parse(s) : []; } catch(e) { return []; } }
 function isSuperAdminInClub() { return !!localStorage.getItem('sa_token'); }
 
 /* ── Auth ── */
 function logout() {
-  ['token','user','club','selection','sa_token'].forEach(k => localStorage.removeItem(k));
+  ['token','user','club','selection','selections','sa_token'].forEach(k => localStorage.removeItem(k));
   window.location.href = '/app/';
 }
 function redirectToDashboard(role) {
@@ -61,6 +65,7 @@ function exitClub() {
   localStorage.removeItem('sa_token');
   localStorage.removeItem('club');
   localStorage.removeItem('selection');
+  localStorage.removeItem('selections');
   localStorage.setItem('token', saToken);
   try {
     const p = JSON.parse(atob(saToken.split('.')[1]));
