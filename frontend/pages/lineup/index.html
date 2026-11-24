@@ -812,6 +812,7 @@ let currentFormation = '4-4-2';
 let pitchSlots = [];
 let benchSlots = [];
 let allMembers = [];
+let allMatches = [];
 let currentMatchId = null;
 let activeSlotId = null;
 
@@ -824,6 +825,7 @@ async function init() {
 
   try {
     const [matches, members] = await Promise.all([apiGet('/matches'), apiGet('/members')]);
+    allMatches = matches;
     allMembers = members;
     const sel = document.getElementById('matchSelect');
     const now = Date.now(), w = 60*864e5;
@@ -1083,6 +1085,17 @@ async function onMatchChange() {
   document.getElementById('noMatchMsg').style.display = 'none';
   document.getElementById('lineupLayout').style.display = '';
   clearAll();
+
+  // Only members of this match's own selection should be pickable - a match
+  // with no selection falls back to every club member (nothing to filter by).
+  const match = allMatches.find(m => String(m.id) === String(id));
+  try {
+    allMembers = match?.selection_id
+      ? await apiGet('/members?selection_id=' + match.selection_id)
+      : await apiGet('/members');
+  } catch (e) { showToast(e.message, 'error'); }
+  renderAvailable();
+
   try {
     const { players, formation } = await apiGet('/lineup/' + id);
     const savedFormation = formation || '4-4-2';

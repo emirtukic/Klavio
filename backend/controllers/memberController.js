@@ -19,8 +19,13 @@ function selScopeWhere(req, alias) {
       param: useIds,
     };
   }
-  const selId = req.query.selection_id || null;
-  return selId ? { clause: ` AND ${a}selection_id = ?`, param: selId } : { clause: '', param: null };
+  // Admin picking one specific selection (e.g. building a lineup for a match)
+  // means "every member of that selection", primary or additional - not just
+  // whoever happens to have it as their primary.
+  const selId = req.query.selection_id ? Number(req.query.selection_id) : null;
+  return selId
+    ? { clause: ` AND EXISTS (SELECT 1 FROM member_selections ms2 WHERE ms2.member_id=${a}id AND ms2.selection_id=?)`, param: selId }
+    : { clause: '', param: null };
 }
 
 exports.getAll = async (req, res) => {
