@@ -47,11 +47,11 @@ exports.create = async (req, res) => {
   }
 };
 
-async function findOverlapping(clubId, period_start, period_end) {
-  const [members] = await db.query(
-    "SELECT id FROM members WHERE club_id = ? AND status = 'active'",
-    [clubId]
-  );
+async function findOverlapping(clubId, period_start, period_end, selectionId) {
+  const params = [clubId];
+  let sql = "SELECT id FROM members WHERE club_id = ? AND status = 'active'";
+  if (selectionId) { sql += ' AND selection_id = ?'; params.push(selectionId); }
+  const [members] = await db.query(sql, params);
   if (!members.length) return { members: [], overlapping: [] };
 
   const [overlapping] = await db.query(
@@ -66,12 +66,12 @@ async function findOverlapping(clubId, period_start, period_end) {
 }
 
 exports.bulkPreview = async (req, res) => {
-  const { period_start, period_end } = req.body;
+  const { period_start, period_end, selection_id } = req.body;
   if (!period_start || !period_end) {
     return res.status(400).json({ message: 'Period je obavezan' });
   }
   try {
-    const { members, overlapping } = await findOverlapping(req.user.club_id, period_start, period_end);
+    const { members, overlapping } = await findOverlapping(req.user.club_id, period_start, period_end, selection_id || null);
     res.json({
       totalActive: members.length,
       overlapping: overlapping.map(o => ({ id: o.member_id, name: o.name })),
@@ -83,13 +83,13 @@ exports.bulkPreview = async (req, res) => {
 };
 
 exports.bulkGenerate = async (req, res) => {
-  const { amount, period_start, period_end, due_date, payment_method, notes, includeOverlapIds } = req.body;
+  const { amount, period_start, period_end, due_date, payment_method, notes, includeOverlapIds, selection_id } = req.body;
   if (!amount || !period_start || !period_end || !due_date) {
     return res.status(400).json({ message: 'Iznos, period i datum dospijeća su obavezni' });
   }
   try {
-    const { members, overlapping } = await findOverlapping(req.user.club_id, period_start, period_end);
-    if (!members.length) return res.json({ created: 0, skipped: 0, message: 'Nema aktivnih članova' });
+    const { members, overlapping } = await findOverlapping(req.user.club_id, period_start, period_end, selection_id || null);
+    if (!members.length) return res.json({ created: 0, skipped: 0, message: 'Nema aktivnih članova u odabranoj selekciji' });
 
     const includeIds = new Set(Array.isArray(includeOverlapIds) ? includeOverlapIds.map(Number) : []);
     const overlapIds = new Set(overlapping.map(o => o.member_id));

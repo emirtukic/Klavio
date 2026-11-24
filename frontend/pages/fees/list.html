@@ -199,6 +199,12 @@
             <input type="date" class="form-control" id="bgDueDate" required>
           </div>
           <div class="col-12">
+            <label class="form-label">Selekcija</label>
+            <select class="form-select" id="bgSelection">
+              <option value="">Sve selekcije</option>
+            </select>
+          </div>
+          <div class="col-12">
             <label class="form-label">Napomena</label>
             <textarea class="form-control" id="bgNotes" rows="2"></textarea>
           </div>
@@ -295,6 +301,14 @@ let allFees = [];
 const FEE_PAGE_SIZE = 20;
 let feePage = 1;
 let selectedFeeIds = new Set();
+
+async function loadSelections() {
+  try {
+    const selections = await apiGet('/selections');
+    document.getElementById('bgSelection').insertAdjacentHTML('beforeend',
+      selections.map(s => `<option value="${s.id}">${escHtml(s.name)}</option>`).join(''));
+  } catch (_) {}
+}
 
 async function load() {
   try {
@@ -498,16 +512,17 @@ async function runBulkGenerate() {
   const due_date      = document.getElementById('bgDueDate').value;
   const payment_method = document.getElementById('bgPaymentMethod').value;
   const notes = document.getElementById('bgNotes').value;
+  const selection_id = document.getElementById('bgSelection').value || null;
   if (!amount || !period_start || !period_end || !due_date) {
     showToast('Popunite iznos, period i datum dospijeća', 'error'); return;
   }
-  pendingBulkPayload = { amount, period_start, period_end, due_date, payment_method, notes };
+  pendingBulkPayload = { amount, period_start, period_end, due_date, payment_method, notes, selection_id };
 
   const btn = document.getElementById('bulkGenerateBtn');
   const sp  = document.getElementById('bulkGenerateSpinner');
   btn.disabled = true; sp.classList.remove('d-none');
   try {
-    const preview = await apiPost('/fees/bulk-generate/preview', { period_start, period_end });
+    const preview = await apiPost('/fees/bulk-generate/preview', { period_start, period_end, selection_id });
     if (preview.overlapping.length) {
       bootstrap.Modal.getInstance(document.getElementById('bulkGenerateModal')).hide();
       showOverlapDecision(preview.overlapping);
@@ -559,6 +574,7 @@ async function sendFeeReminder(id) {
 }
 
 load();
+loadSelections();
 </script>
 </body>
 </html>
