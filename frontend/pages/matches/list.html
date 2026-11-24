@@ -476,10 +476,9 @@ function toggleStats() {
 async function loadPlayerStats(matchId) {
   document.getElementById('psBody').innerHTML =
     '<tr><td colspan="7" class="text-center py-3 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Učitavanje...</td></tr>';
-  // A coach only sees this match's own selection; an admin manages every
-  // selection in the club, so they should still see every member.
+  // Only members of this match's own selection belong in its stat sheet.
   const match = allMatches.find(x => x.id === matchId);
-  const membersUrl = (!isAdmin && match?.selection_id) ? '/members?selection_id=' + match.selection_id : '/members';
+  const membersUrl = match?.selection_id ? '/members?selection_id=' + match.selection_id : '/members';
   try {
     const [members, existing, rsvps] = await Promise.all([
       apiGet(membersUrl),
