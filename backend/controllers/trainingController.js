@@ -19,10 +19,11 @@ exports.getAll = async (req, res) => {
     const params = [req.user.club_id];
     if (sel.param) params.push(sel.param);
     const [rows] = await db.query(`
-      SELECT ts.*, u.name as coach_name, COUNT(ta.id) as registered_count
+      SELECT ts.*, u.name as coach_name, s.name as selection_name, COUNT(ta.id) as registered_count
       FROM training_sessions ts
       JOIN coaches c ON ts.coach_id = c.id
       JOIN users u ON c.user_id = u.id
+      LEFT JOIN selections s ON ts.selection_id = s.id
       LEFT JOIN training_attendance ta ON ts.id = ta.session_id
       WHERE ts.club_id = ?${sel.clause}
       GROUP BY ts.id
@@ -102,7 +103,15 @@ exports.update = async (req, res) => {
 
 exports.remove = async (req, res) => {
   try {
-    await db.query('DELETE FROM training_sessions WHERE id = ? AND club_id = ?', [req.params.id, req.user.club_id]);
+    // A coach can only delete their own sessions, not every team's.
+    if (req.user.role === 'coach') {
+      const [coaches] = await db.query('SELECT id FROM coaches WHERE user_id = ? AND club_id = ?', [req.user.id, req.user.club_id]);
+      const coachId = coaches[0]?.id;
+      const [result] = await db.query('DELETE FROM training_sessions WHERE id = ? AND club_id = ? AND coach_id = ?', [req.params.id, req.user.club_id, coachId]);
+      if (!result.affectedRows) return res.status(404).json({ message: 'Trening nije pronađen' });
+    } else {
+      await db.query('DELETE FROM training_sessions WHERE id = ? AND club_id = ?', [req.params.id, req.user.club_id]);
+    }
     res.json({ message: 'Trening obrisan' });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
@@ -130,16 +139,18 @@ exports.getMySchedule = async (req, res) => {
     if (req.user.role === 'coach') {
       const [coaches] = await db.query('SELECT id FROM coaches WHERE user_id = ? AND club_id = ?', [req.user.id, club_id]);
       if (!coaches.length) return res.json([]);
-      query = `SELECT ts.*, u.name as coach_name FROM training_sessions ts
+      query = `SELECT ts.*, u.name as coach_name, s.name as selection_name FROM training_sessions ts
         JOIN coaches c ON ts.coach_id = c.id JOIN users u ON c.user_id = u.id
+        LEFT JOIN selections s ON ts.selection_id = s.id
         WHERE ts.coach_id = ? AND ts.club_id = ? ORDER BY ts.session_date, ts.start_time`;
       params = [coaches[0].id, club_id];
     } else {
       // Member: only trainings for the selection(s) they belong to (or
       // whole-club sessions with no selection), not every team's training.
       const sel = selScope(req);
-      query = `SELECT ts.*, u.name as coach_name FROM training_sessions ts
+      query = `SELECT ts.*, u.name as coach_name, s.name as selection_name FROM training_sessions ts
         JOIN coaches c ON ts.coach_id = c.id JOIN users u ON c.user_id = u.id
+        LEFT JOIN selections s ON ts.selection_id = s.id
         WHERE ts.status='scheduled' AND ts.club_id = ?${sel.clause} ORDER BY ts.session_date, ts.start_time`;
       params = sel.param ? [club_id, sel.param] : [club_id];
     }

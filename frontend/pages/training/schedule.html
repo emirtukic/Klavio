@@ -125,6 +125,7 @@
           <thead>
             <tr>
               <th>Naziv</th>
+              <th>Selekcija</th>
               <th>Trener</th>
               <th>Datum</th>
               <th>Vrijeme</th>
@@ -135,10 +136,10 @@
             </tr>
           </thead>
           <tbody id="tableBody">
-            <tr><td colspan="8" class="p-2"><span class="skeleton sk-row"></span></td></tr>
-            <tr><td colspan="8" class="p-2"><span class="skeleton sk-row"></span></td></tr>
-            <tr><td colspan="8" class="p-2"><span class="skeleton sk-row"></span></td></tr>
-            <tr><td colspan="8" class="p-2"><span class="skeleton sk-row" style="width:70%"></span></td></tr>
+            <tr><td colspan="9" class="p-2"><span class="skeleton sk-row"></span></td></tr>
+            <tr><td colspan="9" class="p-2"><span class="skeleton sk-row"></span></td></tr>
+            <tr><td colspan="9" class="p-2"><span class="skeleton sk-row"></span></td></tr>
+            <tr><td colspan="9" class="p-2"><span class="skeleton sk-row" style="width:70%"></span></td></tr>
           </tbody>
         </table>
       </div>
@@ -290,6 +291,7 @@ function renderTable() {
 
     return `<tr>
       <td data-label="Naziv" class="fw-semibold">${esc(s.title)}</td>
+      <td data-label="Selekcija" class="small text-muted">${esc(s.selection_name) || '-'}</td>
       <td data-label="Trener" class="text-muted small">${esc(s.coach_name || '-')}</td>
       <td data-label="Datum">${formatDate(s.session_date)}</td>
       <td data-label="Vrijeme" class="small">${s.start_time} - ${s.end_time}</td>
@@ -301,7 +303,7 @@ function renderTable() {
       </td>
     </tr>`;
   }).join('') :
-    `<tr><td colspan="8" class="text-center py-5 text-muted"><i class="bi bi-inbox fs-2 d-block mb-2"></i>Nema pronađenih treninga</td></tr>`;
+    `<tr><td colspan="9" class="text-center py-5 text-muted"><i class="bi bi-inbox fs-2 d-block mb-2"></i>Nema pronađenih treninga</td></tr>`;
 }
 
 function resetFilters() {
