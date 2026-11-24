@@ -31,7 +31,16 @@ app.get('/register', (req, res) => {
 // acceptRanges disabled: Range requests return 206 Partial Content, which
 // Cloudflare should never compress - doing so corrupts the response and
 // breaks crawlers (e.g. Meta's domain verification, link scraping).
-app.use(express.static(path.join(__dirname, '../frontend'), { acceptRanges: false }));
+// setHeaders forces JS/CSS to always revalidate: without an explicit
+// Cache-Control, Cloudflare applies its own ~4h edge/browser default for
+// static extensions, so a deploy fixing a bug in shared app JS (e.g.
+// auth.js) wouldn't actually reach a returning visitor's browser for hours.
+app.use(express.static(path.join(__dirname, '../frontend'), {
+  acceptRanges: false,
+  setHeaders: (res, filePath) => {
+    if (/\.(js|css)$/.test(filePath)) res.setHeader('Cache-Control', 'no-cache');
+  },
+}));
 app.use('/forms', express.static(path.join(__dirname, '../obrazci'), { acceptRanges: false }));
 
 app.use('/api/auth', require('./routes/auth'));
