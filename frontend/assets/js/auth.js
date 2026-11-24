@@ -144,6 +144,7 @@ const NAV = {
   member: [
     { href:'/pages/dashboard/member.html',     icon:'speedometer2',   label:'Nadzorna ploča' },
     { section:'Moji podaci' },
+    { href:'/pages/my-fees/index.html',        icon:'cash-coin',      label:'Moje članarine' },
     { href:'/pages/calendar/index.html',       icon:'calendar2-week', label:'Kalendar' },
     { href:'/pages/training/schedule.html',    icon:'calendar3',      label:'Treninzi' },
     { href:'/pages/matches/list.html',         icon:'trophy',         label:'Utakmice' },
