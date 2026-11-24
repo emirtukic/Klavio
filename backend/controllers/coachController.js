@@ -38,8 +38,14 @@ exports.getOne = async (req, res) => {
 };
 
 exports.create = async (req, res) => {
-  const { name, email, specialization, phone, bio, selection_id } = req.body;
+  const { name, email, specialization, phone, bio, selection_id, selection_ids } = req.body;
   const club_id = req.user.club_id;
+  // Picking several selections on the create form assigns the coach to all
+  // of them at once; selection_id (the first/primary one) still populates
+  // the primary column exactly as before.
+  const allSelIds = Array.isArray(selection_ids) && selection_ids.length
+    ? [...new Set(selection_ids.map(Number))]
+    : (selection_id ? [Number(selection_id)] : []);
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
@@ -54,10 +60,11 @@ exports.create = async (req, res) => {
     );
     const [coachResult] = await conn.query(
       'INSERT INTO coaches (user_id, specialization, phone, bio, club_id, selection_id) VALUES (?, ?, ?, ?, ?, ?)',
-      [userResult.insertId, specialization, phone, bio, club_id, selection_id || null]
+      [userResult.insertId, specialization, phone, bio, club_id, allSelIds[0] || null]
     );
-    if (selection_id) {
-      await conn.query('INSERT IGNORE INTO coach_selections (coach_id, selection_id) VALUES (?, ?)', [coachResult.insertId, selection_id]);
+    if (allSelIds.length) {
+      const values = allSelIds.map(id => [coachResult.insertId, id]);
+      await conn.query('INSERT IGNORE INTO coach_selections (coach_id, selection_id) VALUES ?', [values]);
     }
     await conn.commit();
 

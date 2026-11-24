@@ -60,8 +60,14 @@ exports.getOne = async (req, res) => {
 };
 
 exports.create = async (req, res) => {
-  const { name, email, phone, date_of_birth, address, membership_number, join_date, position, jersey_number, selection_id } = req.body;
+  const { name, email, phone, date_of_birth, address, membership_number, join_date, position, jersey_number, selection_id, selection_ids } = req.body;
   const club_id = req.user.club_id;
+  // Picking several selections on the create form assigns the member to all
+  // of them at once; selection_id (the first/primary one) still populates
+  // the primary column exactly as before.
+  const allSelIds = Array.isArray(selection_ids) && selection_ids.length
+    ? [...new Set(selection_ids.map(Number))]
+    : (selection_id ? [Number(selection_id)] : []);
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();
@@ -76,10 +82,11 @@ exports.create = async (req, res) => {
     );
     const [memberResult] = await conn.query(
       'INSERT INTO members (user_id, membership_number, phone, date_of_birth, address, join_date, club_id, position, jersey_number, selection_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [userResult.insertId, membership_number, phone, date_of_birth, address, join_date || new Date().toISOString().split('T')[0], club_id, position||null, jersey_number||null, selection_id||null]
+      [userResult.insertId, membership_number, phone, date_of_birth, address, join_date || new Date().toISOString().split('T')[0], club_id, position||null, jersey_number||null, allSelIds[0] || null]
     );
-    if (selection_id) {
-      await conn.query('INSERT IGNORE INTO member_selections (member_id, selection_id) VALUES (?, ?)', [memberResult.insertId, selection_id]);
+    if (allSelIds.length) {
+      const values = allSelIds.map(id => [memberResult.insertId, id]);
+      await conn.query('INSERT IGNORE INTO member_selections (member_id, selection_id) VALUES ?', [values]);
     }
     await conn.commit();
 
