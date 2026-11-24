@@ -21,7 +21,8 @@ exports.getAll = async (req, res) => {
     const params = [req.user.club_id];
     if (sel.param) params.push(sel.param);
     const [rows] = await db.query(
-      `SELECT m.*, s.name AS selection_name
+      `SELECT m.*, s.name AS selection_name,
+        (SELECT COUNT(*) FROM member_availability ma WHERE ma.event_type='match' AND ma.event_id=m.id AND ma.status='yes') as rsvp_yes_count
        FROM matches m
        LEFT JOIN selections s ON m.selection_id = s.id
        WHERE m.club_id = ?${sel.clause}
