@@ -273,19 +273,24 @@ function renderTable() {
     } else if (isMember) {
       const myStatus = myRsvpMap[s.id] || null;
       attendanceCell = `
-        <div class="rsvp-group">
-          <button class="rsvp-btn rsvp-yes ${myStatus === 'yes' ? 'active' : ''}"
-            onclick="setRsvp(${s.id},'yes',this)" title="Idem">
-            <i class="bi bi-check2"></i> Idem
-          </button>
-          <button class="rsvp-btn rsvp-maybe ${myStatus === 'maybe' ? 'active' : ''}"
-            onclick="setRsvp(${s.id},'maybe',this)" title="Možda">
-            <i class="bi bi-question"></i>
-          </button>
-          <button class="rsvp-btn rsvp-no ${myStatus === 'no' ? 'active' : ''}"
-            onclick="setRsvp(${s.id},'no',this)" title="Ne idem">
-            <i class="bi bi-x-lg"></i> Ne
-          </button>
+        <div>
+          <div class="rsvp-group">
+            <button class="rsvp-btn rsvp-yes ${myStatus === 'yes' ? 'active' : ''}"
+              onclick="setRsvp(${s.id},'yes',this)" title="Idem">
+              <i class="bi bi-check2"></i> Idem
+            </button>
+            <button class="rsvp-btn rsvp-maybe ${myStatus === 'maybe' ? 'active' : ''}"
+              onclick="setRsvp(${s.id},'maybe',this)" title="Možda">
+              <i class="bi bi-question"></i>
+            </button>
+            <button class="rsvp-btn rsvp-no ${myStatus === 'no' ? 'active' : ''}"
+              onclick="setRsvp(${s.id},'no',this)" title="Ne idem">
+              <i class="bi bi-x-lg"></i> Ne
+            </button>
+          </div>
+          <div class="small fw-semibold mt-1" id="rsvpLabel-${s.id}" style="color:${myStatus === 'yes' ? '#16a34a' : myStatus === 'no' ? '#dc2626' : myStatus === 'maybe' ? '#d97706' : '#94a3b8'}">
+            ${myStatus ? MY_RSVP_LABEL[myStatus] : ''}
+          </div>
         </div>`;
     }
 
@@ -321,6 +326,8 @@ async function deleteSession(id) {
 }
 
 /* ── RSVP (member) ── */
+const MY_RSVP_LABEL = { yes: '✓ Potvrđeno - ideš', maybe: '? Možda ideš', no: '✕ Prijavljeno - ne ideš' };
+const MY_RSVP_COLOR = { yes: '#16a34a', no: '#dc2626', maybe: '#d97706' };
 async function setRsvp(sessionId, status, btnEl) {
   try {
     await apiPost(`/availability/training/${sessionId}`, { status });
@@ -329,6 +336,8 @@ async function setRsvp(sessionId, status, btnEl) {
     const group = btnEl.closest('.rsvp-group');
     group.querySelectorAll('.rsvp-btn').forEach(b => b.classList.remove('active'));
     btnEl.classList.add('active');
+    const label = document.getElementById('rsvpLabel-' + sessionId);
+    if (label) { label.textContent = MY_RSVP_LABEL[status]; label.style.color = MY_RSVP_COLOR[status]; }
     showToast(status === 'yes' ? 'Potvrđeno - ideš!' : status === 'no' ? 'Označeno - ne ideš' : 'Označeno - možda', 'success');
   } catch(e) { showToast(e.message, 'error'); }
 }
@@ -345,22 +354,31 @@ async function openAttendance(sessionId) {
   modal.show();
 
   try {
-    const [members, sessionDetail] = await Promise.all([
+    const [members, sessionDetail, rsvps] = await Promise.all([
       apiGet('/members'),
-      apiGet('/training/' + sessionId)
+      apiGet('/training/' + sessionId),
+      apiGet('/availability/training/' + sessionId).catch(() => [])
     ]);
 
     // Build a map of existing attendance
     const attMap = {};
     (sessionDetail.attendance || []).forEach(a => { attMap[a.member_id] = a.status; });
 
-    // Merge: every member gets a status (default: absent if not marked)
+    // Build a map of each member's RSVP for this session
+    const rsvpMap = {};
+    (rsvps || []).forEach(r => { rsvpMap[r.member_id] = r.status; });
+
+    // Merge: every member gets a status (default: absent if not marked).
+    // A member who RSVP'd "Idem" and isn't marked yet is pre-filled as
+    // present, so a confirmed member doesn't require manual work - the
+    // coach can still change it before saving.
     attMembers = members.map(m => ({
       id: m.id,
       name: m.name,
       jersey_number: m.jersey_number,
       position: m.position,
-      status: attMap[m.id] || null   // null = not yet marked
+      rsvp: rsvpMap[m.id] || null,
+      status: attMap[m.id] || (rsvpMap[m.id] === 'yes' ? 'present' : null)
     }));
 
     renderAttendanceList();
@@ -383,6 +401,11 @@ function renderAttendanceList() {
     ${unmarked ? `<span class="att-sum-badge" style="background:#f1f5f9;color:#64748b">${unmarked} neoznačenih</span>` : ''}
   `;
 
+  const RSVP_BADGE = {
+    yes:   '<span class="badge" style="background:#dcfce7;color:#166534;font-weight:600;">✓ Idem</span>',
+    maybe: '<span class="badge" style="background:#fef9c3;color:#854d0e;font-weight:600;">? Možda</span>',
+    no:    '<span class="badge" style="background:#fee2e2;color:#991b1b;font-weight:600;">✕ Ne ide</span>',
+  };
   document.getElementById('attMembersList').innerHTML = attMembers.map((m, i) => `
     <div class="att-member-row">
       <div class="fw-semibold" style="min-width:150px">
@@ -390,6 +413,7 @@ function renderAttendanceList() {
         ${m.jersey_number != null ? `<span class="text-muted small ms-1">#${m.jersey_number}</span>` : ''}
       </div>
       <span class="text-muted small">${esc(m.position || '-')}</span>
+      ${RSVP_BADGE[m.rsvp] || '<span class="text-muted small">Nije odgovorio/la</span>'}
       <div class="att-status-btns">
         <button class="att-btn att-btn-p ${m.status === 'present' ? 'active' : ''}"
           onclick="setAttStatus(${i},'present',this)" title="Prisutan/na">
