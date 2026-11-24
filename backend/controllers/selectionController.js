@@ -123,6 +123,8 @@ exports.getCoaches = async (req, res) => {
 
 exports.assignMember = async (req, res) => {
   try {
+    const [sels] = await db.query('SELECT id FROM selections WHERE id=? AND club_id=?', [req.params.id, req.user.club_id]);
+    if (!sels.length) return res.status(404).json({ message: 'Selekcija nije pronađena' });
     const [members] = await db.query('SELECT selection_id FROM members WHERE id=? AND club_id=?', [req.body.member_id, req.user.club_id]);
     if (!members.length) return res.status(404).json({ message: 'Član nije pronađen' });
     await db.query('INSERT IGNORE INTO member_selections (member_id, selection_id) VALUES (?, ?)', [req.body.member_id, req.params.id]);
@@ -147,6 +149,8 @@ exports.removeMember = async (req, res) => {
 
 exports.assignCoach = async (req, res) => {
   try {
+    const [sels] = await db.query('SELECT id FROM selections WHERE id=? AND club_id=?', [req.params.id, req.user.club_id]);
+    if (!sels.length) return res.status(404).json({ message: 'Selekcija nije pronađena' });
     const [coaches] = await db.query('SELECT selection_id FROM coaches WHERE id=? AND club_id=?', [req.body.coach_id, req.user.club_id]);
     if (!coaches.length) return res.status(404).json({ message: 'Trener nije pronađen' });
     await db.query('INSERT IGNORE INTO coach_selections (coach_id, selection_id) VALUES (?, ?)', [req.body.coach_id, req.params.id]);

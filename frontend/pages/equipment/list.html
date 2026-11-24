@@ -343,9 +343,12 @@
     document.getElementById('fCondition').value  = 'good';
     document.getElementById('fAssigned').value   = '';
     document.getElementById('fNotes').value      = '';
+    const coachHasPicker = isCoach && !document.getElementById('fSelectionWrap').classList.contains('d-none');
     if (isAdmin) {
       document.getElementById('fSelection').value = '';
       onSelectionChange();
+    } else if (coachHasPicker) {
+      document.getElementById('fSelection').value = '';
     }
     document.getElementById('modalTitle').innerHTML = id
       ? '<i class="bi bi-pencil me-2"></i>Uredi opremu'
@@ -364,6 +367,8 @@
           document.getElementById('fSelection').value = item.selection_id || '';
           onSelectionChange();
           document.getElementById('fCoach').value = item.assigned_by || '';
+        } else if (coachHasPicker) {
+          document.getElementById('fSelection').value = item.selection_id || '';
         }
       }
     }
