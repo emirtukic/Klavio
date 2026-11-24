@@ -302,12 +302,8 @@
       if (profile.id) {
         try {
           const stats = await apiGet('/stats/player/' + profile.id);
-          goals   = stats.goals   || stats.total_goals   || 0;
-          assists = stats.assists || stats.total_assists || 0;
-          // Attendance from stats if not already set
-          if (attendancePct == null && (stats.attendance_pct || stats.attendance_percentage)) {
-            document.getElementById('statAttendance').textContent = parseFloat(stats.attendance_pct || stats.attendance_percentage).toFixed(1) + '%';
-          }
+          goals   = stats.totals?.goals   ?? goals;
+          assists = stats.totals?.assists ?? assists;
         } catch (_) {}
       }
       document.getElementById('statGoals').textContent   = goals;

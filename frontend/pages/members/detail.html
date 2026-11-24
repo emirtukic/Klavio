@@ -558,9 +558,8 @@
       let goals = m.goals || 0, assists = m.assists || 0, attPct = m.attendance_pct || null;
       try {
         const ps = await apiGet('/stats/player/' + id);
-        goals   = ps.total_goals   || ps.goals   || 0;
-        assists = ps.total_assists || ps.assists || 0;
-        attPct  = ps.attendance_pct || ps.attendance_percentage || attPct;
+        goals   = ps.totals?.goals   ?? goals;
+        assists = ps.totals?.assists ?? assists;
       } catch (_) {}
       document.getElementById('quickStatsTable').innerHTML = `
         <tr><td class="text-muted">Golovi</td><td class="fw-semibold">${goals}</td></tr>
@@ -685,7 +684,7 @@
     tabLoaded.stats = true;
     try {
       const stats = await apiGet('/stats/player/' + id);
-      const matches = stats.matches || stats.match_stats || [];
+      const matches = stats.stats || [];
       const tbody = document.getElementById('statsMatchTable');
 
       if (matches.length) {
