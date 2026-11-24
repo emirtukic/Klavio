@@ -89,9 +89,12 @@ exports.notifyMatchCreated = async (match, clubId, selectionId, creatorUserId) =
 exports.notifyTrainingCreated = async (session, clubId, selectionId, creatorUserId) => {
   if (!selectionId) return;
   try {
+    const [[sel]] = await db.query('SELECT name FROM selections WHERE id = ?', [selectionId]);
+    const selName = sel?.name || 'Selekcija';
+
     const title = '🏃 Novi trening zakazan';
     const when  = `${fmtDate(session.session_date + 'T' + session.start_time)}`;
-    const msg   = `${session.title} · ${when} · ${session.location || 'TBD'}`;
+    const msg   = `${selName} · ${session.title} · ${when} · ${session.location || 'TBD'}`;
     const link  = '/pages/training/schedule.html';
 
     const [members] = await db.query(
@@ -107,7 +110,8 @@ exports.notifyTrainingCreated = async (session, clubId, selectionId, creatorUser
     );
 
     const emailHtml = matchEmailHtml(title,
-      `<p><strong>Naziv:</strong> ${session.title}</p>
+      `<p><strong>Selekcija:</strong> ${selName}</p>
+       <p><strong>Naziv:</strong> ${session.title}</p>
        <p><strong>Datum i vrijeme:</strong> ${when} - ${session.end_time || ''}</p>
        <p><strong>Lokacija:</strong> ${session.location || 'TBD'}</p>
        <p style="margin-top:16px;"><a href="${process.env.APP_URL || 'http://localhost:3000'}/pages/training/schedule.html" style="background:#3b82f6;color:#fff;padding:8px 18px;border-radius:6px;text-decoration:none;font-weight:600;">Pogledaj raspored</a></p>`
