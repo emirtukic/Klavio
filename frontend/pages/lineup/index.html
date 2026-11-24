@@ -785,6 +785,7 @@
 <script>
 const user = requireRole('admin', 'super_admin', 'coach');
 setUserInfo(user); buildSidebar();
+const isAdminUser = ['super_admin','admin'].includes(user.role);
 
 /* ── Formations ──────────────────────────────────────────────── */
 const FORMATIONS = {
@@ -1086,11 +1087,11 @@ async function onMatchChange() {
   document.getElementById('lineupLayout').style.display = '';
   clearAll();
 
-  // Only members of this match's own selection should be pickable - a match
-  // with no selection falls back to every club member (nothing to filter by).
+  // A coach only picks from this match's own selection; an admin manages
+  // every selection in the club, so they should still see every member.
   const match = allMatches.find(m => String(m.id) === String(id));
   try {
-    allMembers = match?.selection_id
+    allMembers = (!isAdminUser && match?.selection_id)
       ? await apiGet('/members?selection_id=' + match.selection_id)
       : await apiGet('/members');
   } catch (e) { showToast(e.message, 'error'); }

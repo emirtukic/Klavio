@@ -62,8 +62,15 @@
       padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700;
     }
 
-    .rsvp-summary { font-size: 0.72rem; color: #64748b; white-space: nowrap; }
-    [data-theme="dark"] .rsvp-summary { color: #94a3b8; }
+    .rsvp-summary {
+      font-size: 0.72rem; color: #1d4ed8; white-space: nowrap; cursor: pointer;
+      background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 20px;
+      padding: 4px 10px; display: inline-flex; align-items: center; gap: 4px;
+      transition: background .12s;
+    }
+    .rsvp-summary:hover { background: #dbeafe; }
+    [data-theme="dark"] .rsvp-summary { color: #93c5fd; background: #1e3a5f; border-color: #1e40af; }
+    [data-theme="dark"] .rsvp-summary:hover { background: #1e40af; }
   </style>
 </head>
 <body>
@@ -270,8 +277,8 @@ function renderTable() {
         // attendance, which doesn't exist yet before the session happens -
         // rsvp_yes_count is who's actually confirmed they're coming).
         attendanceCell = `
-          <span class="rsvp-summary" onclick="openAttendance(${s.id})" style="cursor:pointer" title="Upravljaj prisustvom">
-            <i class="bi bi-people me-1"></i>${s.rsvp_yes_count || 0} potvrđeno
+          <span class="rsvp-summary" onclick="openAttendance(${s.id})" title="Klikni da vidiš ko je potvrdio dolazak">
+            <i class="bi bi-people"></i>${s.rsvp_yes_count || 0} potvrđeno<i class="bi bi-chevron-right small" style="font-size:0.6rem;opacity:0.6;"></i>
           </span>`;
       }
     } else if (isMember) {

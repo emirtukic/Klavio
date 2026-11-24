@@ -37,8 +37,15 @@
     .rsvp-maybe.active, .rsvp-maybe:hover { background:#d97706; border-color:#d97706; color:#fff; }
     .rsvp-no   { background:#fef2f2; border-color:#fca5a5; color:#991b1b; }
     .rsvp-no.active, .rsvp-no:hover   { background:#dc2626; border-color:#dc2626; color:#fff; }
-    .rsvp-count { font-size: 0.72rem; color: #64748b; white-space: nowrap; }
-    [data-theme="dark"] .rsvp-count { color: #94a3b8; }
+    .rsvp-count {
+      font-size: 0.72rem; color: #1d4ed8; white-space: nowrap; cursor: pointer;
+      background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 20px;
+      padding: 4px 10px; display: inline-flex; align-items: center; gap: 4px;
+      transition: background .12s;
+    }
+    .rsvp-count:hover { background: #dbeafe; }
+    [data-theme="dark"] .rsvp-count { color: #93c5fd; background: #1e3a5f; border-color: #1e40af; }
+    [data-theme="dark"] .rsvp-count:hover { background: #1e40af; }
   </style>
 </head>
 <body>
@@ -354,16 +361,25 @@ function renderTable() {
     if (isMember && upcoming) {
       const st = myRsvpMap[m.id] || null;
       rsvpCell = `
-        <div class="rsvp-group">
-          <button class="rsvp-btn rsvp-yes ${st==='yes'?'active':''}"
-            onclick="setRsvp(${m.id},'yes',this)" title="Idem"><i class="bi bi-check2"></i> Idem</button>
-          <button class="rsvp-btn rsvp-maybe ${st==='maybe'?'active':''}"
-            onclick="setRsvp(${m.id},'maybe',this)" title="Možda"><i class="bi bi-question"></i></button>
-          <button class="rsvp-btn rsvp-no ${st==='no'?'active':''}"
-            onclick="setRsvp(${m.id},'no',this)" title="Ne idem"><i class="bi bi-x-lg"></i> Ne</button>
+        <div>
+          <div class="rsvp-group">
+            <button class="rsvp-btn rsvp-yes ${st==='yes'?'active':''}"
+              onclick="setRsvp(${m.id},'yes',this)" title="Idem"><i class="bi bi-check2"></i> Idem</button>
+            <button class="rsvp-btn rsvp-maybe ${st==='maybe'?'active':''}"
+              onclick="setRsvp(${m.id},'maybe',this)" title="Možda"><i class="bi bi-question"></i></button>
+            <button class="rsvp-btn rsvp-no ${st==='no'?'active':''}"
+              onclick="setRsvp(${m.id},'no',this)" title="Ne idem"><i class="bi bi-x-lg"></i> Ne</button>
+          </div>
+          <div class="small fw-semibold mt-1" id="rsvpLabel-${m.id}" style="color:${MY_RSVP_COLOR[st] || '#94a3b8'}">
+            ${st ? MY_RSVP_LABEL[st] : ''}
+          </div>
         </div>`;
     } else if (upcoming) {
-      rsvpCell = `<span class="rsvp-count"><i class="bi bi-people me-1"></i>${m.rsvp_yes_count || 0} potvrđeno</span>`;
+      rsvpCell = canEdit
+        ? `<span class="rsvp-count" onclick="openResultModal(${m.id})" title="Klikni da vidiš ko je potvrdio dolazak">
+             <i class="bi bi-people"></i>${m.rsvp_yes_count || 0} potvrđeno<i class="bi bi-chevron-right small" style="font-size:0.6rem;opacity:0.6;"></i>
+           </span>`
+        : `<span class="rsvp-count" style="cursor:default;background:none;border:none;padding:0;"><i class="bi bi-people me-1"></i>${m.rsvp_yes_count || 0} potvrđeno</span>`;
     } else {
       rsvpCell = '<span class="text-muted small">-</span>';
     }
@@ -460,9 +476,10 @@ function toggleStats() {
 async function loadPlayerStats(matchId) {
   document.getElementById('psBody').innerHTML =
     '<tr><td colspan="7" class="text-center py-3 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Učitavanje...</td></tr>';
-  // Only members of this match's own selection belong in its stat sheet.
+  // A coach only sees this match's own selection; an admin manages every
+  // selection in the club, so they should still see every member.
   const match = allMatches.find(x => x.id === matchId);
-  const membersUrl = match?.selection_id ? '/members?selection_id=' + match.selection_id : '/members';
+  const membersUrl = (!isAdmin && match?.selection_id) ? '/members?selection_id=' + match.selection_id : '/members';
   try {
     const [members, existing, rsvps] = await Promise.all([
       apiGet(membersUrl),
@@ -568,6 +585,8 @@ async function saveResult() {
 }
 
 /* ── RSVP ── */
+const MY_RSVP_LABEL = { yes: '✓ Potvrđeno - ideš', maybe: '? Možda ideš', no: '✕ Prijavljeno - ne ideš' };
+const MY_RSVP_COLOR = { yes: '#16a34a', no: '#dc2626', maybe: '#d97706' };
 async function setRsvp(matchId, status, btnEl) {
   try {
     await apiPost(`/availability/match/${matchId}`, { status });
@@ -575,6 +594,8 @@ async function setRsvp(matchId, status, btnEl) {
     const group = btnEl.closest('.rsvp-group');
     group.querySelectorAll('.rsvp-btn').forEach(b => b.classList.remove('active'));
     btnEl.classList.add('active');
+    const label = document.getElementById('rsvpLabel-' + matchId);
+    if (label) { label.textContent = MY_RSVP_LABEL[status]; label.style.color = MY_RSVP_COLOR[status]; }
     showToast(status === 'yes' ? 'Potvrđeno - ideš!' : status === 'no' ? 'Označeno - ne ideš' : 'Označeno - možda', 'success');
   } catch(e) { showToast(e.message, 'error'); }
 }
