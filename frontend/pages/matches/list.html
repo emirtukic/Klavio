@@ -266,11 +266,17 @@ buildSidebar();
 
 const canEdit  = ['super_admin','admin','coach'].includes(user.role);
 const isAdmin  = ['super_admin','admin'].includes(user.role);
+const isCoach  = user.role === 'coach';
 const isMember = user.role === 'member';
+// Coaches now see the selection column too (they can belong to more than
+// one), just without the admin-only "filter by any club selection" dropdown.
+const showSelCol = isAdmin || isCoach;
 if (!canEdit) document.getElementById('addBtn').classList.add('d-none');
 if (isMember)  document.getElementById('playerStatsWrap').classList.add('d-none');
 if (isAdmin) {
   document.getElementById('fSelectionWrap').classList.remove('d-none');
+}
+if (showSelCol) {
   document.querySelectorAll('.admin-col').forEach(el => el.classList.remove('d-none'));
 }
 
@@ -366,7 +372,7 @@ function renderTable() {
       <td data-label="Protivnik" class="fw-semibold">${esc(m.opponent)}</td>
       <td data-label="Datum">${formatDate(m.match_date)}</td>
       <td data-label="Lokacija" class="text-muted small">${esc(m.location || '-')}</td>
-      ${isAdmin ? `<td data-label="Selekcija" class="small">${m.selection_name ? `<span class="badge bg-secondary bg-opacity-75">${esc(m.selection_name)}</span>` : '<span class="text-muted">-</span>'}</td>` : ''}
+      ${showSelCol ? `<td data-label="Selekcija" class="small">${m.selection_name ? `<span class="badge bg-secondary bg-opacity-75">${esc(m.selection_name)}</span>` : '<span class="text-muted">-</span>'}</td>` : ''}
       <td data-label="Vrsta">${statusBadge(m.match_type)}</td>
       <td data-label="D/G">${statusBadge(m.home_away)}</td>
       <td data-label="RSVP">${rsvpCell}</td>
@@ -390,7 +396,7 @@ function renderTable() {
           </button>` : ''}
       </td>
     </tr>`;
-  }).join('') : `<tr><td colspan="${isAdmin ? 10 : 9}" class="text-center py-5 text-muted"><i class="bi bi-inbox fs-2 d-block mb-2"></i>Nema pronađenih utakmica</td></tr>`;
+  }).join('') : `<tr><td colspan="${showSelCol ? 10 : 9}" class="text-center py-5 text-muted"><i class="bi bi-inbox fs-2 d-block mb-2"></i>Nema pronađenih utakmica</td></tr>`;
 }
 
 function resetFilters() {
