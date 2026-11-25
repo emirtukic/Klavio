@@ -140,7 +140,7 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content" style="border-radius:14px;overflow:hidden;">
       <div class="modal-header border-0 pb-1">
-        <h5 class="modal-title fw-bold"><i class="bi bi-pencil me-2"></i>Brza izmjena člana</h5>
+        <h5 class="modal-title fw-bold"><i class="bi bi-pencil me-2"></i>Izmjena člana</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
@@ -169,6 +169,34 @@
           <div class="col-sm-6">
             <label class="form-label">Selekcija</label>
             <select class="form-select" id="editMemberSelection"></select>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label">Broj članske karte</label>
+            <input type="text" class="form-control" id="editMemberNumber">
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label">Datum učlanjenja</label>
+            <input type="date" class="form-control" id="editMemberJoinDate">
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label">Datum rođenja</label>
+            <input type="date" class="form-control" id="editMemberDob">
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label">Pozicija</label>
+            <select class="form-select" id="editMemberPosition">
+              <option value="">- Odaberi poziciju -</option>
+              <option>Golman</option><option>Odbrana</option><option>Vezni red</option><option>Napad</option>
+              <option>Lijevo krilo</option><option>Desno krilo</option><option>Zentarhalf</option>
+            </select>
+          </div>
+          <div class="col-sm-6">
+            <label class="form-label">Broj dresa</label>
+            <input type="number" class="form-control" id="editMemberJersey" min="1" max="99">
+          </div>
+          <div class="col-12">
+            <label class="form-label">Adresa</label>
+            <textarea class="form-control" id="editMemberAddress" rows="2"></textarea>
           </div>
         </div>
       </div>
@@ -400,6 +428,12 @@
     document.getElementById('editMemberEmail').value = m.email || '';
     document.getElementById('editMemberPhone').value = m.phone || '';
     document.getElementById('editMemberStatus').value = m.status || 'active';
+    document.getElementById('editMemberNumber').value  = m.membership_number || '';
+    document.getElementById('editMemberJoinDate').value = m.join_date ? m.join_date.slice(0, 10) : '';
+    document.getElementById('editMemberDob').value     = m.date_of_birth ? m.date_of_birth.slice(0, 10) : '';
+    document.getElementById('editMemberPosition').value = m.position || '';
+    document.getElementById('editMemberJersey').value  = m.jersey_number || '';
+    document.getElementById('editMemberAddress').value = m.address || '';
     const sel = document.getElementById('editMemberSelection');
     sel.innerHTML = '<option value="">Bez selekcije</option>';
     allSelections.forEach(s => {
@@ -418,11 +452,17 @@
     btn.disabled = true; sp.classList.remove('d-none');
     try {
       await apiPut('/members/' + id, {
-        name:         document.getElementById('editMemberName').value.trim(),
-        email:        document.getElementById('editMemberEmail').value.trim(),
-        phone:        document.getElementById('editMemberPhone').value.trim(),
-        status:       document.getElementById('editMemberStatus').value,
-        selection_id: document.getElementById('editMemberSelection').value || null,
+        name:               document.getElementById('editMemberName').value.trim(),
+        email:              document.getElementById('editMemberEmail').value.trim(),
+        phone:              document.getElementById('editMemberPhone').value.trim(),
+        status:             document.getElementById('editMemberStatus').value,
+        selection_id:       document.getElementById('editMemberSelection').value || null,
+        membership_number: document.getElementById('editMemberNumber').value.trim() || null,
+        join_date:          document.getElementById('editMemberJoinDate').value || null,
+        date_of_birth:      document.getElementById('editMemberDob').value || null,
+        position:           document.getElementById('editMemberPosition').value || null,
+        jersey_number:      document.getElementById('editMemberJersey').value || null,
+        address:            document.getElementById('editMemberAddress').value.trim() || null,
       });
       bootstrap.Modal.getInstance(document.getElementById('memberEditModal')).hide();
       showToast('Član ažuriran', 'success'); load();
