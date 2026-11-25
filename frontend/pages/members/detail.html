@@ -436,7 +436,7 @@
               <option value="suspended">Suspendiran</option>
             </select>
           </div>
-          <div class="col-sm-6">
+          <div class="col-sm-6" id="editMemberSelectionField">
             <label class="form-label">Selekcija</label>
             <select class="form-select" id="editMemberSelection"></select>
           </div>
@@ -490,7 +490,8 @@
   const user = requireRole('admin', 'super_admin', 'coach');
   setUserInfo(user);
   buildSidebar();
-  const canEdit = ['super_admin', 'admin'].includes(user.role);
+  const isAdmin = ['super_admin', 'admin'].includes(user.role);
+  const canEdit = isAdmin || user.role === 'coach';
   if (!canEdit) document.getElementById('editBtn').classList.add('d-none');
 
   const id = new URLSearchParams(location.search).get('id');
@@ -510,14 +511,21 @@
     document.getElementById('editMemberPosition').value = memberData.position || '';
     document.getElementById('editMemberJersey').value  = memberData.jersey_number || '';
     document.getElementById('editMemberAddress').value = memberData.address || '';
-    const sel = document.getElementById('editMemberSelection');
-    sel.innerHTML = '<option value="">Bez selekcije</option>';
-    allSelections.forEach(s => {
-      const o = document.createElement('option');
-      o.value = s.id; o.textContent = s.name;
-      if (s.id === memberData.selection_id) o.selected = true;
-      sel.appendChild(o);
-    });
+    const selField = document.getElementById('editMemberSelectionField');
+    if (isAdmin) {
+      selField.classList.remove('d-none');
+      const sel = document.getElementById('editMemberSelection');
+      sel.innerHTML = '<option value="">Bez selekcije</option>';
+      allSelections.forEach(s => {
+        const o = document.createElement('option');
+        o.value = s.id; o.textContent = s.name;
+        if (s.id === memberData.selection_id) o.selected = true;
+        sel.appendChild(o);
+      });
+    } else {
+      // A coach can't reassign which selection a member belongs to.
+      selField.classList.add('d-none');
+    }
     new bootstrap.Modal(document.getElementById('memberEditModal')).show();
   }
 
@@ -526,19 +534,20 @@
     const sp  = document.getElementById('editMemberSpinner');
     btn.disabled = true; sp.classList.remove('d-none');
     try {
-      await apiPut('/members/' + id, {
+      const payload = {
         name:               document.getElementById('editMemberName').value.trim(),
         email:              document.getElementById('editMemberEmail').value.trim(),
         phone:              document.getElementById('editMemberPhone').value.trim(),
         status:             document.getElementById('editMemberStatus').value,
-        selection_id:       document.getElementById('editMemberSelection').value || null,
         membership_number: document.getElementById('editMemberNumber').value.trim() || null,
         join_date:          document.getElementById('editMemberJoinDate').value || null,
         date_of_birth:      document.getElementById('editMemberDob').value || null,
         position:           document.getElementById('editMemberPosition').value || null,
         jersey_number:      document.getElementById('editMemberJersey').value || null,
         address:            document.getElementById('editMemberAddress').value.trim() || null,
-      });
+      };
+      if (isAdmin) payload.selection_id = document.getElementById('editMemberSelection').value || null;
+      await apiPut('/members/' + id, payload);
       bootstrap.Modal.getInstance(document.getElementById('memberEditModal')).hide();
       showToast('Član ažuriran', 'success');
       loadProfile();

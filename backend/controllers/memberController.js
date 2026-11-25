@@ -124,9 +124,15 @@ exports.create = async (req, res) => {
 
 exports.update = async (req, res) => {
   const { name, email, phone, date_of_birth, address, status, is_active, position, jersey_number, selection_id, membership_number, join_date } = req.body;
-  // Only ever assign a selection that actually belongs to this admin's own club.
+  // A coach never reassigns which selection a member belongs to - only admins
+  // send selection_id, so its key is simply absent from a coach's request.
+  // Distinguish "key absent" (leave untouched) from "key present" (set/clear)
+  // instead of collapsing both to null, which used to wipe the selection on
+  // every edit that didn't happen to include it.
+  const hasSelectionField = Object.prototype.hasOwnProperty.call(req.body, 'selection_id');
   let safeSelId = null;
-  if (selection_id) {
+  if (hasSelectionField && selection_id) {
+    // Only ever assign a selection that actually belongs to this admin's own club.
     const [sels] = await db.query('SELECT id FROM selections WHERE id = ? AND club_id = ?', [selection_id, req.user.club_id]);
     if (sels.length) safeSelId = sels[0].id;
   }
@@ -136,13 +142,26 @@ exports.update = async (req, res) => {
     const [members] = await conn.query('SELECT user_id FROM members WHERE id = ? AND club_id = ?', [req.params.id, req.user.club_id]);
     if (!members.length) { await conn.rollback(); return res.status(404).json({ message: 'Član nije pronađen' }); }
 
+    // A coach may only edit members of the selection(s) they belong to.
+    if (req.user.role === 'coach') {
+      const ids = req.user.selection_ids || [];
+      const [inScope] = ids.length
+        ? await conn.query('SELECT 1 FROM member_selections WHERE member_id=? AND selection_id IN (?) LIMIT 1', [req.params.id, ids])
+        : [[]];
+      if (!inScope.length) { await conn.rollback(); return res.status(404).json({ message: 'Član nije pronađen' }); }
+    }
+
     await conn.query(
       'UPDATE users SET name=COALESCE(?,name), email=COALESCE(?,email), is_active=COALESCE(?,is_active) WHERE id=?',
       [name, email, is_active, members[0].user_id]
     );
+    const setSelection = hasSelectionField ? ', selection_id=?' : '';
+    const updateParams = [phone, date_of_birth, address, status, position||null, jersey_number||null, membership_number||null, join_date||null];
+    if (hasSelectionField) updateParams.push(safeSelId);
+    updateParams.push(req.params.id);
     await conn.query(
-      'UPDATE members SET phone=COALESCE(?,phone), date_of_birth=COALESCE(?,date_of_birth), address=COALESCE(?,address), status=COALESCE(?,status), position=COALESCE(?,position), jersey_number=COALESCE(?,jersey_number), membership_number=COALESCE(?,membership_number), join_date=COALESCE(?,join_date), selection_id=? WHERE id=?',
-      [phone, date_of_birth, address, status, position||null, jersey_number||null, membership_number||null, join_date||null, safeSelId, req.params.id]
+      `UPDATE members SET phone=COALESCE(?,phone), date_of_birth=COALESCE(?,date_of_birth), address=COALESCE(?,address), status=COALESCE(?,status), position=COALESCE(?,position), jersey_number=COALESCE(?,jersey_number), membership_number=COALESCE(?,membership_number), join_date=COALESCE(?,join_date)${setSelection} WHERE id=?`,
+      updateParams
     );
     // Setting a primary selection always ensures membership in it too; it
     // never removes any other (additional) selections assigned elsewhere.
