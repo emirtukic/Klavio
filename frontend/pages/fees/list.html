@@ -116,10 +116,10 @@
           </select>
         </div>
         <div class="col-6 col-sm-auto">
-          <input type="date" class="form-control form-control-sm" id="fFrom" onchange="feePage=1;renderTable()" title="Dospijeće od">
+          <input type="date" class="form-control form-control-sm" id="fFrom" onchange="feePage=1;renderTable()" title="Rok uplate od">
         </div>
         <div class="col-6 col-sm-auto">
-          <input type="date" class="form-control form-control-sm" id="fTo" onchange="feePage=1;renderTable()" title="Dospijeće do">
+          <input type="date" class="form-control form-control-sm" id="fTo" onchange="feePage=1;renderTable()" title="Rok uplate do">
         </div>
         <div class="col-6 col-sm-auto">
           <input type="number" class="form-control form-control-sm" id="fAmtMin"
@@ -152,7 +152,7 @@
               <th>Selekcija</th>
               <th>Period</th>
               <th>Iznos</th>
-              <th>Dospijeće</th>
+              <th>Rok uplate</th>
               <th>Plaćeno dana</th>
               <th>Status</th>
               <th id="thActions">Akcije</th>
@@ -204,7 +204,7 @@
             <input type="date" class="form-control" id="bgPeriodEnd" required>
           </div>
           <div class="col-sm-4">
-            <label class="form-label">Datum dospijeća *</label>
+            <label class="form-label">Rok uplate *</label>
             <input type="date" class="form-control" id="bgDueDate" required>
           </div>
           <div class="col-12">
@@ -242,7 +242,7 @@
         <div id="duplicateInfo" class="small text-muted mb-3">Učitavanje...</div>
         <div id="duplicateForm" class="d-none">
           <p class="text-muted small">Kreira novu članarinu za svakog člana iz prethodnog perioda, sa istim iznosom. Članovi koji već imaju članarinu za novi period se preskaču.</p>
-          <label class="form-label">Datum dospijeća *</label>
+          <label class="form-label">Rok uplate *</label>
           <input type="date" class="form-control" id="dupDueDate" required>
         </div>
       </div>
@@ -304,7 +304,7 @@
             </select>
           </div>
           <div class="col-sm-6">
-            <label class="form-label">Rok dospijeća</label>
+            <label class="form-label">Rok uplate</label>
             <input type="date" class="form-control" id="editFeeDueDate">
           </div>
           <div class="col-sm-6">
@@ -421,7 +421,7 @@ function renderTable() {
       <td data-label="Selekcija" class="small text-muted">${escHtml(f.selection_names) || '-'}</td>
       <td data-label="Period" class="small text-muted">${formatDate(f.period_start)} - ${formatDate(f.period_end)}</td>
       <td data-label="Iznos" class="fw-semibold">${parseFloat(f.amount).toFixed(2)} KM</td>
-      <td data-label="Dospijeće">${formatDate(f.due_date)}</td>
+      <td data-label="Rok uplate">${formatDate(f.due_date)}</td>
       <td data-label="Plaćeno">${f.paid_date ? formatDate(f.paid_date) : '-'}</td>
       <td data-label="Status">${statusBadge(f.status)}</td>
       ${canManage ? `<td>
@@ -591,7 +591,7 @@ async function openDuplicateModal() {
 
 async function runDuplicateFees() {
   const due_date = document.getElementById('dupDueDate').value;
-  if (!due_date) { showToast('Odaberite datum dospijeća', 'error'); return; }
+  if (!due_date) { showToast('Odaberite rok uplate', 'error'); return; }
   const btn = document.getElementById('dupConfirmBtn');
   const sp  = document.getElementById('dupSpinner');
   btn.disabled = true; sp.classList.remove('d-none');
@@ -613,7 +613,7 @@ async function runBulkGenerate() {
   const notes = document.getElementById('bgNotes').value;
   const selection_id = document.getElementById('bgSelection').value || null;
   if (!amount || !period_start || !period_end || !due_date) {
-    showToast('Popunite iznos, period i datum dospijeća', 'error'); return;
+    showToast('Popunite iznos, period i rok uplate', 'error'); return;
   }
   pendingBulkPayload = { amount, period_start, period_end, due_date, payment_method, notes, selection_id };
 

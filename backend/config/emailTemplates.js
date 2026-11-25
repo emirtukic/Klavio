@@ -276,4 +276,28 @@ function ticketReplyEmailHtml(userName, subject, body) {
   return emailWrap(`Odgovor na vaš tiket: ${safeSubject}`, bodyHtml);
 }
 
-module.exports = { verifyEmailHtml, welcomeEmailHtml, inviteEmailHtml, resetPasswordEmailHtml, newClubNotificationHtml, newTicketNotificationHtml, ticketReplyEmailHtml };
+/* ── 8. Membership fee reminder ── */
+function feeReminderEmailHtml(name, clubName, amount, dueDateStr, isOverdue) {
+  const amountStr = Number(amount).toFixed(2);
+  const heading = isOverdue ? 'Članarina je zakašnjela' : 'Podsjetnik: članarina uskoro dospijeva';
+  const intro = isOverdue
+    ? `Pozdrav ${escapeHtml(name)}, va&scaron;a &#269;lanarina u klubu <strong style="color:#0f172a;">${escapeHtml(clubName)}</strong> nije upla&#263;ena na vrijeme.`
+    : `Pozdrav ${escapeHtml(name)}, ovo je podsjetnik da va&scaron;a &#269;lanarina u klubu <strong style="color:#0f172a;">${escapeHtml(clubName)}</strong> uskoro dospijeva na napla&#263;eno.`;
+
+  const bodyHtml = `
+            <h1 class="heading" style="margin:0 0 14px;font-size:26px;font-weight:800;color:${isOverdue ? '#b91c1c' : '#0f172a'};letter-spacing:-0.4px;line-height:1.25;text-align:center;font-family:${FONT};">
+              ${heading}
+            </h1>
+            <p style="margin:0 0 24px;font-size:15px;color:#475569;line-height:1.7;text-align:center;font-family:${FONT};">
+              ${intro}
+            </p>
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 24px;">
+              <tr><td style="padding:8px 0;border-bottom:1px solid #e2e8f0;"><span style="font-size:13px;color:#94a3b8;font-family:${FONT};">Iznos</span><br><span style="font-size:15px;color:#0f172a;font-weight:600;font-family:${FONT};">${amountStr} KM</span></td></tr>
+              <tr><td style="padding:8px 0;"><span style="font-size:13px;color:#94a3b8;font-family:${FONT};">Rok uplate</span><br><span style="font-size:15px;color:${isOverdue ? '#b91c1c' : '#0f172a'};font-weight:600;font-family:${FONT};">${escapeHtml(dueDateStr)}</span></td></tr>
+            </table>
+            ${ctaButton(`${SITE}/pages/my-fees/index.html`, 'Pogledaj članarinu')}`;
+
+  return emailWrap(`${heading} - ${amountStr} KM`, bodyHtml);
+}
+
+module.exports = { verifyEmailHtml, welcomeEmailHtml, inviteEmailHtml, resetPasswordEmailHtml, newClubNotificationHtml, newTicketNotificationHtml, ticketReplyEmailHtml, feeReminderEmailHtml };

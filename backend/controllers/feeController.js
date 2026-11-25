@@ -108,7 +108,7 @@ exports.bulkPreview = async (req, res) => {
 exports.bulkGenerate = async (req, res) => {
   const { amount, period_start, period_end, due_date, payment_method, notes, includeOverlapIds, selection_id } = req.body;
   if (!amount || !period_start || !period_end || !due_date) {
-    return res.status(400).json({ message: 'Iznos, period i datum dospijeća su obavezni' });
+    return res.status(400).json({ message: 'Iznos, period i rok uplate su obavezni' });
   }
   try {
     const { members, overlapping } = await findOverlapping(req.user.club_id, period_start, period_end, selection_id || null);
@@ -334,7 +334,7 @@ exports.getLastPeriod = async (req, res) => {
 
 exports.duplicateLastPeriod = async (req, res) => {
   const { due_date } = req.body;
-  if (!due_date) return res.status(400).json({ message: 'Datum dospijeća je obavezan' });
+  if (!due_date) return res.status(400).json({ message: 'Rok uplate je obavezan' });
   try {
     const ids = req.user.selection_ids || [];
     const coachFilter = req.user.role === 'coach'

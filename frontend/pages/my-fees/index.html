@@ -78,7 +78,7 @@
     <div class="card table-card">
       <div class="table-responsive">
         <table class="table table-hover mb-0 table-mobile-cards">
-          <thead><tr><th>Period</th><th>Iznos</th><th>Status</th><th>Dospijeće</th><th>Plaćeno dana</th><th>Napomene</th></tr></thead>
+          <thead><tr><th>Period</th><th>Iznos</th><th>Status</th><th>Rok uplate</th><th>Plaćeno dana</th><th>Napomene</th></tr></thead>
           <tbody id="tableBody">
             <tr><td colspan="6" class="p-2"><span class="skeleton sk-row"></span></td></tr>
             <tr><td colspan="6" class="p-2"><span class="skeleton sk-row"></span></td></tr>
@@ -134,7 +134,7 @@ function renderTable() {
       <td data-label="Period" class="small">${f.period_start ? fmtD(f.period_start) + ' - ' + fmtD(f.period_end) : '-'}</td>
       <td data-label="Iznos" class="fw-semibold">${fmt(f.amount)}</td>
       <td data-label="Status">${STATUS_BADGE[f.status] || f.status}</td>
-      <td data-label="Dospijeće" class="small">${fmtD(f.due_date)}</td>
+      <td data-label="Rok uplate" class="small">${fmtD(f.due_date)}</td>
       <td data-label="Plaćeno dana" class="small">${fmtD(f.paid_date)}</td>
       <td data-label="Napomene" class="small text-muted">${escHtml(f.notes) || '-'}</td>
     </tr>`).join('') || '<tr><td colspan="6" class="text-center text-muted py-3">Nema članarina</td></tr>';
