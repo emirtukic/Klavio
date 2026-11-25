@@ -468,7 +468,7 @@ textarea.form-control { resize: vertical; min-height: 100px; }
    MODALS
 ══════════════════════════════════════════ */
 .modal-backdrop { background: rgba(15,23,42,0.5); }
-.modal-backdrop.show { opacity: 1; backdrop-filter: blur(3px); }
+.modal-backdrop.show { opacity: 1; }
 .modal.fade .modal-dialog {
   transform: scale(0.97) translateY(-6px);
   transition: transform var(--t-base), opacity var(--t-base);
@@ -512,7 +512,6 @@ textarea.form-control { resize: vertical; min-height: 100px; }
   display: none;
   position: fixed; inset: 0;
   background: rgba(0,0,0,0.45); z-index: 1040;
-  backdrop-filter: blur(3px);
   transition: opacity var(--t-base);
 }
 .sidebar-overlay.active { display: block; }
