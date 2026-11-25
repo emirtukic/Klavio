@@ -428,6 +428,14 @@
   }
 
   /* ── Table ── */
+  function renderFinanceDescription(description) {
+    if (!description) return '-';
+    const tag = '[Član izbrisan]';
+    if (!description.includes(tag)) return escHtml(description);
+    const rest = description.replace(tag, '').trim();
+    return `${escHtml(rest)} <span class="text-danger fw-semibold">${escHtml(tag)}</span>`;
+  }
+
   function renderTable(entries) {
     const tbody = document.getElementById('tableBody');
     if (!entries.length) {
@@ -444,7 +452,7 @@
           </span>
         </td>
         <td data-label="Kategorija">${e.category || '-'}</td>
-        <td data-label="Opis" class="text-muted small">${e.description || '-'}</td>
+        <td data-label="Opis" class="text-muted small">${renderFinanceDescription(e.description)}</td>
         <td data-label="Iznos">
           <span class="fw-semibold ${e.type === 'income' ? 'text-success' : 'text-danger'}">
             ${e.type === 'expense' ? '-' : '+'}${parseFloat(e.amount || 0).toFixed(2)} KM
