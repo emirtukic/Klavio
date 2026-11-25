@@ -162,6 +162,14 @@ exports.update = async (req, res) => {
     if (status === 'paid' && fee && fee.status !== 'paid') {
       await autoAddIncome(fee, paid_date || new Date().toISOString().slice(0, 10), req.user.id);
     }
+    // Remove the linked income entry when a fee is reverted away from paid
+    // (e.g. back to pending/overdue) - it no longer represents real income.
+    if (status && status !== 'paid' && fee && fee.status === 'paid') {
+      await db.query(
+        'DELETE FROM finances WHERE club_id=? AND reference=?',
+        [fee.club_id, `CLN-${fee.id}`]
+      );
+    }
     // Keep the linked finance entry's amount in sync if an already-paid fee's amount is edited
     if (amount != null && fee && (fee.status === 'paid' || status === 'paid')) {
       await db.query(
