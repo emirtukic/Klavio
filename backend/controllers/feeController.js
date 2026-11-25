@@ -166,7 +166,7 @@ exports.markPaid = async (req, res) => {
 
     await db.query(
       `UPDATE membership_fees mf JOIN members m ON mf.member_id = m.id
-       SET mf.status="paid", mf.paid_date=CURDATE(), mf.payment_method=?
+       SET mf.status='paid', mf.paid_date=CURDATE(), mf.payment_method=?
        WHERE mf.id=? AND m.club_id=?`,
       [payment_method || 'cash', req.params.id, req.user.club_id]
     );
