@@ -1,6 +1,18 @@
 const db = require('../config/db');
 const { assertClubOwned } = require('../utils/clubScope');
 
+// A coach may only record/edit fees for members of the selection(s) they belong to.
+async function memberInCoachScope(req, memberId) {
+  if (req.user.role !== 'coach') return true;
+  const ids = req.user.selection_ids || [];
+  if (!ids.length) return false;
+  const [rows] = await db.query(
+    'SELECT 1 FROM member_selections WHERE member_id=? AND selection_id IN (?) LIMIT 1',
+    [memberId, ids]
+  );
+  return rows.length > 0;
+}
+
 exports.getAll = async (req, res) => {
   try {
     // A coach only sees fees for members of the selection(s) they belong to.
@@ -46,6 +58,8 @@ exports.getMemberFees = async (req, res) => {
 exports.create = async (req, res) => {
   const { member_id, amount, period_start, period_end, due_date, payment_method, notes } = req.body;
   try {
+    if (!(await assertClubOwned('members', member_id, req.user.club_id))) return res.status(404).json({ message: 'Član nije pronađen' });
+    if (!(await memberInCoachScope(req, member_id))) return res.status(403).json({ message: 'Nemate pristup ovom članu' });
     const [result] = await db.query(
       'INSERT INTO membership_fees (member_id, amount, period_start, period_end, due_date, payment_method, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
       [member_id, amount, period_start, period_end, due_date, payment_method, notes, req.user.id]
@@ -135,6 +149,7 @@ exports.update = async (req, res) => {
     );
     const fee = before[0];
     if (!fee) return res.status(404).json({ message: 'Članarina nije pronađena' });
+    if (!(await memberInCoachScope(req, fee.member_id))) return res.status(404).json({ message: 'Članarina nije pronađena' });
 
     await db.query(
       `UPDATE membership_fees mf JOIN members m ON mf.member_id = m.id
@@ -170,6 +185,7 @@ exports.markPaid = async (req, res) => {
     );
     const fee = before[0];
     if (!fee) return res.status(404).json({ message: 'Članarina nije pronađena' });
+    if (!(await memberInCoachScope(req, fee.member_id))) return res.status(404).json({ message: 'Članarina nije pronađena' });
 
     await db.query(
       `UPDATE membership_fees mf JOIN members m ON mf.member_id = m.id

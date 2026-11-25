@@ -78,7 +78,7 @@
 <script src="../../assets/js/api.js"></script>
 <script src="../../assets/js/utils.js"></script>
 <script>
-  const user = requireRole('super_admin', 'admin');
+  const user = requireRole('super_admin', 'admin', 'coach');
   setUserInfo(user); buildSidebar();
   async function loadMembers() {
     try {
