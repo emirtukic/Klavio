@@ -14,6 +14,9 @@ module.exports = async (req, res, next) => {
         `SELECT id, selection_id FROM ${table} WHERE user_id = ? AND club_id = ?`,
         [req.user.id, req.user.club_id]
       );
+      // The member/coach row is gone (account deleted) - the old token should
+      // stop working immediately instead of limping along with no selection.
+      if (!rows.length) return res.status(401).json({ message: 'Nalog više ne postoji' });
       req.user.selection_id = rows[0]?.selection_id ?? null;
 
       // selection_ids = primary + any additional selections this person was
