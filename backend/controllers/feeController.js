@@ -147,6 +147,13 @@ exports.update = async (req, res) => {
     if (status === 'paid' && fee && fee.status !== 'paid') {
       await autoAddIncome(fee, paid_date || new Date().toISOString().slice(0, 10), req.user.id);
     }
+    // Keep the linked finance entry's amount in sync if an already-paid fee's amount is edited
+    if (amount != null && fee && (fee.status === 'paid' || status === 'paid')) {
+      await db.query(
+        'UPDATE finances SET amount=? WHERE club_id=? AND reference=?',
+        [amount, fee.club_id, `CLN-${fee.id}`]
+      );
+    }
 
     res.json({ message: 'Članarina ažurirana' });
   } catch (err) {
@@ -202,6 +209,12 @@ async function autoAddIncome(fee, date, userId) {
 
 exports.remove = async (req, res) => {
   try {
+    // Delete the linked income entry too, so a deleted fee doesn't keep
+    // inflating the Finansije total forever.
+    await db.query(
+      'DELETE FROM finances WHERE club_id = ? AND reference = ?',
+      [req.user.club_id, `CLN-${req.params.id}`]
+    );
     await db.query(
       'DELETE mf FROM membership_fees mf JOIN members m ON mf.member_id = m.id WHERE mf.id = ? AND m.club_id = ?',
       [req.params.id, req.user.club_id]
