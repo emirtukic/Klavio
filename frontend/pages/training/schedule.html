@@ -419,12 +419,6 @@ async function unmarkCompleted(id) {
 }
 
 /* ── Edit ── */
-function toDateInputValue(d) {
-  if (!d) return '';
-  const dt = new Date(d);
-  const y = dt.getFullYear(), m = String(dt.getMonth() + 1).padStart(2, '0'), day = String(dt.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
 function openEditSession(id) {
   const s = allSessions.find(x => x.id === id);
   if (!s) return;

@@ -429,8 +429,8 @@
     document.getElementById('editMemberPhone').value = m.phone || '';
     document.getElementById('editMemberStatus').value = m.status || 'active';
     document.getElementById('editMemberNumber').value  = m.membership_number || '';
-    document.getElementById('editMemberJoinDate').value = m.join_date ? m.join_date.slice(0, 10) : '';
-    document.getElementById('editMemberDob').value     = m.date_of_birth ? m.date_of_birth.slice(0, 10) : '';
+    document.getElementById('editMemberJoinDate').value = toDateInputValue(m.join_date);
+    document.getElementById('editMemberDob').value     = toDateInputValue(m.date_of_birth);
     document.getElementById('editMemberPosition').value = m.position || '';
     document.getElementById('editMemberJersey').value  = m.jersey_number || '';
     document.getElementById('editMemberAddress').value = m.address || '';

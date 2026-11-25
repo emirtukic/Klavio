@@ -511,8 +511,8 @@ function quickEditFee(id) {
   document.getElementById('editFeeId').value     = id;
   document.getElementById('editFeeAmount').value = parseFloat(f.amount).toFixed(2);
   document.getElementById('editFeeStatus').value = f.status;
-  document.getElementById('editFeeDueDate').value  = f.due_date  ? f.due_date.slice(0,10)  : '';
-  document.getElementById('editFeePaidDate').value = f.paid_date ? f.paid_date.slice(0,10) : '';
+  document.getElementById('editFeeDueDate').value  = toDateInputValue(f.due_date);
+  document.getElementById('editFeePaidDate').value = toDateInputValue(f.paid_date);
   new bootstrap.Modal(document.getElementById('feeEditModal')).show();
 }
 async function saveQuickEditFee() {

@@ -12,6 +12,17 @@ function formatDateTime(d) {
   if (!d) return '-';
   return new Date(d).toLocaleString('bs-BA');
 }
+// A DATE column comes back as e.g. "2026-11-24T23:00:00.000Z" (midnight local
+// time, shifted to UTC) - slicing the first 10 characters reads the UTC date
+// and shows the day before. Re-parse and read the local calendar date instead
+// (this only lines up when server and browser share a timezone, true for this
+// single-country app) before putting a value into an <input type="date">.
+function toDateInputValue(d) {
+  if (!d) return '';
+  const dt = new Date(d);
+  const y = dt.getFullYear(), m = String(dt.getMonth() + 1).padStart(2, '0'), day = String(dt.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
 function statusBadge(status) {
   const map = {
     active: 'badge-active', inactive: 'badge-inactive', suspended: 'badge-suspended',

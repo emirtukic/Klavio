@@ -13,6 +13,10 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
   <link href="../../assets/css/style.css" rel="stylesheet">
   <style>
+    .event-modal-table th, .event-modal-table td { padding: 0.55rem 0.5rem; vertical-align: top; }
+    .event-modal-table tr:not(:last-child) th, .event-modal-table tr:not(:last-child) td { border-bottom: 1px solid #f1f5f9; }
+    [data-theme="dark"] .event-modal-table tr:not(:last-child) th, [data-theme="dark"] .event-modal-table tr:not(:last-child) td { border-color: #334155; }
+
     .cal-nav { display: flex; align-items: center; gap: 1rem; }
     .cal-nav-btn {
       background: #fff; border: 1px solid #e2e8f0; border-radius: 8px;
@@ -144,14 +148,14 @@
 <!-- Event detail modal -->
 <div class="modal fade" id="eventModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header" id="eventModalHeader">
-        <h5 class="modal-title" id="eventModalTitle"></h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+    <div class="modal-content" style="border-radius:14px;overflow:hidden;">
+      <div class="modal-header border-0" id="eventModalHeader">
+        <h5 class="modal-title fw-bold" id="eventModalTitle"></h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body" id="eventModalBody"></div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Zatvori</button>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Zatvori</button>
       </div>
     </div>
   </div>
@@ -346,11 +350,10 @@
   }
 
   // ── Event detail modal ──
-  function openEventModal(idx) {
+  async function openEventModal(idx) {
     const e = allEvents[idx];
     if (!e) return;
     const typeColors = { training:'primary', match:'danger', appointment:'success' };
-    const typeLabels = { training:'Trening', match:'Utakmica', appointment:'Termin' };
     const color = typeColors[e.type] || 'secondary';
 
     const header = document.getElementById('eventModalHeader');
@@ -359,36 +362,69 @@
     document.getElementById('eventModalTitle').innerHTML =
       `<i class="bi bi-${typeIcons[e.type]} me-2"></i>${escHtml(e.title)}`;
 
-    let body = `<table class="table table-sm table-borderless mb-0">`;
-    body += row('Datum', formatDate(e.date));
-    if (e.time) body += row('Vrijeme', formatTime(e.time));
+    let body = `<table class="table table-sm table-borderless mb-0 event-modal-table">`;
+    body += row('calendar-event', 'Datum', formatDate(e.date));
+    if (e.time) body += row('clock', 'Vrijeme', formatTime(e.time));
 
     if (e.type === 'training') {
       const r = e.raw;
-      if (r.end_time)  body += row('Kraj', formatTime(r.end_time));
-      if (r.location)  body += row('Lokacija', escHtml(r.location));
-      if (r.status)    body += row('Status', statusBadge(r.status));
-      if (r.member_note) body += row('Napomena', escHtml(r.member_note).replace(/\n/g, '<br>'));
+      if (r.end_time)  body += row('clock-history', 'Kraj', formatTime(r.end_time));
+      if (r.location)  body += row('geo-alt', 'Lokacija', escHtml(r.location));
+      if (r.coach_name) body += row('person-badge', 'Trener', escHtml(r.coach_name));
+      if (r.selection_name) body += row('people', 'Selekcija', escHtml(r.selection_name));
+      if (r.status)    body += row('flag', 'Status', statusBadge(r.status));
+      if (r.description) body += row('card-text', 'Opis', escHtml(r.description).replace(/\n/g, '<br>'));
+      if (r.member_note) body += row('journal-text', 'Napomena', escHtml(r.member_note).replace(/\n/g, '<br>'));
     } else if (e.type === 'match') {
       const r = e.raw;
-      if (r.match_type) body += row('Tip', statusBadge(r.match_type));
-      if (r.home_away)  body += row('Dom/Gost', statusBadge(r.home_away));
-      if (r.result)     body += row('Rezultat', `<strong>${escHtml(r.result)}</strong>`);
+      if (r.location)   body += row('geo-alt', 'Lokacija', escHtml(r.location));
+      if (r.match_type) body += row('award', 'Tip', statusBadge(r.match_type));
+      if (r.home_away)  body += row('house', 'Dom/Gost', statusBadge(r.home_away));
+      if (r.result && r.result !== 'pending') {
+        body += row('trophy', 'Rezultat', `<strong class="fs-6">${r.goals_for ?? 0} : ${r.goals_against ?? 0}</strong> ${statusBadge(r.result)}`);
+      } else {
+        body += row('hourglass-split', 'Rezultat', '<span class="text-muted">Nije odigrano</span>');
+      }
+      if (r.notes) body += row('journal-text', 'Napomena', escHtml(r.notes).replace(/\n/g, '<br>'));
+      body += `<tr id="eventScorersRow" class="d-none"></tr>`;
     } else if (e.type === 'appointment') {
       const r = e.raw;
-      if (r.end_time) body += row('Kraj', formatTime(r.end_time));
-      if (r.status)   body += row('Status', statusBadge(r.status));
+      if (r.end_time)    body += row('clock-history', 'Kraj', formatTime(r.end_time));
+      if (r.coach_name)  body += row('person-badge', 'Trener', escHtml(r.coach_name));
+      if (r.member_name) body += row('person', 'Član', escHtml(r.member_name));
+      if (r.status)      body += row('flag', 'Status', statusBadge(r.status));
+      if (r.notes)       body += row('journal-text', 'Napomena', escHtml(r.notes).replace(/\n/g, '<br>'));
     }
 
     body += `</table>`;
     document.getElementById('eventModalBody').innerHTML = body;
     new bootstrap.Modal(document.getElementById('eventModal')).show();
+
+    // Goal scorers - fetched separately since it's a different endpoint;
+    // only meaningful once the match has an actual result.
+    if (e.type === 'match' && e.raw.result && e.raw.result !== 'pending') {
+      try {
+        const stats = await apiGet('/stats/match/' + e.raw.id);
+        const scorers = (stats || []).filter(s => s.goals > 0)
+          .sort((a, b) => b.goals - a.goals)
+          .map(s => `${escHtml(s.name)} (${s.goals})`);
+        const scorersRow = document.getElementById('eventScorersRow');
+        if (scorersRow && scorers.length) {
+          scorersRow.outerHTML = row('bullseye', 'Golovi', scorers.join(', '));
+        } else if (scorersRow) {
+          scorersRow.remove();
+        }
+      } catch (_) {
+        const scorersRow = document.getElementById('eventScorersRow');
+        if (scorersRow) scorersRow.remove();
+      }
+    }
   }
 
   const typeIcons = { training:'calendar3', match:'trophy', appointment:'calendar-check' };
 
-  function row(label, value) {
-    return `<tr><th class="text-muted fw-normal" style="width:110px">${label}</th><td>${value}</td></tr>`;
+  function row(icon, label, value) {
+    return `<tr><th class="text-muted fw-normal" style="width:130px"><i class="bi bi-${icon} me-2"></i>${label}</th><td>${value}</td></tr>`;
   }
 
   // ── Navigation ──

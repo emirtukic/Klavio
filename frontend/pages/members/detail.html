@@ -505,8 +505,8 @@
     document.getElementById('editMemberPhone').value   = memberData.phone || '';
     document.getElementById('editMemberStatus').value  = memberData.status || 'active';
     document.getElementById('editMemberNumber').value  = memberData.membership_number || '';
-    document.getElementById('editMemberJoinDate').value = memberData.join_date ? memberData.join_date.slice(0, 10) : '';
-    document.getElementById('editMemberDob').value     = memberData.date_of_birth ? memberData.date_of_birth.slice(0, 10) : '';
+    document.getElementById('editMemberJoinDate').value = toDateInputValue(memberData.join_date);
+    document.getElementById('editMemberDob').value     = toDateInputValue(memberData.date_of_birth);
     document.getElementById('editMemberPosition').value = memberData.position || '';
     document.getElementById('editMemberJersey').value  = memberData.jersey_number || '';
     document.getElementById('editMemberAddress').value = memberData.address || '';
