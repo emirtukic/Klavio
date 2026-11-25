@@ -368,6 +368,7 @@
       if (r.end_time)  body += row('Kraj', formatTime(r.end_time));
       if (r.location)  body += row('Lokacija', escHtml(r.location));
       if (r.status)    body += row('Status', statusBadge(r.status));
+      if (r.member_note) body += row('Napomena', escHtml(r.member_note).replace(/\n/g, '<br>'));
     } else if (e.type === 'match') {
       const r = e.raw;
       if (r.match_type) body += row('Tip', statusBadge(r.match_type));

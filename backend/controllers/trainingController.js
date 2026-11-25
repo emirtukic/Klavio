@@ -61,7 +61,7 @@ exports.getOne = async (req, res) => {
 };
 
 exports.create = async (req, res) => {
-  const { title, description, location, session_date, start_time, end_time, max_participants, coach_id, selection_id } = req.body;
+  const { title, description, location, session_date, start_time, end_time, max_participants, coach_id, selection_id, member_note } = req.body;
   const club_id = req.user.club_id;
   try {
     let coachId = coach_id;
@@ -76,8 +76,8 @@ exports.create = async (req, res) => {
       selId = (selection_id && ids.includes(Number(selection_id))) ? Number(selection_id) : coaches[0].selection_id;
     }
     const [result] = await db.query(
-      'INSERT INTO training_sessions (coach_id, title, description, location, session_date, start_time, end_time, max_participants, club_id, selection_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [coachId, title, description, location, session_date, start_time, end_time, max_participants || 20, club_id, selId]
+      'INSERT INTO training_sessions (coach_id, title, description, member_note, location, session_date, start_time, end_time, max_participants, club_id, selection_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [coachId, title, description, member_note || null, location, session_date, start_time, end_time, max_participants || 20, club_id, selId]
     );
     notifyTrainingCreated(
       { title, description, location, session_date, start_time, end_time },
@@ -90,9 +90,9 @@ exports.create = async (req, res) => {
 };
 
 exports.update = async (req, res) => {
-  const { title, description, location, session_date, start_time, end_time, max_participants, status } = req.body;
-  const params = [title, description, location, session_date, start_time, end_time, max_participants, status, req.params.id, req.user.club_id];
-  const sql = 'UPDATE training_sessions SET title=COALESCE(?,title), description=COALESCE(?,description), location=COALESCE(?,location), session_date=COALESCE(?,session_date), start_time=COALESCE(?,start_time), end_time=COALESCE(?,end_time), max_participants=COALESCE(?,max_participants), status=COALESCE(?,status) WHERE id=? AND club_id=?';
+  const { title, description, member_note, location, session_date, start_time, end_time, max_participants, status } = req.body;
+  const params = [title, description, member_note, location, session_date, start_time, end_time, max_participants, status, req.params.id, req.user.club_id];
+  const sql = 'UPDATE training_sessions SET title=COALESCE(?,title), description=COALESCE(?,description), member_note=COALESCE(?,member_note), location=COALESCE(?,location), session_date=COALESCE(?,session_date), start_time=COALESCE(?,start_time), end_time=COALESCE(?,end_time), max_participants=COALESCE(?,max_participants), status=COALESCE(?,status) WHERE id=? AND club_id=?';
   try {
     // A coach can only edit their own sessions, not every team's.
     if (req.user.role === 'coach') {
