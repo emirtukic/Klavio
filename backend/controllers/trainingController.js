@@ -91,11 +91,18 @@ exports.create = async (req, res) => {
 
 exports.update = async (req, res) => {
   const { title, description, location, session_date, start_time, end_time, max_participants, status } = req.body;
+  const params = [title, description, location, session_date, start_time, end_time, max_participants, status, req.params.id, req.user.club_id];
+  const sql = 'UPDATE training_sessions SET title=COALESCE(?,title), description=COALESCE(?,description), location=COALESCE(?,location), session_date=COALESCE(?,session_date), start_time=COALESCE(?,start_time), end_time=COALESCE(?,end_time), max_participants=COALESCE(?,max_participants), status=COALESCE(?,status) WHERE id=? AND club_id=?';
   try {
-    await db.query(
-      'UPDATE training_sessions SET title=COALESCE(?,title), description=COALESCE(?,description), location=COALESCE(?,location), session_date=COALESCE(?,session_date), start_time=COALESCE(?,start_time), end_time=COALESCE(?,end_time), max_participants=COALESCE(?,max_participants), status=COALESCE(?,status) WHERE id=? AND club_id=?',
-      [title, description, location, session_date, start_time, end_time, max_participants, status, req.params.id, req.user.club_id]
-    );
+    // A coach can only edit their own sessions, not every team's.
+    if (req.user.role === 'coach') {
+      const [coaches] = await db.query('SELECT id FROM coaches WHERE user_id = ? AND club_id = ?', [req.user.id, req.user.club_id]);
+      const coachId = coaches[0]?.id;
+      const [result] = await db.query(sql + ' AND coach_id=?', [...params, coachId]);
+      if (!result.affectedRows) return res.status(404).json({ message: 'Trening nije pronađen' });
+    } else {
+      await db.query(sql, params);
+    }
     res.json({ message: 'Trening ažuriran' });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });

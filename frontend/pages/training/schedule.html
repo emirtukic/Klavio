@@ -315,6 +315,7 @@ function renderTable() {
       <td data-label="Prisustvo / RSVP">${attendanceCell}</td>
       <td data-label="Status">${statusBadge(s.status)}</td>
       <td>
+        ${canManage && s.status === 'scheduled' ? `<button class="btn btn-sm btn-outline-success me-1" onclick="markCompleted(${s.id})" title="Označi kao završen"><i class="bi bi-check2-circle"></i></button>` : ''}
         ${canManage ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteSession(${s.id})" title="Obriši"><i class="bi bi-trash"></i></button>` : ''}
       </td>
     </tr>`;
@@ -326,6 +327,12 @@ function resetFilters() {
   ['fSearch','fFrom','fTo'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('fStatus').value = '';
   renderTable();
+}
+
+/* ── Mark completed ── */
+async function markCompleted(id) {
+  try { await apiPut('/training/' + id, { status: 'completed' }); showToast('Trening označen kao završen', 'success'); load(); }
+  catch(e) { showToast(e.message, 'error'); }
 }
 
 /* ── Delete ── */
