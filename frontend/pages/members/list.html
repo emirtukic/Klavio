@@ -262,10 +262,11 @@
     const to = document.getElementById('fJoinTo').value;
     return allMembers.filter(m => {
       const jd = (m.join_date || '').slice(0,10);
+      const memberSelIds = (m.selection_ids || '').split(',').filter(Boolean);
       return (
         (!q  || (m.name||'').toLowerCase().includes(q) || (m.email||'').toLowerCase().includes(q) || (m.membership_number||'').toLowerCase().includes(q)) &&
         (!st || m.status === st) &&
-        (!sl || String(m.selection_id) === sl) &&
+        (!sl || memberSelIds.includes(sl)) &&
         (!fr || jd >= fr) &&
         (!to || jd <= to)
       );
@@ -285,7 +286,7 @@
 
     const colCount = canEdit ? 9 : 8;
     document.getElementById('tableBody').innerHTML = page.length ? page.map(m => {
-      const selName = allSelections.find(s => s.id === m.selection_id)?.name || '-';
+      const selName = m.selection_names || '-';
       const checked = selectedIds.has(m.id) ? 'checked' : '';
       const rowSel  = selectedIds.has(m.id) ? 'row-selected' : '';
       return `<tr class="${rowSel}" id="row-${m.id}">

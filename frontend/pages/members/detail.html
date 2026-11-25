@@ -587,7 +587,7 @@
       document.getElementById('mPosition').textContent  = m.position || '-';
       document.getElementById('mJersey').textContent    = m.jersey_number || '-';
       document.getElementById('mJoined').textContent    = formatDate(m.join_date);
-      document.getElementById('mSelection').textContent = m.selection_name || m.selection || '-';
+      document.getElementById('mSelection').textContent = m.selection_names || '-';
       document.getElementById('mAddress').textContent   = m.address || '-';
       renderAvatarEl(document.getElementById('profileAvatarWrap'), m.avatar_url || null, m.name);
 
