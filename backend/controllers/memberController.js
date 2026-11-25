@@ -123,7 +123,7 @@ exports.create = async (req, res) => {
 };
 
 exports.update = async (req, res) => {
-  const { name, email, phone, date_of_birth, address, status, is_active, position, jersey_number, selection_id } = req.body;
+  const { name, email, phone, date_of_birth, address, status, is_active, position, jersey_number, selection_id, membership_number, join_date } = req.body;
   // Only ever assign a selection that actually belongs to this admin's own club.
   let safeSelId = null;
   if (selection_id) {
@@ -141,8 +141,8 @@ exports.update = async (req, res) => {
       [name, email, is_active, members[0].user_id]
     );
     await conn.query(
-      'UPDATE members SET phone=COALESCE(?,phone), date_of_birth=COALESCE(?,date_of_birth), address=COALESCE(?,address), status=COALESCE(?,status), position=COALESCE(?,position), jersey_number=COALESCE(?,jersey_number), selection_id=? WHERE id=?',
-      [phone, date_of_birth, address, status, position||null, jersey_number||null, safeSelId, req.params.id]
+      'UPDATE members SET phone=COALESCE(?,phone), date_of_birth=COALESCE(?,date_of_birth), address=COALESCE(?,address), status=COALESCE(?,status), position=COALESCE(?,position), jersey_number=COALESCE(?,jersey_number), membership_number=COALESCE(?,membership_number), join_date=COALESCE(?,join_date), selection_id=? WHERE id=?',
+      [phone, date_of_birth, address, status, position||null, jersey_number||null, membership_number||null, join_date||null, safeSelId, req.params.id]
     );
     // Setting a primary selection always ensures membership in it too; it
     // never removes any other (additional) selections assigned elsewhere.
@@ -153,6 +153,9 @@ exports.update = async (req, res) => {
     res.json({ message: 'Član ažuriran' });
   } catch (err) {
     await conn.rollback();
+    if (err.code === 'ER_DUP_ENTRY') {
+      return res.status(400).json({ message: 'E-mail ili broj članske karte već postoji' });
+    }
     res.status(500).json({ message: 'Server error' });
   } finally {
     conn.release();
