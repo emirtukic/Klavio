@@ -192,10 +192,21 @@ exports.bulkAction = async (req, res) => {
       }
     } else if (action === 'delete') {
       const [members] = await db.query(
-        `SELECT user_id FROM members WHERE id IN (${placeholders}) AND club_id = ?`,
+        `SELECT id, user_id FROM members WHERE id IN (${placeholders}) AND club_id = ?`,
         [...ids, req.user.club_id]
       );
+      const memberIds = members.map(m => m.id);
       const userIds = members.map(m => m.user_id);
+      if (memberIds.length) {
+        // Same tagging as the single-member delete, before the cascade removes the fees.
+        await db.query(
+          `UPDATE finances f
+           JOIN membership_fees mf ON f.reference = CONCAT('CLN-', mf.id)
+           SET f.description = CONCAT(f.description, ' [Član izbrisan]')
+           WHERE mf.member_id IN (${memberIds.map(()=>'?').join(',')}) AND f.club_id = ? AND f.description NOT LIKE '%[Član izbrisan]%'`,
+          [...memberIds, req.user.club_id]
+        );
+      }
       if (userIds.length) {
         await db.query(`DELETE FROM users WHERE id IN (${userIds.map(()=>'?').join(',')})`, userIds);
       }
@@ -213,6 +224,15 @@ exports.remove = async (req, res) => {
   try {
     const [members] = await db.query('SELECT user_id FROM members WHERE id = ? AND club_id = ?', [req.params.id, req.user.club_id]);
     if (!members.length) return res.status(404).json({ message: 'Član nije pronađen' });
+    // Tag any finance income entries tied to this member's fees before the
+    // cascade deletes the fees themselves, so the paid history stays readable.
+    await db.query(
+      `UPDATE finances f
+       JOIN membership_fees mf ON f.reference = CONCAT('CLN-', mf.id)
+       SET f.description = CONCAT(f.description, ' [Član izbrisan]')
+       WHERE mf.member_id = ? AND f.club_id = ? AND f.description NOT LIKE '%[Član izbrisan]%'`,
+      [req.params.id, req.user.club_id]
+    );
     await db.query('DELETE FROM users WHERE id = ?', [members[0].user_id]);
     res.json({ message: 'Član obrisan' });
   } catch (err) {
