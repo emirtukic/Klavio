@@ -274,3 +274,120 @@ exports.getStats = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+function toSqlDate(d) {
+  const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+// If the period is exactly a calendar month, shifting it forward should land
+// on the next calendar month (whatever its length) rather than a fixed day
+// count - most clubs generate fees per full month.
+function shiftPeriod(start, end) {
+  const s = new Date(start), e = new Date(end);
+  const isFullMonth = s.getDate() === 1 &&
+    e.getFullYear() === new Date(s.getFullYear(), s.getMonth() + 1, 0).getFullYear() &&
+    e.getMonth() === new Date(s.getFullYear(), s.getMonth() + 1, 0).getMonth() &&
+    e.getDate() === new Date(s.getFullYear(), s.getMonth() + 1, 0).getDate();
+
+  if (isFullMonth) {
+    const newStart = new Date(s.getFullYear(), s.getMonth() + 1, 1);
+    const newEnd = new Date(s.getFullYear(), s.getMonth() + 2, 0);
+    return { start: toSqlDate(newStart), end: toSqlDate(newEnd) };
+  }
+  const periodDays = Math.round((e - s) / 86400000);
+  const newStart = new Date(s); newStart.setDate(newStart.getDate() + periodDays + 1);
+  const newEnd = new Date(e); newEnd.setDate(newEnd.getDate() + periodDays + 1);
+  return { start: toSqlDate(newStart), end: toSqlDate(newEnd) };
+}
+
+exports.getLastPeriod = async (req, res) => {
+  try {
+    const ids = req.user.selection_ids || [];
+    const coachFilter = req.user.role === 'coach'
+      ? (ids.length ? ' AND EXISTS (SELECT 1 FROM member_selections ms WHERE ms.member_id=m.id AND ms.selection_id IN (?))' : ' AND 1=0')
+      : '';
+    const params = [req.user.club_id];
+    if (req.user.role === 'coach' && ids.length) params.push(ids);
+    const [[last]] = await db.query(`
+      SELECT mf.period_start, mf.period_end, COUNT(*) as fee_count, COALESCE(SUM(mf.amount),0) as total_amount
+      FROM membership_fees mf JOIN members m ON mf.member_id = m.id
+      WHERE m.club_id = ?${coachFilter}
+      GROUP BY mf.period_start, mf.period_end
+      ORDER BY mf.period_end DESC
+      LIMIT 1
+    `, params);
+    if (!last) return res.json(null);
+    const next = shiftPeriod(last.period_start, last.period_end);
+    res.json({
+      period_start: toSqlDate(new Date(last.period_start)),
+      period_end: toSqlDate(new Date(last.period_end)),
+      fee_count: last.fee_count,
+      total_amount: parseFloat(last.total_amount),
+      next_period_start: next.start,
+      next_period_end: next.end,
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.duplicateLastPeriod = async (req, res) => {
+  const { due_date } = req.body;
+  if (!due_date) return res.status(400).json({ message: 'Datum dospijeća je obavezan' });
+  try {
+    const ids = req.user.selection_ids || [];
+    const coachFilter = req.user.role === 'coach'
+      ? (ids.length ? ' AND EXISTS (SELECT 1 FROM member_selections ms WHERE ms.member_id=m.id AND ms.selection_id IN (?))' : ' AND 1=0')
+      : '';
+    const scopeParams = [req.user.club_id];
+    if (req.user.role === 'coach' && ids.length) scopeParams.push(ids);
+
+    const [[last]] = await db.query(`
+      SELECT mf.period_start, mf.period_end
+      FROM membership_fees mf JOIN members m ON mf.member_id = m.id
+      WHERE m.club_id = ?${coachFilter}
+      GROUP BY mf.period_start, mf.period_end
+      ORDER BY mf.period_end DESC
+      LIMIT 1
+    `, scopeParams);
+    if (!last) return res.json({ created: 0, skipped: 0, message: 'Nema prethodnih članarina za dupliranje' });
+
+    const sourceParams = [last.period_start, last.period_end, req.user.club_id];
+    if (req.user.role === 'coach' && ids.length) sourceParams.push(ids);
+    const [sourceFees] = await db.query(`
+      SELECT mf.member_id, mf.amount, mf.notes
+      FROM membership_fees mf JOIN members m ON mf.member_id = m.id
+      WHERE mf.period_start=? AND mf.period_end=? AND m.club_id=?${coachFilter}
+    `, sourceParams);
+    if (!sourceFees.length) return res.json({ created: 0, skipped: 0, message: 'Nema članarina u prethodnom periodu' });
+
+    const { start: newPeriodStart, end: newPeriodEnd } = shiftPeriod(last.period_start, last.period_end);
+
+    // Don't duplicate onto a member who already has a fee overlapping the new period.
+    const memberIds = sourceFees.map(f => f.member_id);
+    const [existing] = await db.query(
+      `SELECT DISTINCT member_id FROM membership_fees WHERE member_id IN (?) AND period_start <= ? AND period_end >= ?`,
+      [memberIds, newPeriodEnd, newPeriodStart]
+    );
+    const existingIds = new Set(existing.map(e => e.member_id));
+    const toCreate = sourceFees.filter(f => !existingIds.has(f.member_id));
+
+    if (toCreate.length) {
+      const values = toCreate.map(f => [f.member_id, f.amount, newPeriodStart, newPeriodEnd, due_date, null, f.notes, req.user.id]);
+      await db.query(
+        'INSERT INTO membership_fees (member_id, amount, period_start, period_end, due_date, payment_method, notes, created_by) VALUES ?',
+        [values]
+      );
+    }
+    res.status(201).json({
+      created: toCreate.length,
+      skipped: sourceFees.length - toCreate.length,
+      period_start: newPeriodStart,
+      period_end: newPeriodEnd,
+    });
+  } catch (err) {
+    console.error('Fee duplicate error:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};

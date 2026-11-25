@@ -40,6 +40,9 @@
         <button class="btn btn-outline-success btn-sm" id="bulkGenerateBtn" data-bs-toggle="modal" data-bs-target="#bulkGenerateModal">
           <i class="bi bi-magic me-1"></i>Generiši za sve
         </button>
+        <button class="btn btn-outline-primary btn-sm" id="duplicateFeesBtn" onclick="openDuplicateModal()">
+          <i class="bi bi-copy me-1"></i>Dupliraj prošli mjesec
+        </button>
         <a href="add.html" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Dodaj</a>
       </div>
     </div>
@@ -221,6 +224,33 @@
         <button type="button" class="btn btn-success" id="bulkGenerateBtn" onclick="runBulkGenerate()">
           <span id="bulkGenerateSpinner" class="spinner-border spinner-border-sm d-none me-1"></span>
           Generiši
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Duplicate last period modal -->
+<div class="modal fade" id="duplicateFeesModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="border-radius:14px;overflow:hidden;">
+      <div class="modal-header border-0 pb-1">
+        <h5 class="modal-title fw-bold"><i class="bi bi-copy me-2"></i>Dupliraj prošli mjesec</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="duplicateInfo" class="small text-muted mb-3">Učitavanje...</div>
+        <div id="duplicateForm" class="d-none">
+          <p class="text-muted small">Kreira novu članarinu za svakog člana iz prethodnog perioda, sa istim iznosom. Članovi koji već imaju članarinu za novi period se preskaču.</p>
+          <label class="form-label">Datum dospijeća *</label>
+          <input type="date" class="form-control" id="dupDueDate" required>
+        </div>
+      </div>
+      <div class="modal-footer border-0 pt-1">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
+        <button type="button" class="btn btn-primary d-none" id="dupConfirmBtn" onclick="runDuplicateFees()">
+          <span id="dupSpinner" class="spinner-border spinner-border-sm d-none me-1"></span>
+          Dupliraj
         </button>
       </div>
     </div>
@@ -535,6 +565,44 @@ async function saveQuickEditFee() {
 
 /* ── Bulk generate ── */
 let pendingBulkPayload = null;
+
+/* ── Duplicate last period ── */
+let lastPeriodInfo = null;
+async function openDuplicateModal() {
+  document.getElementById('duplicateInfo').textContent = 'Učitavanje...';
+  document.getElementById('duplicateForm').classList.add('d-none');
+  document.getElementById('dupConfirmBtn').classList.add('d-none');
+  new bootstrap.Modal(document.getElementById('duplicateFeesModal')).show();
+  try {
+    lastPeriodInfo = await apiGet('/fees/last-period');
+    if (!lastPeriodInfo) {
+      document.getElementById('duplicateInfo').textContent = 'Nema prethodnih članarina za dupliranje.';
+      return;
+    }
+    document.getElementById('duplicateInfo').innerHTML =
+      `Prethodni period: <strong>${formatDate(lastPeriodInfo.period_start)} - ${formatDate(lastPeriodInfo.period_end)}</strong> ` +
+      `(${lastPeriodInfo.fee_count} članarina, ${lastPeriodInfo.total_amount.toFixed(2)} KM)<br>` +
+      `Novi period: <strong>${formatDate(lastPeriodInfo.next_period_start)} - ${formatDate(lastPeriodInfo.next_period_end)}</strong>`;
+    document.getElementById('duplicateForm').classList.remove('d-none');
+    document.getElementById('dupConfirmBtn').classList.remove('d-none');
+    document.getElementById('dupDueDate').value = lastPeriodInfo.next_period_end;
+  } catch(e) { document.getElementById('duplicateInfo').textContent = e.message; }
+}
+
+async function runDuplicateFees() {
+  const due_date = document.getElementById('dupDueDate').value;
+  if (!due_date) { showToast('Odaberite datum dospijeća', 'error'); return; }
+  const btn = document.getElementById('dupConfirmBtn');
+  const sp  = document.getElementById('dupSpinner');
+  btn.disabled = true; sp.classList.remove('d-none');
+  try {
+    const r = await apiPost('/fees/duplicate-last-month', { due_date });
+    bootstrap.Modal.getInstance(document.getElementById('duplicateFeesModal')).hide();
+    showToast(`Kreirano ${r.created}${r.skipped ? ', preskočeno ' + r.skipped + ' (već postoje)' : ''}`, 'success');
+    load();
+  } catch(e) { showToast(e.message, 'error'); }
+  finally { btn.disabled = false; sp.classList.add('d-none'); }
+}
 
 async function runBulkGenerate() {
   const amount      = parseFloat(document.getElementById('bgAmount').value);
