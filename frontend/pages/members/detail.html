@@ -370,42 +370,43 @@
             </div>
           </div>
         </div>
-
-        <!-- Upload modal -->
-        <div class="modal fade" id="docUploadModal" tabindex="-1">
-          <div class="modal-dialog modal-sm">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-cloud-upload me-2"></i>Dodaj dokument</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-              </div>
-              <div class="modal-body">
-                <div id="docAlert" class="alert alert-danger d-none small py-2"></div>
-                <div class="mb-3">
-                  <label class="form-label fw-semibold">Naziv dokumenta</label>
-                  <input type="text" class="form-control" id="docNameInput" placeholder="npr. Ugovor 2024">
-                </div>
-                <div class="mb-1">
-                  <label class="form-label fw-semibold">Fajl *</label>
-                  <input type="file" class="form-control" id="docFileInput"
-                    accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.gif,.webp,.txt,.csv,.zip">
-                  <div class="form-text">Maks 20 MB - PDF, Word, Excel, slike, ZIP</div>
-                </div>
-              </div>
-              <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
-                <button type="button" class="btn btn-primary" id="docSaveBtn" onclick="submitDocUpload()">
-                  <span id="docSpinner" class="spinner-border spinner-border-sm d-none me-1"></span>Upload
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
     </div><!-- /tab-content -->
   </div><!-- /page-body -->
 </div><!-- /main-content -->
+
+<!-- Upload modal - kept outside .main-content/tab structure; nested inside a
+     tab-pane it rendered fine but was entirely unclickable in some browsers. -->
+<div class="modal fade" id="docUploadModal" tabindex="-1">
+  <div class="modal-dialog modal-sm">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-cloud-upload me-2"></i>Dodaj dokument</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div id="docAlert" class="alert alert-danger d-none small py-2"></div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold">Naziv dokumenta</label>
+          <input type="text" class="form-control" id="docNameInput" placeholder="npr. Ugovor 2024">
+        </div>
+        <div class="mb-1">
+          <label class="form-label fw-semibold">Fajl *</label>
+          <input type="file" class="form-control" id="docFileInput"
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.gif,.webp,.txt,.csv,.zip">
+          <div class="form-text">Maks 20 MB - PDF, Word, Excel, slike, ZIP</div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
+        <button type="button" class="btn btn-primary" id="docSaveBtn" onclick="submitDocUpload()">
+          <span id="docSpinner" class="spinner-border spinner-border-sm d-none me-1"></span>Upload
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <div class="modal fade" id="memberEditModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
