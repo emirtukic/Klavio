@@ -114,6 +114,8 @@ CREATE TABLE IF NOT EXISTS training_sessions (
   end_time TIME NOT NULL,
   max_participants INT DEFAULT 20,
   status ENUM('scheduled','cancelled','completed') DEFAULT 'scheduled',
+  rsvp_locked TINYINT(1) NOT NULL DEFAULT 0,
+  attendance_locked TINYINT(1) NOT NULL DEFAULT 0,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (coach_id) REFERENCES coaches(id) ON DELETE SET NULL,
   FOREIGN KEY (club_id) REFERENCES clubs(id),

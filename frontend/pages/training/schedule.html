@@ -311,6 +311,7 @@ let allSessions = [];
 let myRsvpMap   = {};   // session_id -> 'yes'|'no'|'maybe'
 let attSessionId = null;
 let attMembers   = [];  // { id, name, status } for current modal
+let attLocked    = false;
 
 /* ── Boot ── */
 async function load() {
@@ -380,7 +381,11 @@ function renderTable() {
       }
     } else if (isMember) {
       const myStatus = myRsvpMap[s.id] || null;
-      attendanceCell = `
+      attendanceCell = s.rsvp_locked ? `
+        <div class="small text-muted"><i class="bi bi-lock-fill me-1"></i>RSVP zaključan</div>
+        <div class="small fw-semibold mt-1" style="color:${myStatus === 'yes' ? '#16a34a' : myStatus === 'no' ? '#dc2626' : myStatus === 'maybe' ? '#d97706' : '#94a3b8'}">
+          ${myStatus ? MY_RSVP_LABEL[myStatus] : ''}
+        </div>` : `
         <div>
           <div class="rsvp-group">
             <button class="rsvp-btn rsvp-yes ${myStatus === 'yes' ? 'active' : ''}"
@@ -418,6 +423,8 @@ function renderTable() {
         ${canManage ? `<button class="btn btn-sm btn-outline-secondary me-1" onclick="openEditSession(${s.id})" title="Uredi"><i class="bi bi-pencil"></i></button>` : ''}
         ${canManage && s.status === 'scheduled' ? `<button class="btn btn-sm btn-outline-success me-1" onclick="markCompleted(${s.id})" title="Označi kao završen"><i class="bi bi-check2-circle"></i></button>` : ''}
         ${canManage && s.status === 'completed' ? `<button class="btn btn-sm btn-outline-warning me-1" onclick="unmarkCompleted(${s.id})" title="Odznači završen"><i class="bi bi-arrow-counterclockwise"></i></button>` : ''}
+        ${canManage ? `<button class="btn btn-sm ${s.rsvp_locked ? 'btn-warning' : 'btn-outline-secondary'} me-1" onclick="toggleRsvpLock(${s.id}, ${s.rsvp_locked ? 0 : 1})" title="${s.rsvp_locked ? 'Otključaj RSVP' : 'Zaključaj RSVP'}"><i class="bi bi-${s.rsvp_locked ? 'lock-fill' : 'unlock'}"></i></button>` : ''}
+        ${canManage ? `<button class="btn btn-sm ${s.attendance_locked ? 'btn-warning' : 'btn-outline-secondary'} me-1" onclick="toggleAttendanceLock(${s.id}, ${s.attendance_locked ? 0 : 1})" title="${s.attendance_locked ? 'Otključaj prisustvo' : 'Zaključaj prisustvo'}"><i class="bi bi-${s.attendance_locked ? 'shield-lock-fill' : 'shield-lock'}"></i></button>` : ''}
         ${canManage ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteSession(${s.id})" title="Obriši"><i class="bi bi-trash"></i></button>` : ''}
       </td>
     </tr>`;
@@ -439,6 +446,22 @@ async function markCompleted(id) {
 async function unmarkCompleted(id) {
   try { await apiPut('/training/' + id, { status: 'scheduled' }); showToast('Trening vraćen u zakazano', 'success'); load(); }
   catch(e) { showToast(e.message, 'error'); }
+}
+
+async function toggleRsvpLock(id, lock) {
+  try {
+    await apiPut('/training/' + id, { rsvp_locked: lock });
+    showToast(lock ? 'RSVP zaključan - članovi više ne mogu mijenjati odgovor' : 'RSVP otključan', 'success');
+    load();
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function toggleAttendanceLock(id, lock) {
+  try {
+    await apiPut('/training/' + id, { attendance_locked: lock });
+    showToast(lock ? 'Prisustvo zaključano' : 'Prisustvo otključano', 'success');
+    load();
+  } catch(e) { showToast(e.message, 'error'); }
 }
 
 /* ── Edit ── */
@@ -536,6 +559,7 @@ async function applyRsvp(sessionId, status, btnEl, note) {
 async function openAttendance(sessionId) {
   attSessionId = sessionId;
   const s = allSessions.find(x => x.id === sessionId);
+  attLocked = !!s?.attendance_locked;
   document.getElementById('attModalTitle').textContent = 'Prisustvo - ' + (s?.title || '');
   document.getElementById('attModalSub').textContent   = formatDate(s?.session_date) + ' · ' + (s?.start_time || '') + ' - ' + (s?.end_time || '');
   document.getElementById('attMembersList').innerHTML  = '<div class="text-center py-4 text-muted"><div class="spinner-border spinner-border-sm me-2"></div>Učitavanje...</div>';
@@ -589,11 +613,14 @@ function renderAttendanceList() {
   const unmarked = attMembers.filter(m => !m.status).length;
 
   document.getElementById('attSummary').innerHTML = `
+    ${attLocked ? `<span class="att-sum-badge" style="background:#fef3c7;color:#92400e"><i class="bi bi-lock-fill me-1"></i>Prisustvo zaključano</span>` : ''}
     <span class="att-sum-badge" style="background:#dcfce7;color:#166534">${present} prisutnih</span>
     <span class="att-sum-badge" style="background:#fef9c3;color:#854d0e">${excused} opravdanih</span>
     <span class="att-sum-badge" style="background:#fee2e2;color:#991b1b">${absent} odsutnih</span>
     ${unmarked ? `<span class="att-sum-badge" style="background:#f1f5f9;color:#64748b">${unmarked} neoznačenih</span>` : ''}
   `;
+  document.getElementById('attSaveBtn').disabled = attLocked;
+  document.querySelectorAll('#attSummaryBar .btn').forEach(b => b.disabled = attLocked);
 
   const RSVP_BADGE = {
     yes:   '<span class="badge" style="background:#dcfce7;color:#166534;font-weight:600;">✓ Idem</span>',
@@ -610,15 +637,15 @@ function renderAttendanceList() {
       ${RSVP_BADGE[m.rsvp] || '<span class="text-muted small">Nije odgovorio/la</span>'}
       ${m.rsvp === 'no' && m.rsvpNote ? `<span class="text-muted small fst-italic" title="Razlog nedolaska">"${esc(m.rsvpNote)}"</span>` : ''}
       <div class="att-status-btns">
-        <button class="att-btn att-btn-p ${m.status === 'present' ? 'active' : ''}"
+        <button class="att-btn att-btn-p ${m.status === 'present' ? 'active' : ''}" ${attLocked ? 'disabled' : ''}
           onclick="setAttStatus(${i},'present',this)" title="Prisutan/na">
           <i class="bi bi-check2"></i>
         </button>
-        <button class="att-btn att-btn-e ${m.status === 'excused' ? 'active' : ''}"
+        <button class="att-btn att-btn-e ${m.status === 'excused' ? 'active' : ''}" ${attLocked ? 'disabled' : ''}
           onclick="setAttStatus(${i},'excused',this)" title="Opravdano">
           <i class="bi bi-dash-lg"></i>
         </button>
-        <button class="att-btn att-btn-a ${m.status === 'absent' ? 'active' : ''}"
+        <button class="att-btn att-btn-a ${m.status === 'absent' ? 'active' : ''}" ${attLocked ? 'disabled' : ''}
           onclick="setAttStatus(${i},'absent',this)" title="Odsutan/na">
           <i class="bi bi-x-lg"></i>
         </button>
@@ -627,16 +654,19 @@ function renderAttendanceList() {
 }
 
 function setAttStatus(idx, status, btnEl) {
+  if (attLocked) return;
   attMembers[idx].status = attMembers[idx].status === status ? null : status;
   renderAttendanceList();
 }
 
 function markAll(status) {
+  if (attLocked) return;
   attMembers.forEach(m => m.status = status);
   renderAttendanceList();
 }
 
 async function saveAttendance() {
+  if (attLocked) return;
   const spinner = document.getElementById('attSpinner');
   const btn     = document.getElementById('attSaveBtn');
   spinner.classList.remove('d-none');

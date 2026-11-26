@@ -1,5 +1,4 @@
 const db = require('../config/db');
-const { assertClubOwned } = require('../utils/clubScope');
 const { notifyTrainingCreated } = require('../services/matchNotificationService');
 
 function selScope(req) {
@@ -90,9 +89,9 @@ exports.create = async (req, res) => {
 };
 
 exports.update = async (req, res) => {
-  const { title, description, member_note, location, session_date, start_time, end_time, max_participants, status } = req.body;
-  const params = [title, description, member_note, location, session_date, start_time, end_time, max_participants, status, req.params.id, req.user.club_id];
-  const sql = 'UPDATE training_sessions SET title=COALESCE(?,title), description=COALESCE(?,description), member_note=COALESCE(?,member_note), location=COALESCE(?,location), session_date=COALESCE(?,session_date), start_time=COALESCE(?,start_time), end_time=COALESCE(?,end_time), max_participants=COALESCE(?,max_participants), status=COALESCE(?,status) WHERE id=? AND club_id=?';
+  const { title, description, member_note, location, session_date, start_time, end_time, max_participants, status, rsvp_locked, attendance_locked } = req.body;
+  const params = [title, description, member_note, location, session_date, start_time, end_time, max_participants, status, rsvp_locked, attendance_locked, req.params.id, req.user.club_id];
+  const sql = 'UPDATE training_sessions SET title=COALESCE(?,title), description=COALESCE(?,description), member_note=COALESCE(?,member_note), location=COALESCE(?,location), session_date=COALESCE(?,session_date), start_time=COALESCE(?,start_time), end_time=COALESCE(?,end_time), max_participants=COALESCE(?,max_participants), status=COALESCE(?,status), rsvp_locked=COALESCE(?,rsvp_locked), attendance_locked=COALESCE(?,attendance_locked) WHERE id=? AND club_id=?';
   try {
     // A coach can only edit their own sessions, not every team's.
     if (req.user.role === 'coach') {
@@ -129,7 +128,9 @@ exports.remove = async (req, res) => {
 exports.markAttendance = async (req, res) => {
   const { member_id, status } = req.body;
   try {
-    if (!(await assertClubOwned('training_sessions', req.params.id, req.user.club_id))) return res.status(404).json({ message: 'Trening nije pronađen' });
+    const [[session]] = await db.query('SELECT attendance_locked FROM training_sessions WHERE id=? AND club_id=?', [req.params.id, req.user.club_id]);
+    if (!session) return res.status(404).json({ message: 'Trening nije pronađen' });
+    if (session.attendance_locked) return res.status(403).json({ message: 'Prisustvo je zaključano za ovaj trening.' });
     await db.query(
       'INSERT INTO training_attendance (session_id, member_id, status) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE status=?',
       [req.params.id, member_id, status, status]

@@ -26,6 +26,10 @@ exports.setAvailability = async (req, res) => {
       [req.user.id]
     );
     if (!member) return res.status(404).json({ message: 'Niste član kluba' });
+    if (event_type === 'training') {
+      const [[session]] = await db.query('SELECT rsvp_locked FROM training_sessions WHERE id=? AND club_id=?', [event_id, member.club_id]);
+      if (session && session.rsvp_locked) return res.status(403).json({ message: 'RSVP je zaključan za ovaj trening.' });
+    }
     await db.query(`
       INSERT INTO member_availability (member_id, event_type, event_id, status, note)
       VALUES (?,?,?,?,?)
