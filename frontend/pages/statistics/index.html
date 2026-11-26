@@ -171,6 +171,11 @@
     <!-- Tabs (hidden for pure members who see personal card) -->
     <div id="tabsSection">
       <ul class="nav nav-tabs" id="statsTabs">
+        <li class="nav-item d-none" id="tabMyMatchesLi">
+          <button class="nav-link" data-tab="mymatches" onclick="switchTab('mymatches', this)">
+            <i class="bi bi-calendar-event me-1"></i>Utakmice
+          </button>
+        </li>
         <li class="nav-item">
           <button class="nav-link active" data-tab="scorers" onclick="switchTab('scorers', this)">
             <i class="bi bi-trophy me-1"></i>Strijelci
@@ -202,6 +207,33 @@
           placeholder="Pretraži igrača..." style="width:170px"
           oninput="applySearch()"
           autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly')">
+      </div>
+
+      <!-- Tab: Utakmice (member's own match-by-match list) -->
+      <div id="tab-mymatches" class="tab-pane-custom d-none">
+        <div class="card table-card">
+          <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <span class="fw-semibold"><i class="bi bi-calendar-event me-2 text-primary"></i>Utakmice na kojima si igrao/la</span>
+            <span class="text-muted small" id="myMatchesCount"></span>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover mb-0 table-mobile-cards">
+              <thead>
+                <tr>
+                  <th>Protivnik</th>
+                  <th>Datum</th>
+                  <th>Rezultat</th>
+                  <th>Minuti</th>
+                  <th>Golovi</th>
+                  <th>Asistencije</th>
+                  <th>Žuti</th>
+                  <th>Crveni</th>
+                </tr>
+              </thead>
+              <tbody id="myMatchesTable"></tbody>
+            </table>
+          </div>
+        </div>
       </div>
 
       <!-- Tab: Strijelci -->
@@ -609,10 +641,37 @@
           </div>
         </div>
       `).join('');
+
+      // My own match-by-match list - reuses the same data, no extra fetch.
+      renderMyMatches(data.stats || []);
+      const tabLi = document.getElementById('tabMyMatchesLi');
+      tabLi.classList.remove('d-none');
+      switchTab('mymatches', tabLi.querySelector('.nav-link'));
     } catch(e) {
       document.getElementById('memberStatCards').innerHTML =
         `<div class="col-12 text-muted small text-center py-2">Nema dostupnih podataka</div>`;
     }
+  }
+
+  function renderMyMatches(rows) {
+    const sorted = [...rows].sort((a, b) => new Date(b.match_date) - new Date(a.match_date));
+    document.getElementById('myMatchesCount').textContent = sorted.length + ' utakmica';
+    document.getElementById('myMatchesTable').innerHTML = sorted.length ? sorted.map(r => {
+      const played = r.goals > 0 || r.assists > 0 || r.yellow_cards > 0 || r.red_cards > 0 || r.minutes_played > 0 || r.started;
+      const resultLabel = { win: 'Pobjeda', loss: 'Poraz', draw: 'Remi' }[r.result] || '-';
+      const resultColor = { win: 'text-success', loss: 'text-danger', draw: 'text-warning' }[r.result] || 'text-muted';
+      return `
+        <tr role="button" onclick="window.location.href='../matches/detail.html?id=${r.match_id}'">
+          <td data-label="Protivnik" class="fw-semibold">${escHtml(r.opponent || '-')}</td>
+          <td data-label="Datum">${formatDate(r.match_date)}</td>
+          <td data-label="Rezultat" class="${resultColor}">${r.goals_for ?? '-'} : ${r.goals_against ?? '-'} <span class="small">(${resultLabel})</span></td>
+          <td data-label="Minuti">${r.minutes_played || (played ? 0 : '-')}</td>
+          <td data-label="Golovi" class="${r.goals > 0 ? 'fw-bold text-success' : ''}">${r.goals || 0}</td>
+          <td data-label="Asistencije" class="${r.assists > 0 ? 'fw-bold text-primary' : ''}">${r.assists || 0}</td>
+          <td data-label="Žuti" class="${r.yellow_cards > 0 ? 'fw-bold text-warning' : ''}">${r.yellow_cards || 0}</td>
+          <td data-label="Crveni" class="${r.red_cards > 0 ? 'fw-bold text-danger' : ''}">${r.red_cards || 0}</td>
+        </tr>`;
+    }).join('') : `<tr><td colspan="8" class="text-center text-muted py-4">Još nema odigranih utakmica.</td></tr>`;
   }
 
   /* ── Selection change (admin) ── */

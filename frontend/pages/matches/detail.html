@@ -325,6 +325,16 @@
 
   let matchData = null;
   let editModal = null;
+  let myMemberId = null;
+
+  async function getMyMemberId() {
+    if (user.role !== 'member') return null;
+    if (user.member_id) return user.member_id;
+    try {
+      const profile = await apiGet('/members/my-profile');
+      return profile.id;
+    } catch (_) { return null; }
+  }
 
   async function init() {
     editModal = new bootstrap.Modal(document.getElementById('editModal'));
@@ -332,7 +342,8 @@
       const [match, stats, lineup] = await Promise.all([
         apiGet('/matches/' + matchId),
         apiGet('/stats/match/' + matchId).catch(() => []),
-        apiGet('/lineup/' + matchId).catch(() => ({ players: [], formation: null }))
+        apiGet('/lineup/' + matchId).catch(() => ({ players: [], formation: null })),
+        getMyMemberId().then(id => { myMemberId = id; })
       ]);
       matchData = match;
       renderHero(match);
@@ -399,11 +410,14 @@
       return;
     }
     const sorted = [...arr].sort((a,b) => (b.is_starter||0) - (a.is_starter||0));
-    tbody.innerHTML = sorted.map(p => `<tr>
+    tbody.innerHTML = sorted.map(p => {
+      const isMe = myMemberId && p.member_id === myMemberId;
+      return `<tr class="${isMe ? 'table-primary' : ''}">
       <td data-label="Igrač">
         <div class="d-flex align-items-center gap-2">
           <span class="fw-semibold small">${p.name || '-'}</span>
           ${p.jersey_number ? `<span class="badge bg-secondary bg-opacity-15 text-secondary" style="font-size:.65rem;">#${p.jersey_number}</span>` : ''}
+          ${isMe ? `<span class="badge bg-primary" style="font-size:.65rem;">Ti</span>` : ''}
         </div>
         <div class="text-muted" style="font-size:.7rem;">${p.position || ''}</div>
       </td>
@@ -413,7 +427,8 @@
       <td data-label="Žuti" class="text-center"><span class="badge bg-warning text-dark">${p.yellow_cards || 0}</span></td>
       <td data-label="Crveni" class="text-center"><span class="badge bg-danger">${p.red_cards || 0}</span></td>
       <td data-label="Min" class="text-center text-muted small">${p.minutes_played || 0}'</td>
-    </tr>`).join('');
+    </tr>`;
+    }).join('');
   }
 
   function renderTopPerformers(stats) {
