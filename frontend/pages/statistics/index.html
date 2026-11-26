@@ -563,6 +563,21 @@
     return { isDark: dark, grid: dark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)', label: dark ? '#94a3b8' : '#64748b', tbg: dark ? 'rgba(51,65,85,0.97)' : 'rgba(15,23,42,0.88)' };
   }
 
+  /* ── MEMBER: resolve my own members.id ──
+     The login payload doesn't include it (user.member_id is always
+     undefined), so fall back to the member's own profile endpoint, which
+     does return it - and cache the result so this only runs once. ── */
+  let resolvedMemberId = null;
+  async function getMyMemberId() {
+    if (resolvedMemberId) return resolvedMemberId;
+    if (user.member_id) { resolvedMemberId = user.member_id; return resolvedMemberId; }
+    try {
+      const profile = await apiGet('/members/my-profile');
+      resolvedMemberId = profile.id;
+    } catch (_) {}
+    return resolvedMemberId;
+  }
+
   /* ── MEMBER: personal stats card ── */
   async function loadMemberPersonal() {
     document.getElementById('memberPersonalCard').classList.remove('d-none');
@@ -573,7 +588,7 @@
     // We show the personal summary card always, and filter tables below.
 
     try {
-      const memberId = user.member_id || user.id;
+      const memberId = await getMyMemberId();
       const data = await apiGet('/stats/player/' + memberId);
       const totals = data.totals || {};
 
@@ -626,7 +641,7 @@
       let scorers = Array.isArray(data.topScorers) ? data.topScorers : [];
 
       if (isMember) {
-        const memberId = user.member_id || user.id;
+        const memberId = await getMyMemberId();
         scorers = scorers.filter(s => s.member_id == memberId || s.player_id == memberId);
       }
 
@@ -724,7 +739,7 @@
       let rows = Array.isArray(data) ? data : (data.attendance || []);
 
       if (isMember) {
-        const memberId = user.member_id || user.id;
+        const memberId = await getMyMemberId();
         rows = rows.filter(r => r.member_id == memberId || r.id == memberId);
       }
 

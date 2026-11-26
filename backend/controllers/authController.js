@@ -42,6 +42,8 @@ exports.login = async (req, res) => {
     let selectionId = null;
     let selection = null;
     let selections = []; // every selection this person belongs to (primary + additional)
+    let memberId = null;
+    let coachId = null;
     if (user.role === 'coach' && user.club_id) {
       const [coachRows] = await db.query(
         'SELECT c.id, c.selection_id, s.name as selection_name FROM coaches c LEFT JOIN selections s ON c.selection_id = s.id WHERE c.user_id = ? AND c.club_id = ?',
@@ -52,6 +54,7 @@ exports.login = async (req, res) => {
         selection = { id: selectionId, name: coachRows[0].selection_name };
       }
       if (coachRows.length) {
+        coachId = coachRows[0].id;
         const [rows] = await db.query(
           'SELECT s.id, s.name FROM coach_selections cs JOIN selections s ON s.id = cs.selection_id WHERE cs.coach_id = ? ORDER BY s.name',
           [coachRows[0].id]
@@ -70,6 +73,7 @@ exports.login = async (req, res) => {
         selection = { id: selectionId, name: memberRows[0].selection_name };
       }
       if (memberRows.length) {
+        memberId = memberRows[0].id;
         const [rows] = await db.query(
           'SELECT s.id, s.name FROM member_selections ms JOIN selections s ON s.id = ms.selection_id WHERE ms.member_id = ? ORDER BY s.name',
           [memberRows[0].id]
@@ -86,7 +90,7 @@ exports.login = async (req, res) => {
 
     res.json({
       token,
-      user: { id: user.id, name: user.name, email: user.email, role: user.role, club_id: user.club_id || null, avatar_url: user.avatar_url || null },
+      user: { id: user.id, name: user.name, email: user.email, role: user.role, club_id: user.club_id || null, avatar_url: user.avatar_url || null, member_id: memberId, coach_id: coachId },
       club,
       selection,
       selections

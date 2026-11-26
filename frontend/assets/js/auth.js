@@ -178,8 +178,8 @@ function buildSidebar() {
     ? `<div style="font-size:0.7rem;opacity:0.5;font-weight:400;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(club.name)}</div>`
     : '';
   const selSub = selLabel
-    ? `<div style="font-size:0.65rem;opacity:0.4;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${escHtml(selLabel)}">${escHtml(selLabel)}</div>`
-    : '';
+    ? `<div id="sidebarSelSub" style="font-size:0.65rem;opacity:0.4;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${escHtml(selLabel)}">${escHtml(selLabel)}</div>`
+    : `<div id="sidebarSelSub"></div>`;
 
   // Pick nav config
   let items;
@@ -296,6 +296,19 @@ function buildSidebar() {
   if (collapsible) {
     const hasActiveInside = collapsible.querySelector('.nav-link.active');
     if (hasActiveInside) expandSection(collapsible);
+  }
+
+  // Keep the sidebar's selection label fresh - the cached login-time copy
+  // goes stale if an admin assigns this person to another selection later,
+  // since that only gets written to localStorage again at next login.
+  if ((user.role === 'coach' || user.role === 'member') && typeof apiGet === 'function') {
+    apiGet('/selections/mine').then(mine => {
+      if (!Array.isArray(mine) || !mine.length) return;
+      localStorage.setItem('selections', JSON.stringify(mine));
+      const label = mine.map(s => s.name).join(', ');
+      const el = document.getElementById('sidebarSelSub');
+      if (el) { el.textContent = label; el.title = label; }
+    }).catch(() => {});
   }
 }
 
