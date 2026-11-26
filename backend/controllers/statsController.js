@@ -35,6 +35,53 @@ exports.getPlayerStats = async (req, res) => {
   } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
 
+exports.getMemberTrainingAttendance = async (req, res) => {
+  try {
+    const memberId = req.params.memberId;
+    const [[member]] = await db.query('SELECT id FROM members WHERE id=? AND club_id=?', [memberId, req.user.club_id]);
+    if (!member) return res.status(404).json({ message: 'Član nije pronađen' });
+    const [selRows] = await db.query('SELECT selection_id FROM member_selections WHERE member_id=?', [memberId]);
+    const selIds = selRows.map(r => r.selection_id);
+    const selClause = selIds.length ? ' AND (ts.selection_id IN (?) OR ts.selection_id IS NULL)' : ' AND ts.selection_id IS NULL';
+    const params = [memberId, req.user.club_id];
+    if (selIds.length) params.push(selIds);
+    // Only sessions that have already happened count - an upcoming session
+    // with no attendance taken yet isn't a "missed" training.
+    const [sessions] = await db.query(`
+      SELECT ts.id, ts.title, ts.session_date, ta.status
+      FROM training_sessions ts
+      LEFT JOIN training_attendance ta ON ta.session_id = ts.id AND ta.member_id = ?
+      WHERE ts.club_id = ? AND ts.status != 'cancelled' AND ts.session_date <= NOW()${selClause}
+      ORDER BY ts.session_date DESC
+    `, params);
+    const marked = sessions.filter(s => s.status);
+    const present = marked.filter(s => s.status === 'present').length;
+    res.json({ sessions, pct: marked.length ? Math.round(present / marked.length * 100) : null });
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
+};
+
+exports.getMemberMatchAttendance = async (req, res) => {
+  try {
+    const memberId = req.params.memberId;
+    const [[member]] = await db.query('SELECT id FROM members WHERE id=? AND club_id=?', [memberId, req.user.club_id]);
+    if (!member) return res.status(404).json({ message: 'Član nije pronađen' });
+    const [selRows] = await db.query('SELECT selection_id FROM member_selections WHERE member_id=?', [memberId]);
+    const selIds = selRows.map(r => r.selection_id);
+    const selClause = selIds.length ? ' AND (m.selection_id IN (?) OR m.selection_id IS NULL)' : ' AND m.selection_id IS NULL';
+    const params = [memberId, req.user.club_id];
+    if (selIds.length) params.push(selIds);
+    const [matches] = await db.query(`
+      SELECT m.id, m.opponent, m.match_date, m.result, ps.started, ps.minutes_played
+      FROM matches m
+      LEFT JOIN player_stats ps ON ps.match_id = m.id AND ps.member_id = ?
+      WHERE m.club_id = ? AND m.result != 'pending'${selClause}
+      ORDER BY m.match_date DESC
+    `, params);
+    const played = matches.filter(m => m.started || (m.minutes_played || 0) > 0).length;
+    res.json({ matches, pct: matches.length ? Math.round(played / matches.length * 100) : null });
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
+};
+
 exports.getClubStats = async (req, res) => {
   try {
     const selId = resolveSelId(req);

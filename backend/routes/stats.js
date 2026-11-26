@@ -15,5 +15,7 @@ router.post('/match/:matchId',         auth, role('super_admin', 'admin', 'coach
 
 router.get('/overview',                auth, pro, ctrl.getOverview);
 router.get('/player/:memberId',        auth, pro, ctrl.getPlayerStats);
+router.get('/attendance/training/:memberId', auth, pro, ctrl.getMemberTrainingAttendance);
+router.get('/attendance/match/:memberId',    auth, pro, ctrl.getMemberMatchAttendance);
 
 module.exports = router;
