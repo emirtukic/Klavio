@@ -37,6 +37,7 @@
               <span class="text-muted small"><i class="bi bi-hash me-1"></i><span id="profileNumber">-</span></span>
               <span class="text-muted small"><i class="bi bi-person-badge me-1"></i><span id="profilePosition">-</span></span>
               <span class="text-muted small"><i class="bi bi-hash me-1"></i>Dres: <span id="profileJersey">-</span></span>
+              <span class="text-muted small"><i class="bi bi-layers me-1"></i><span id="profileSelections">-</span></span>
               <span id="profileStatusBadge"></span>
             </div>
           </div>
@@ -283,6 +284,7 @@
       document.getElementById('profileNumber').textContent  = profile.membership_number || '-';
       document.getElementById('profilePosition').textContent = profile.position || '-';
       document.getElementById('profileJersey').textContent  = profile.jersey_number || '-';
+      document.getElementById('profileSelections').textContent = profile.selection_names || '-';
       document.getElementById('profileStatusBadge').innerHTML = statusBadge(profile.status || 'active');
 
       const avatarEl = document.getElementById('profileAvatarWrap');

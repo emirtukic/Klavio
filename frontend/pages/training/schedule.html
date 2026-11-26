@@ -474,8 +474,15 @@ async function deleteSession(id) {
 const MY_RSVP_LABEL = { yes: '✓ Potvrđeno - ideš', maybe: '? Možda ideš', no: '✕ Prijavljeno - ne ideš' };
 const MY_RSVP_COLOR = { yes: '#16a34a', no: '#dc2626', maybe: '#d97706' };
 async function setRsvp(sessionId, status, btnEl) {
+  let note = null;
+  if (status === 'no') {
+    const input = prompt('Zašto ne možeš doći na trening? (obavezno, vidjet će trener i admin)');
+    if (input === null) return; // cancelled
+    note = input.trim();
+    if (!note) { showToast('Razlog je obavezan', 'error'); return; }
+  }
   try {
-    await apiPost(`/availability/training/${sessionId}`, { status });
+    await apiPost(`/availability/training/${sessionId}`, { status, note });
     myRsvpMap[sessionId] = status;
     // Update just this row's buttons without full re-render
     const group = btnEl.closest('.rsvp-group');
@@ -513,7 +520,8 @@ async function openAttendance(sessionId) {
 
     // Build a map of each member's RSVP for this session
     const rsvpMap = {};
-    (rsvps || []).forEach(r => { rsvpMap[r.member_id] = r.status; });
+    const rsvpNoteMap = {};
+    (rsvps || []).forEach(r => { rsvpMap[r.member_id] = r.status; rsvpNoteMap[r.member_id] = r.note; });
 
     // Merge: every member gets a status (default: absent if not marked).
     // A member who RSVP'd "Idem" and isn't marked yet is pre-filled as
@@ -525,6 +533,7 @@ async function openAttendance(sessionId) {
       jersey_number: m.jersey_number,
       position: m.position,
       rsvp: rsvpMap[m.id] || null,
+      rsvpNote: rsvpNoteMap[m.id] || null,
       status: attMap[m.id] || (rsvpMap[m.id] === 'yes' ? 'present' : null)
     }));
 
@@ -561,6 +570,7 @@ function renderAttendanceList() {
       </div>
       <span class="text-muted small">${esc(m.position || '-')}</span>
       ${RSVP_BADGE[m.rsvp] || '<span class="text-muted small">Nije odgovorio/la</span>'}
+      ${m.rsvp === 'no' && m.rsvpNote ? `<span class="text-muted small fst-italic" title="Razlog nedolaska">"${esc(m.rsvpNote)}"</span>` : ''}
       <div class="att-status-btns">
         <button class="att-btn att-btn-p ${m.status === 'present' ? 'active' : ''}"
           onclick="setAttStatus(${i},'present',this)" title="Prisutan/na">

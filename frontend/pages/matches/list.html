@@ -426,7 +426,7 @@ function renderTable() {
 
     return `<tr>
       <td data-label="Protivnik" class="fw-semibold">
-        ${esc(m.opponent)}
+        <a href="detail.html?id=${m.id}" class="text-reset text-decoration-none" title="Vidi rezultat i detalje">${esc(m.opponent)}</a>
         ${m.notes ? `<button type="button" class="btn btn-sm btn-link p-0 ms-2" style="font-size:0.75rem;text-decoration:none;" onclick="openNotesModal(${m.id})"><i class="bi bi-journal-text me-1"></i>Napomena</button>` : ''}
       </td>
       <td data-label="Datum">${formatDate(m.match_date)}</td>
@@ -529,7 +529,8 @@ async function openRsvpModal(matchId) {
       apiGet('/availability/match/' + matchId).catch(() => [])
     ]);
     const rsvpMap = {};
-    (Array.isArray(rsvps) ? rsvps : []).forEach(r => { rsvpMap[r.member_id] = r.status; });
+    const rsvpNoteMap = {};
+    (Array.isArray(rsvps) ? rsvps : []).forEach(r => { rsvpMap[r.member_id] = r.status; rsvpNoteMap[r.member_id] = r.note; });
 
     const yes   = members.filter(mb => rsvpMap[mb.id] === 'yes').length;
     const maybe = members.filter(mb => rsvpMap[mb.id] === 'maybe').length;
@@ -549,7 +550,10 @@ async function openRsvpModal(matchId) {
     document.getElementById('rsvpMembersList').innerHTML = sorted.length
       ? sorted.map(mb => `
           <div class="d-flex align-items-center justify-content-between py-2 border-bottom">
-            <span class="fw-semibold small">${esc(mb.name)}</span>
+            <span class="fw-semibold small">
+              ${esc(mb.name)}
+              ${rsvpMap[mb.id] === 'no' && rsvpNoteMap[mb.id] ? `<span class="text-muted fst-italic d-block" style="font-size:0.75rem;" title="Razlog nedolaska">"${esc(rsvpNoteMap[mb.id])}"</span>` : ''}
+            </span>
             ${RSVP_BADGE_FULL[rsvpMap[mb.id]] || '<span class="text-muted small">Nije odgovorio/la</span>'}
           </div>`).join('')
       : '<div class="text-center text-muted py-3 small">Nema registrovanih članova</div>';
@@ -690,8 +694,15 @@ async function saveResult() {
 const MY_RSVP_LABEL = { yes: '✓ Potvrđeno - ideš', maybe: '? Možda ideš', no: '✕ Prijavljeno - ne ideš' };
 const MY_RSVP_COLOR = { yes: '#16a34a', no: '#dc2626', maybe: '#d97706' };
 async function setRsvp(matchId, status, btnEl) {
+  let note = null;
+  if (status === 'no') {
+    const input = prompt('Zašto ne možeš doći na utakmicu? (obavezno, vidjet će trener i admin)');
+    if (input === null) return; // cancelled
+    note = input.trim();
+    if (!note) { showToast('Razlog je obavezan', 'error'); return; }
+  }
   try {
-    await apiPost(`/availability/match/${matchId}`, { status });
+    await apiPost(`/availability/match/${matchId}`, { status, note });
     myRsvpMap[matchId] = status;
     const group = btnEl.closest('.rsvp-group');
     group.querySelectorAll('.rsvp-btn').forEach(b => b.classList.remove('active'));

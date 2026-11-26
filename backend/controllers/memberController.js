@@ -267,7 +267,8 @@ exports.remove = async (req, res) => {
 exports.getMyProfile = async (req, res) => {
   try {
     const [rows] = await db.query(`
-      SELECT m.*, u.name, u.email
+      SELECT m.*, u.name, u.email,
+        (SELECT GROUP_CONCAT(s.name ORDER BY s.name SEPARATOR ', ') FROM member_selections ms JOIN selections s ON s.id=ms.selection_id WHERE ms.member_id=m.id) as selection_names
       FROM members m JOIN users u ON m.user_id = u.id
       WHERE u.id = ?
     `, [req.user.id]);
