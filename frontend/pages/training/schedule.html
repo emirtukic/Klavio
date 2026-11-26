@@ -382,7 +382,7 @@ function renderTable() {
     } else if (isMember) {
       const myStatus = myRsvpMap[s.id] || null;
       attendanceCell = s.rsvp_locked ? `
-        <div class="small text-muted"><i class="bi bi-lock-fill me-1"></i>RSVP zaključan</div>
+        <div class="small text-muted"><i class="bi bi-lock-fill me-1"></i>Trening zaključan</div>
         <div class="small fw-semibold mt-1" style="color:${myStatus === 'yes' ? '#16a34a' : myStatus === 'no' ? '#dc2626' : myStatus === 'maybe' ? '#d97706' : '#94a3b8'}">
           ${myStatus ? MY_RSVP_LABEL[myStatus] : ''}
         </div>` : `
@@ -423,7 +423,7 @@ function renderTable() {
         ${canManage ? `<button class="btn btn-sm btn-outline-secondary me-1" onclick="openEditSession(${s.id})" title="Uredi"><i class="bi bi-pencil"></i></button>` : ''}
         ${canManage && s.status === 'scheduled' ? `<button class="btn btn-sm btn-outline-success me-1" onclick="markCompleted(${s.id})" title="Označi kao završen"><i class="bi bi-check2-circle"></i></button>` : ''}
         ${canManage && s.status === 'completed' ? `<button class="btn btn-sm btn-outline-warning me-1" onclick="unmarkCompleted(${s.id})" title="Odznači završen"><i class="bi bi-arrow-counterclockwise"></i></button>` : ''}
-        ${canManage ? `<button class="btn btn-sm ${s.rsvp_locked ? 'btn-warning' : 'btn-outline-secondary'} me-1" onclick="toggleRsvpLock(${s.id}, ${s.rsvp_locked ? 0 : 1})" title="${s.rsvp_locked ? 'Otključaj RSVP' : 'Zaključaj RSVP'}"><i class="bi bi-${s.rsvp_locked ? 'lock-fill' : 'unlock'}"></i></button>` : ''}
+        ${canManage ? `<button class="btn btn-sm ${s.rsvp_locked ? 'btn-warning' : 'btn-outline-secondary'} me-1" onclick="toggleRsvpLock(${s.id}, ${s.rsvp_locked ? 0 : 1})" title="${s.rsvp_locked ? 'Otključaj trening' : 'Zaključaj trening'}"><i class="bi bi-${s.rsvp_locked ? 'lock-fill' : 'unlock'}"></i></button>` : ''}
         ${canManage ? `<button class="btn btn-sm ${s.attendance_locked ? 'btn-warning' : 'btn-outline-secondary'} me-1" onclick="toggleAttendanceLock(${s.id}, ${s.attendance_locked ? 0 : 1})" title="${s.attendance_locked ? 'Otključaj prisustvo' : 'Zaključaj prisustvo'}"><i class="bi bi-${s.attendance_locked ? 'shield-lock-fill' : 'shield-lock'}"></i></button>` : ''}
         ${canManage ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteSession(${s.id})" title="Obriši"><i class="bi bi-trash"></i></button>` : ''}
       </td>
@@ -451,7 +451,7 @@ async function unmarkCompleted(id) {
 async function toggleRsvpLock(id, lock) {
   try {
     await apiPut('/training/' + id, { rsvp_locked: lock });
-    showToast(lock ? 'RSVP zaključan - članovi više ne mogu mijenjati odgovor' : 'RSVP otključan', 'success');
+    showToast(lock ? 'Trening zaključan - članovi više ne mogu mijenjati odgovor' : 'Trening otključan', 'success');
     load();
   } catch(e) { showToast(e.message, 'error'); }
 }
