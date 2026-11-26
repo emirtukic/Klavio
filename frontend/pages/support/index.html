@@ -108,6 +108,10 @@
             <label class="form-label">Opis *</label>
             <textarea class="form-control" id="tBody" rows="5" placeholder="Detaljno opišite problem ili zahtjev..."></textarea>
           </div>
+          <div class="col-12">
+            <label class="form-label">Slika (opciono)</label>
+            <input type="file" class="form-control" id="tAttachment" accept="image/png,image/jpeg,image/gif,image/webp">
+          </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -132,7 +136,8 @@
       <div class="modal-body" style="max-height:420px;overflow-y:auto;" id="threadReplies"></div>
       <div class="modal-footer flex-column align-items-stretch" id="threadReplyWrap">
         <textarea class="form-control mb-2" id="replyBody" rows="3" placeholder="Unesite poruku..."></textarea>
-        <div class="d-flex justify-content-end">
+        <div class="d-flex justify-content-between align-items-center gap-2">
+          <input type="file" class="form-control form-control-sm w-auto" id="replyAttachment" accept="image/png,image/jpeg,image/gif,image/webp">
           <button class="btn btn-primary" onclick="sendReply()"><i class="bi bi-send me-1"></i>Pošalji</button>
         </div>
       </div>
@@ -194,6 +199,7 @@ function openCreate() {
   document.getElementById('tSubject').value = '';
   document.getElementById('tBody').value = '';
   document.getElementById('tPriority').value = 'medium';
+  document.getElementById('tAttachment').value = '';
   new bootstrap.Modal(document.getElementById('createModal')).show();
 }
 
@@ -201,9 +207,18 @@ async function submitTicket() {
   const subject  = document.getElementById('tSubject').value.trim();
   const body     = document.getElementById('tBody').value.trim();
   const priority = document.getElementById('tPriority').value;
+  const file     = document.getElementById('tAttachment').files[0];
   if (!subject || !body) return showToast('Unesite naslov i opis', 'error');
+  const formData = new FormData();
+  formData.append('subject', subject);
+  formData.append('body', body);
+  formData.append('priority', priority);
+  if (file) formData.append('attachment', file);
   try {
-    await apiPost('/support-tickets', { subject, body, priority });
+    const res = await fetch('/api/support-tickets', { method: 'POST', headers: { Authorization: 'Bearer ' + getToken() }, body: formData });
+    if (res.status === 401) { logout(); return; }
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Greška pri slanju');
     bootstrap.Modal.getInstance(document.getElementById('createModal')).hide();
     showToast('Tiket poslan', 'success');
     load();
@@ -217,6 +232,7 @@ async function openThread(id) {
     document.getElementById('threadSubject').textContent = ticket.subject;
     document.getElementById('threadMeta').innerHTML = `${STATUS_BADGE[ticket.status]} ${PRIO_BADGE[ticket.priority]}`;
     document.getElementById('replyBody').value = '';
+    document.getElementById('replyAttachment').value = '';
 
     // Hide reply box if ticket is closed/resolved
     const closed = ticket.status === 'closed' || ticket.status === 'resolved';
@@ -231,7 +247,7 @@ async function openThread(id) {
         </div>
         <div class="flex-grow-1">
           <div class="small fw-semibold ${r.is_staff ? 'text-end' : ''} mb-1">${escHtml(r.user_name)} ${r.is_staff ? '<span class="badge" style="background:#9b86f2">Klavio</span>' : ''}</div>
-          <div class="p-3 rounded-3 ${r.is_staff ? 'text-white' : 'bg-light'}" style="${r.is_staff ? 'background:#9b86f2' : ''};white-space:pre-wrap;">${escHtml(r.body)}</div>
+          <div class="p-3 rounded-3 ${r.is_staff ? 'text-white' : 'bg-light'}" style="${r.is_staff ? 'background:#9b86f2' : ''};white-space:pre-wrap;">${escHtml(r.body)}${r.attachment_url ? `<div class="${r.body ? 'mt-2' : ''}"><a href="${escHtml(r.attachment_url)}" target="_blank" rel="noopener"><img src="${escHtml(r.attachment_url)}" alt="${escHtml(r.attachment_filename || 'slika')}" style="max-width:220px;max-height:220px;border-radius:8px;display:block;"></a></div>` : ''}</div>
           <div class="small text-muted mt-1 ${r.is_staff ? 'text-end' : ''}">${new Date(r.created_at).toLocaleString('bs-BA')}</div>
         </div>
       </div>`).join('') || '<p class="text-muted text-center">Nema poruka</p>';
@@ -243,9 +259,16 @@ async function openThread(id) {
 
 async function sendReply() {
   const body = document.getElementById('replyBody').value.trim();
-  if (!body) return;
+  const file = document.getElementById('replyAttachment').files[0];
+  if (!body && !file) return;
+  const formData = new FormData();
+  formData.append('body', body);
+  if (file) formData.append('attachment', file);
   try {
-    await apiPost('/support-tickets/' + currentTicketId + '/replies', { body });
+    const res = await fetch('/api/support-tickets/' + currentTicketId + '/replies', { method: 'POST', headers: { Authorization: 'Bearer ' + getToken() }, body: formData });
+    if (res.status === 401) { logout(); return; }
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Greška pri slanju');
     showToast('Poruka poslana', 'success');
     openThread(currentTicketId); load();
   } catch(e) { showToast(e.message, 'error'); }

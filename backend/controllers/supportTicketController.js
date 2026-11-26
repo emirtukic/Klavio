@@ -1,10 +1,32 @@
+const multer = require('multer');
 const db = require('../config/db');
 const { assertClubOwned } = require('../utils/clubScope');
 const { send: sendMail } = require('../config/mailer');
 const { newTicketNotificationHtml } = require('../config/emailTemplates');
 const { renderEmail } = require('../config/emailTemplateStore');
+const { imageFileFilter } = require('../middleware/imageUpload');
+const { uploadToR2 } = require('../config/r2');
+const { detectImageType } = require('../utils/fileSignature');
 
 const APP_URL = process.env.APP_URL || 'http://localhost:3000';
+
+exports.upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: imageFileFilter
+});
+
+// Uploads the attachment (if any) and returns { url, filename } or null -
+// shared by create() and reply() since a ticket message works the same way
+// in both places.
+async function handleAttachment(file) {
+  if (!file) return null;
+  const type = detectImageType(file.buffer);
+  if (!type) throw new Error('Fajl nije validna slika');
+  const filename = `ticket_${Date.now()}_${Math.random().toString(36).slice(2, 7)}${type.ext}`;
+  const url = await uploadToR2(`support-tickets/${filename}`, file.buffer, type.mime);
+  return { url, filename: file.originalname || filename };
+}
 
 exports.getAll = async (req, res) => {
   try {
@@ -38,14 +60,15 @@ exports.getMine = async (req, res) => {
 exports.create = async (req, res) => {
   const { subject, body, priority } = req.body;
   try {
+    const attachment = await handleAttachment(req.file);
     const [result] = await db.query(
       'INSERT INTO support_tickets (club_id, created_by, subject, priority) VALUES (?,?,?,?)',
       [req.user.club_id, req.user.id, subject, priority || 'medium']
     );
-    if (body) {
+    if (body || attachment) {
       await db.query(
-        'INSERT INTO support_ticket_replies (ticket_id, user_id, body, is_staff) VALUES (?,?,?,0)',
-        [result.insertId, req.user.id, body]
+        'INSERT INTO support_ticket_replies (ticket_id, user_id, body, is_staff, attachment_url, attachment_filename) VALUES (?,?,?,0,?,?)',
+        [result.insertId, req.user.id, body || '', attachment?.url || null, attachment?.filename || null]
       );
     }
 
@@ -60,7 +83,11 @@ exports.create = async (req, res) => {
     }).catch(err => console.error('New ticket notification mail error:', err.message));
 
     res.status(201).json({ id: result.insertId });
-  } catch (err) { console.error('Support ticket create error:', err.message); res.status(500).json({ message: 'Server error' }); }
+  } catch (err) {
+    console.error('Support ticket create error:', err.message);
+    if (err.message === 'Fajl nije validna slika') return res.status(400).json({ message: err.message });
+    res.status(500).json({ message: 'Server error' });
+  }
 };
 
 exports.getReplies = async (req, res) => {
@@ -83,13 +110,15 @@ exports.reply = async (req, res) => {
   const { body } = req.body;
   const isStaff = req.user.role === 'super_admin';
   try {
+    const attachment = await handleAttachment(req.file);
+    if (!body && !attachment) return res.status(400).json({ message: 'Unesite poruku ili dodajte sliku' });
     const exists = isStaff
       ? (await db.query('SELECT id FROM support_tickets WHERE id=?', [req.params.id]))[0].length > 0
       : await assertClubOwned('support_tickets', req.params.id, req.user.club_id);
     if (!exists) return res.status(404).json({ message: 'Ticket nije pronađen' });
     await db.query(
-      'INSERT INTO support_ticket_replies (ticket_id, user_id, body, is_staff) VALUES (?,?,?,?)',
-      [req.params.id, req.user.id, body, isStaff ? 1 : 0]
+      'INSERT INTO support_ticket_replies (ticket_id, user_id, body, is_staff, attachment_url, attachment_filename) VALUES (?,?,?,?,?,?)',
+      [req.params.id, req.user.id, body || '', isStaff ? 1 : 0, attachment?.url || null, attachment?.filename || null]
     );
     const newStatus = isStaff ? 'in_progress' : 'open';
     await db.query(
@@ -106,15 +135,19 @@ exports.reply = async (req, res) => {
       if (ticket.length) {
         await db.query(
           'INSERT INTO notifications (user_id, club_id, title, message, type) VALUES (?,?,?,?,?)',
-          [ticket[0].created_by, ticket[0].club_id, `💬 Odgovor na tiket: ${ticket[0].subject}`, body.slice(0, 200), 'info']
+          [ticket[0].created_by, ticket[0].club_id, `💬 Odgovor na tiket: ${ticket[0].subject}`, (body || (attachment ? '📎 Slika' : '')).slice(0, 200), 'info']
         );
-        renderEmail('ticket_reply', { ime: ticket[0].user_name, naslov: ticket[0].subject, odgovor: body, __link: `${APP_URL}/pages/support/index.html` })
+        renderEmail('ticket_reply', { ime: ticket[0].user_name, naslov: ticket[0].subject, odgovor: body || (attachment ? '📎 Slika u prilogu' : ''), __link: `${APP_URL}/pages/support/index.html` })
           .then(r => { if (r.enabled) return sendMail({ to: ticket[0].user_email, subject: r.subject, html: r.html }); })
           .catch(err => console.error('Ticket reply notification mail error:', err.message));
       }
     }
     res.json({ message: 'Odgovor poslan' });
-  } catch (err) { console.error('Support ticket reply error:', err.message); res.status(500).json({ message: 'Server error' }); }
+  } catch (err) {
+    console.error('Support ticket reply error:', err.message);
+    if (err.message === 'Fajl nije validna slika') return res.status(400).json({ message: err.message });
+    res.status(500).json({ message: 'Server error' });
+  }
 };
 
 exports.updateStatus = async (req, res) => {

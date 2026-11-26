@@ -113,6 +113,7 @@
       <div class="modal-body" style="max-height:420px;overflow-y:auto;" id="threadReplies"></div>
       <div class="modal-footer flex-column align-items-stretch">
         <textarea class="form-control mb-2" id="replyBody" rows="3" placeholder="Unesite odgovor..."></textarea>
+        <input type="file" class="form-control form-control-sm mb-2" id="replyAttachment" accept="image/png,image/jpeg,image/gif,image/webp">
         <div class="d-flex gap-2 justify-content-between">
           <select class="form-select form-select-sm w-auto" id="threadStatus">
             <option value="open">Otvoren</option>
@@ -183,6 +184,7 @@ async function openThread(id) {
     document.getElementById('threadMeta').innerHTML=`${STATUS_BADGE[ticket.status]} ${PRIO_BADGE[ticket.priority]} <span class="text-muted small">${escHtml(ticket.club_name)}</span>`;
     document.getElementById('threadStatus').value=ticket.status;
     document.getElementById('replyBody').value='';
+    document.getElementById('replyAttachment').value='';
     document.getElementById('threadReplies').innerHTML = replies.map(r=>`
       <div class="d-flex gap-2 mb-3 ${r.is_staff?'flex-row-reverse':''}">
         <div class="flex-shrink-0">
@@ -192,7 +194,7 @@ async function openThread(id) {
         </div>
         <div class="flex-grow-1">
           <div class="small fw-semibold ${r.is_staff?'text-end':''} mb-1">${escHtml(r.user_name)} ${r.is_staff?'<span class="badge" style="background:#9b86f2">Klavio</span>':''}</div>
-          <div class="p-3 rounded-3 ${r.is_staff?'text-white':'bg-light'}" style="${r.is_staff?'background:#9b86f2':''};white-space:pre-wrap;">${escHtml(r.body)}</div>
+          <div class="p-3 rounded-3 ${r.is_staff?'text-white':'bg-light'}" style="${r.is_staff?'background:#9b86f2':''};white-space:pre-wrap;">${escHtml(r.body)}${r.attachment_url ? `<div class="${r.body ? 'mt-2' : ''}"><a href="${escHtml(r.attachment_url)}" target="_blank" rel="noopener"><img src="${escHtml(r.attachment_url)}" alt="${escHtml(r.attachment_filename || 'slika')}" style="max-width:220px;max-height:220px;border-radius:8px;display:block;"></a></div>` : ''}</div>
           <div class="small text-muted mt-1 ${r.is_staff?'text-end':''}">${new Date(r.created_at).toLocaleString('bs-BA')}</div>
         </div>
       </div>`).join('')||'<p class="text-muted text-center">Nema poruka</p>';
@@ -202,10 +204,17 @@ async function openThread(id) {
 }
 
 async function sendReply() {
-  const body=document.getElementById('replyBody').value.trim();
-  if (!body) return;
+  const body = document.getElementById('replyBody').value.trim();
+  const file = document.getElementById('replyAttachment').files[0];
+  if (!body && !file) return;
+  const formData = new FormData();
+  formData.append('body', body);
+  if (file) formData.append('attachment', file);
   try {
-    await apiPost('/support-tickets/'+currentTicketId+'/replies',{body});
+    const res = await fetch('/api/support-tickets/'+currentTicketId+'/replies', { method: 'POST', headers: { Authorization: 'Bearer ' + getToken() }, body: formData });
+    if (res.status === 401) { logout(); return; }
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Greška pri slanju');
     showToast('Odgovor poslan','success');
     openThread(currentTicketId); load();
   } catch(e) { showToast(e.message,'error'); }

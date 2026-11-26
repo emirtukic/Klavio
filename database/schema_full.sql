@@ -393,6 +393,8 @@ CREATE TABLE IF NOT EXISTS support_ticket_replies (
   user_id INT NOT NULL,
   body TEXT NOT NULL,
   is_staff TINYINT(1) DEFAULT 0,
+  attachment_url VARCHAR(500) NULL,
+  attachment_filename VARCHAR(255) NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (ticket_id) REFERENCES support_tickets(id) ON DELETE CASCADE,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
