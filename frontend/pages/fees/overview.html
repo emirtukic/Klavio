@@ -24,17 +24,35 @@
     </div>
   </div>
   <div class="page-body">
-    <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-2">
-      <div><h4>Ko je platio članarinu</h4><p class="text-muted mb-0">Pregled po selekciji/treneru - koliko igrača je platilo članarinu za izabrani period.</p></div>
-      <select class="form-select" id="periodSelect" style="width:auto;" onchange="loadOverview()"></select>
+    <div class="page-header">
+      <h4>Ko je platio članarinu</h4>
+      <p class="text-muted mb-0">Koliko igrača je platilo članarinu za izabrani period - po selekciji ili po treneru.</p>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-body d-flex flex-wrap align-items-end gap-3">
+        <div>
+          <label class="form-label small mb-1">Period od</label>
+          <input type="date" class="form-control form-control-sm" id="periodStart">
+        </div>
+        <div>
+          <label class="form-label small mb-1">Period do</label>
+          <input type="date" class="form-control form-control-sm" id="periodEnd">
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="loadOverview()"><i class="bi bi-search me-1"></i>Prikaži</button>
+        <div class="btn-group ms-auto" role="group">
+          <button type="button" class="btn btn-sm btn-outline-primary active" id="viewBtn_selection" onclick="setView('selection')">Po selekciji</button>
+          <button type="button" class="btn btn-sm btn-outline-primary" id="viewBtn_coach" onclick="setView('coach')">Po treneru</button>
+        </div>
+      </div>
     </div>
 
     <div id="emptyState" class="empty-state d-none">
       <i class="bi bi-cash-coin empty-state-icon"></i>
-      <p class="text-muted">Još nema generisanih članarina - prvo generišite članarine na stranici <a href="/pages/fees/list.html">Članarine</a>.</p>
+      <p class="text-muted">Nema generisanih članarina za izabrani period - prvo generišite članarine na stranici <a href="/pages/fees/list.html">Članarine</a>.</p>
     </div>
 
-    <div class="row g-3" id="selectionCards"></div>
+    <div class="row g-3" id="cards"></div>
   </div>
 </div>
 
@@ -43,7 +61,7 @@
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="detailTitle">Selekcija</h5>
+        <h5 class="modal-title" id="detailTitle">Detalji</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body">
@@ -74,80 +92,79 @@ buildSidebar();
 const STATUS_LABEL = { paid: 'Plaćeno', pending: 'Na čekanju', overdue: 'Zakašnjelo', no_fee: 'Nije generisano' };
 const STATUS_BADGE = { paid: 'success', pending: 'warning', overdue: 'danger', no_fee: 'secondary' };
 
-let overviewData = { selections: [] };
+let overviewData = { selections: [], coaches: [] };
+let currentView = 'selection';
 
+function escHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c])); }
 function fmtDate(d) { return d ? new Date(d).toLocaleDateString('bs-BA') : '-'; }
 
-async function loadPeriods() {
-  const periods = await apiGet('/fees/periods');
-  const sel = document.getElementById('periodSelect');
-  if (!periods.length) {
-    sel.classList.add('d-none');
-    return null;
-  }
-  sel.innerHTML = periods.map(p =>
-    `<option value="${p.period_start}|${p.period_end}">${fmtDate(p.period_start)} - ${fmtDate(p.period_end)}</option>`
-  ).join('');
-  return periods[0];
+function setView(view) {
+  currentView = view;
+  document.getElementById('viewBtn_selection').classList.toggle('active', view === 'selection');
+  document.getElementById('viewBtn_coach').classList.toggle('active', view === 'coach');
+  render();
 }
 
-function cardHtml(s) {
-  const barColor = s.percent_paid >= 80 ? 'bg-success' : s.percent_paid >= 50 ? 'bg-warning' : 'bg-danger';
+// Normalizes either a selection-row or coach-row into the same shape the card/modal need.
+function normalize(row) {
+  return currentView === 'selection'
+    ? { id: row.selection_id, name: row.selection_name, subtitle: row.coach_names || 'Nema dodijeljenog trenera', total: row.total, paid: row.paid, percent_paid: row.percent_paid, members: row.members }
+    : { id: row.coach_id, name: row.coach_name, subtitle: row.selection_names || '-', total: row.total, paid: row.paid, percent_paid: row.percent_paid, members: row.members };
+}
+
+function cardHtml(row) {
+  const r = normalize(row);
+  const barColor = r.percent_paid >= 80 ? 'bg-success' : r.percent_paid >= 50 ? 'bg-warning' : 'bg-danger';
   return `
     <div class="col-md-6 col-lg-4">
-      <div class="card h-100" style="cursor:pointer;" onclick="openDetail(${s.selection_id})">
+      <div class="card h-100" style="cursor:pointer;" onclick='openDetail(${JSON.stringify(String(r.id))})'>
         <div class="card-body">
-          <h6 class="fw-bold mb-1">${escHtml(s.selection_name)}</h6>
-          <p class="small text-muted mb-2">${s.coach_names ? escHtml(s.coach_names) : 'Nema dodijeljenog trenera'}</p>
+          <h6 class="fw-bold mb-1">${escHtml(r.name)}</h6>
+          <p class="small text-muted mb-2">${escHtml(r.subtitle)}</p>
           <div class="progress mb-2" style="height:8px;">
-            <div class="progress-bar ${barColor}" style="width:${s.percent_paid}%"></div>
+            <div class="progress-bar ${barColor}" style="width:${r.percent_paid}%"></div>
           </div>
           <div class="d-flex justify-content-between align-items-center">
-            <span class="small text-muted">${s.paid} / ${s.total} platilo</span>
-            <span class="fw-bold">${s.percent_paid}%</span>
+            <span class="small text-muted">${r.paid} / ${r.total} platilo</span>
+            <span class="fw-bold">${r.percent_paid}%</span>
           </div>
         </div>
       </div>
     </div>`;
 }
 
-function escHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c])); }
-
 function render() {
-  const wrap = document.getElementById('selectionCards');
-  const empty = document.getElementById('emptyState');
-  if (!overviewData.selections.length) {
-    wrap.innerHTML = '';
-    return;
-  }
-  empty.classList.add('d-none');
-  wrap.innerHTML = overviewData.selections.map(cardHtml).join('');
+  const rows = currentView === 'selection' ? overviewData.selections : overviewData.coaches;
+  document.getElementById('cards').innerHTML = (rows || []).map(cardHtml).join('');
 }
 
 async function loadOverview() {
   try {
-    const sel = document.getElementById('periodSelect');
-    let qs = '';
-    if (!sel.classList.contains('d-none') && sel.value) {
-      const [ps, pe] = sel.value.split('|');
-      qs = `?period_start=${ps}&period_end=${pe}`;
-    }
+    const ps = document.getElementById('periodStart').value;
+    const pe = document.getElementById('periodEnd').value;
+    const qs = (ps && pe) ? `?period_start=${ps}&period_end=${pe}` : '';
     overviewData = await apiGet('/fees/overview' + qs);
+    const empty = document.getElementById('emptyState');
     if (!overviewData.period_start) {
-      document.getElementById('emptyState').classList.remove('d-none');
-      document.getElementById('selectionCards').innerHTML = '';
+      empty.classList.remove('d-none');
+      document.getElementById('cards').innerHTML = '';
       return;
     }
+    empty.classList.add('d-none');
+    if (!ps) document.getElementById('periodStart').value = overviewData.period_start;
+    if (!pe) document.getElementById('periodEnd').value = overviewData.period_end;
     render();
   } catch (e) { showToast(e.message, 'error'); }
 }
 
-function openDetail(selectionId) {
-  const s = overviewData.selections.find(x => x.selection_id === selectionId);
-  if (!s) return;
-  document.getElementById('detailTitle').textContent = s.selection_name + ' - ' + fmtDate(overviewData.period_start) + ' do ' + fmtDate(overviewData.period_end);
-  const paid = s.members.filter(m => m.status === 'paid');
-  const unpaid = s.members.filter(m => m.status !== 'paid');
+function openDetail(id) {
+  const rows = currentView === 'selection' ? overviewData.selections : overviewData.coaches;
+  const raw = rows.find(x => String(currentView === 'selection' ? x.selection_id : x.coach_id) === id);
+  if (!raw) return;
+  const r = normalize(raw);
+  document.getElementById('detailTitle').textContent = r.name + ' - ' + fmtDate(overviewData.period_start) + ' do ' + fmtDate(overviewData.period_end);
+  const paid = r.members.filter(m => m.status === 'paid');
+  const unpaid = r.members.filter(m => m.status !== 'paid');
   document.getElementById('paidList').innerHTML = paid.map(m => `
     <li class="list-group-item d-flex justify-content-between align-items-center px-0">
       <span>${escHtml(m.name)}</span>
@@ -161,10 +178,7 @@ function openDetail(selectionId) {
   bootstrap.Modal.getOrCreateInstance(document.getElementById('detailModal')).show();
 }
 
-(async () => {
-  await loadPeriods();
-  await loadOverview();
-})();
+loadOverview();
 </script>
 </body>
 </html>
