@@ -2,10 +2,14 @@ const router = require('express').Router();
 const ctrl = require('../controllers/tournamentController');
 const auth = require('../middleware/auth');
 const role = require('../middleware/roleCheck');
+const requirePlan = require('../middleware/requirePlan');
 const log  = require('../controllers/activityController').log;
 
-const staff = [auth, role('super_admin', 'admin', 'coach')];
+const staff = [auth, role('super_admin', 'admin', 'coach'), requirePlan('pro')];
 
+// /mine and /:id stay open to any plan - a club that drops back to Starter
+// after having tournaments shouldn't lock invited members out of what
+// already exists, it just can't create anything new (gated below).
 router.get('/mine', auth, ctrl.getMine);
 router.get('/',     ...staff, ctrl.getAll);
 router.get('/:id',  auth, ctrl.getOne); // open to members too - controller enforces they were invited
