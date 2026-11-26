@@ -408,6 +408,118 @@ exports.getLastPeriod = async (req, res) => {
   }
 };
 
+// Admin-only: list of distinct fee periods that exist for this club, most
+// recent first - powers the period picker on the "ko je platio" overview.
+exports.getPeriods = async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT mf.period_start, mf.period_end, COUNT(*) as fee_count
+      FROM membership_fees mf JOIN members m ON mf.member_id = m.id
+      WHERE m.club_id = ?
+      GROUP BY mf.period_start, mf.period_end
+      ORDER BY mf.period_end DESC
+      LIMIT 24
+    `, [req.user.club_id]);
+    res.json(rows.map(r => ({
+      period_start: toSqlDate(new Date(r.period_start)),
+      period_end: toSqlDate(new Date(r.period_end)),
+      fee_count: r.fee_count,
+    })));
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+// Admin-only: per-selection breakdown of who has paid their membership fee
+// for a given period vs. who hasn't (pending/overdue/never generated) -
+// denominator is every active member of the selection, not just those with
+// a fee row, so "nije platio" also surfaces members nobody billed yet.
+exports.getOverview = async (req, res) => {
+  const { period_start, period_end } = req.query;
+  try {
+    let periodStart = period_start, periodEnd = period_end;
+    if (!periodStart || !periodEnd) {
+      const [[last]] = await db.query(`
+        SELECT mf.period_start, mf.period_end
+        FROM membership_fees mf JOIN members m ON mf.member_id = m.id
+        WHERE m.club_id = ?
+        ORDER BY mf.period_end DESC LIMIT 1
+      `, [req.user.club_id]);
+      if (!last) return res.json({ period_start: null, period_end: null, selections: [] });
+      periodStart = toSqlDate(new Date(last.period_start));
+      periodEnd = toSqlDate(new Date(last.period_end));
+    }
+
+    const [selRows] = await db.query(`
+      SELECT s.id as selection_id, s.name as selection_name,
+        GROUP_CONCAT(DISTINCT cu.name ORDER BY cu.name SEPARATOR ', ') as coach_names
+      FROM selections s
+      LEFT JOIN coach_selections cs ON cs.selection_id = s.id
+      LEFT JOIN coaches c ON c.id = cs.coach_id
+      LEFT JOIN users cu ON cu.id = c.user_id
+      WHERE s.club_id = ?
+      GROUP BY s.id, s.name
+      ORDER BY s.name
+    `, [req.user.club_id]);
+
+    // A member can have more than one fee row inside the same period (e.g.
+    // duplicated/split charges) - collapse those into one status per member
+    // first, so they're never double-counted in the per-selection totals.
+    // "paid" only if every row for the period is paid; "overdue" if any row
+    // is overdue; otherwise "pending".
+    const [memberRows] = await db.query(`
+      SELECT ms.selection_id, m.id as member_id, u.name as member_name,
+        mf.agg_status as fee_status, mf.total_amount as fee_amount, mf.due_date as fee_due_date
+      FROM member_selections ms
+      JOIN members m ON m.id = ms.member_id AND m.status = 'active'
+      JOIN users u ON u.id = m.user_id
+      JOIN selections s ON s.id = ms.selection_id AND s.club_id = ?
+      LEFT JOIN (
+        SELECT member_id,
+          CASE
+            WHEN SUM(status != 'paid') = 0 THEN 'paid'
+            WHEN SUM(status = 'overdue') > 0 THEN 'overdue'
+            ELSE 'pending'
+          END as agg_status,
+          SUM(amount) as total_amount,
+          MAX(due_date) as due_date
+        FROM membership_fees
+        WHERE period_start = ? AND period_end = ?
+        GROUP BY member_id
+      ) mf ON mf.member_id = m.id
+      ORDER BY u.name
+    `, [req.user.club_id, periodStart, periodEnd]);
+
+    const bySelection = {};
+    for (const sel of selRows) {
+      bySelection[sel.selection_id] = {
+        selection_id: sel.selection_id,
+        selection_name: sel.selection_name,
+        coach_names: sel.coach_names || null,
+        total: 0, paid: 0, percent_paid: 0,
+        members: [],
+      };
+    }
+    for (const m of memberRows) {
+      const bucket = bySelection[m.selection_id];
+      if (!bucket) continue;
+      const status = m.fee_status || 'no_fee';
+      bucket.total++;
+      if (status === 'paid') bucket.paid++;
+      bucket.members.push({ id: m.member_id, name: m.member_name, status, amount: m.fee_amount, due_date: m.fee_due_date });
+    }
+    const selections = Object.values(bySelection).map(b => ({
+      ...b,
+      percent_paid: b.total ? Math.round((b.paid / b.total) * 100) : 0,
+    }));
+
+    res.json({ period_start: periodStart, period_end: periodEnd, selections });
+  } catch (err) {
+    console.error('Fee overview error:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 exports.duplicateLastPeriod = async (req, res) => {
   const { due_date } = req.body;
   if (!due_date) return res.status(400).json({ message: 'Rok uplate je obavezan' });

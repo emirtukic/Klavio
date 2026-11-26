@@ -11,6 +11,8 @@ router.post('/',               auth, role('super_admin', 'admin', 'coach'), log(
 router.post('/bulk-generate/preview', auth, role('super_admin', 'admin', 'coach'), ctrl.bulkPreview);
 router.post('/bulk-generate',  auth, role('super_admin', 'admin', 'coach'), log('create', 'Članarina (masovno)'), ctrl.bulkGenerate);
 router.get('/last-period',     auth, role('super_admin', 'admin', 'coach'), ctrl.getLastPeriod);
+router.get('/periods',         auth, role('super_admin', 'admin'), ctrl.getPeriods);
+router.get('/overview',        auth, role('super_admin', 'admin'), ctrl.getOverview);
 router.post('/duplicate-last-month', auth, role('super_admin', 'admin', 'coach'), log('create', 'Članarina (duplirano)'), ctrl.duplicateLastPeriod);
 router.put('/:id/pay',         auth, role('super_admin', 'admin', 'coach'), log('update', 'Članarina'), ctrl.markPaid);
 router.put('/:id',             auth, role('super_admin', 'admin', 'coach'), log('update', 'Članarina'), ctrl.update);

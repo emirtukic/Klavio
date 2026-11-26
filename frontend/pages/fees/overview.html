@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-v3.png"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="theme-color" content="#2563eb">
+  <script src="/assets/js/cookie-consent.js" defer></script>
+  <title>Pregled plaćanja | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Pregled plaćanja</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-danger" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+  <div class="page-body">
+    <div class="page-header d-flex justify-content-between align-items-start flex-wrap gap-2">
+      <div><h4>Ko je platio članarinu</h4><p class="text-muted mb-0">Pregled po selekciji/treneru - koliko igrača je platilo članarinu za izabrani period.</p></div>
+      <select class="form-select" id="periodSelect" style="width:auto;" onchange="loadOverview()"></select>
+    </div>
+
+    <div id="emptyState" class="empty-state d-none">
+      <i class="bi bi-cash-coin empty-state-icon"></i>
+      <p class="text-muted">Još nema generisanih članarina - prvo generišite članarine na stranici <a href="/pages/fees/list.html">Članarine</a>.</p>
+    </div>
+
+    <div class="row g-3" id="selectionCards"></div>
+  </div>
+</div>
+
+<!-- Drill-down modal -->
+<div class="modal fade" id="detailModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="detailTitle">Selekcija</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-6">
+            <h6 class="small text-success fw-bold text-uppercase"><i class="bi bi-check-circle me-1"></i>Platili</h6>
+            <ul class="list-group list-group-flush mb-3" id="paidList"></ul>
+          </div>
+          <div class="col-md-6">
+            <h6 class="small text-danger fw-bold text-uppercase"><i class="bi bi-x-circle me-1"></i>Nisu platili</h6>
+            <ul class="list-group list-group-flush mb-3" id="unpaidList"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+const user = requireRole('admin');
+setUserInfo(user);
+buildSidebar();
+
+const STATUS_LABEL = { paid: 'Plaćeno', pending: 'Na čekanju', overdue: 'Zakašnjelo', no_fee: 'Nije generisano' };
+const STATUS_BADGE = { paid: 'success', pending: 'warning', overdue: 'danger', no_fee: 'secondary' };
+
+let overviewData = { selections: [] };
+
+function fmtDate(d) { return d ? new Date(d).toLocaleDateString('bs-BA') : '-'; }
+
+async function loadPeriods() {
+  const periods = await apiGet('/fees/periods');
+  const sel = document.getElementById('periodSelect');
+  if (!periods.length) {
+    sel.classList.add('d-none');
+    return null;
+  }
+  sel.innerHTML = periods.map(p =>
+    `<option value="${p.period_start}|${p.period_end}">${fmtDate(p.period_start)} - ${fmtDate(p.period_end)}</option>`
+  ).join('');
+  return periods[0];
+}
+
+function cardHtml(s) {
+  const barColor = s.percent_paid >= 80 ? 'bg-success' : s.percent_paid >= 50 ? 'bg-warning' : 'bg-danger';
+  return `
+    <div class="col-md-6 col-lg-4">
+      <div class="card h-100" style="cursor:pointer;" onclick="openDetail(${s.selection_id})">
+        <div class="card-body">
+          <h6 class="fw-bold mb-1">${escHtml(s.selection_name)}</h6>
+          <p class="small text-muted mb-2">${s.coach_names ? escHtml(s.coach_names) : 'Nema dodijeljenog trenera'}</p>
+          <div class="progress mb-2" style="height:8px;">
+            <div class="progress-bar ${barColor}" style="width:${s.percent_paid}%"></div>
+          </div>
+          <div class="d-flex justify-content-between align-items-center">
+            <span class="small text-muted">${s.paid} / ${s.total} platilo</span>
+            <span class="fw-bold">${s.percent_paid}%</span>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function escHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c])); }
+
+function render() {
+  const wrap = document.getElementById('selectionCards');
+  const empty = document.getElementById('emptyState');
+  if (!overviewData.selections.length) {
+    wrap.innerHTML = '';
+    return;
+  }
+  empty.classList.add('d-none');
+  wrap.innerHTML = overviewData.selections.map(cardHtml).join('');
+}
+
+async function loadOverview() {
+  try {
+    const sel = document.getElementById('periodSelect');
+    let qs = '';
+    if (!sel.classList.contains('d-none') && sel.value) {
+      const [ps, pe] = sel.value.split('|');
+      qs = `?period_start=${ps}&period_end=${pe}`;
+    }
+    overviewData = await apiGet('/fees/overview' + qs);
+    if (!overviewData.period_start) {
+      document.getElementById('emptyState').classList.remove('d-none');
+      document.getElementById('selectionCards').innerHTML = '';
+      return;
+    }
+    render();
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+function openDetail(selectionId) {
+  const s = overviewData.selections.find(x => x.selection_id === selectionId);
+  if (!s) return;
+  document.getElementById('detailTitle').textContent = s.selection_name + ' - ' + fmtDate(overviewData.period_start) + ' do ' + fmtDate(overviewData.period_end);
+  const paid = s.members.filter(m => m.status === 'paid');
+  const unpaid = s.members.filter(m => m.status !== 'paid');
+  document.getElementById('paidList').innerHTML = paid.map(m => `
+    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+      <span>${escHtml(m.name)}</span>
+      <span class="small text-muted">${m.amount ? Number(m.amount).toFixed(2) + ' KM' : ''}</span>
+    </li>`).join('') || '<li class="list-group-item px-0 text-muted small">Nema</li>';
+  document.getElementById('unpaidList').innerHTML = unpaid.map(m => `
+    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+      <span>${escHtml(m.name)}</span>
+      <span class="badge bg-${STATUS_BADGE[m.status]}-subtle text-${STATUS_BADGE[m.status]}-emphasis small">${STATUS_LABEL[m.status]}</span>
+    </li>`).join('') || '<li class="list-group-item px-0 text-muted small">Nema</li>';
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('detailModal')).show();
+}
+
+(async () => {
+  await loadPeriods();
+  await loadOverview();
+})();
+</script>
+</body>
+</html>

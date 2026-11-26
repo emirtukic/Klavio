@@ -101,6 +101,7 @@ const NAV = {
     { href:'/pages/selections/list.html',     icon:'layers',         label:'Selekcije' },
     { href:'/pages/members/list.html',        icon:'people',         label:'Članovi' },
     { href:'/pages/fees/list.html',           icon:'cash-coin',      label:'Članarine' },
+    { href:'/pages/fees/overview.html',       icon:'pie-chart',      label:'Pregled plaćanja' },
     { href:'/pages/finances/index.html',      icon:'wallet2',        label:'Finansije',        plan:'pro' },
     { href:'/pages/training/schedule.html',   icon:'calendar3',      label:'Treninzi' },
     { href:'/pages/matches/list.html',        icon:'trophy',         label:'Utakmice' },
