@@ -276,9 +276,13 @@ exports.remove = async (req, res) => {
     if (!tournament) return res.status(404).json({ message: 'Turnir nije pronađen' });
     if (!(await tournamentInCoachScope(req, tournament.id))) return res.status(404).json({ message: 'Turnir nije pronađen' });
 
-    await db.query(`DELETE FROM finances WHERE club_id=? AND reference IN (SELECT CONCAT('TRN-', id) FROM tournament_entry_fees WHERE tournament_id=?)`, [req.user.club_id, tournament.id]);
+    // Finances rows for already-paid kotizacija are intentionally left alone -
+    // same precedent as a membership fee's finances entry surviving after the
+    // member who paid it is deleted (reference/description are plain text,
+    // not a live join, so they just keep showing as historical income).
     await db.query(`DELETE FROM member_availability WHERE event_type='tournament' AND event_id=?`, [tournament.id]);
     await db.query('DELETE FROM tournaments WHERE id=? AND club_id=?', [tournament.id, req.user.club_id]);
+    // tournament_teams/tournament_entry_fees CASCADE-delete with the tournament row.
     res.json({ message: 'Turnir obrisan' });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
