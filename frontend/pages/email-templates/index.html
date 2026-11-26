@@ -71,6 +71,60 @@
   </div>
 </div>
 
+<!-- Editor Modal -->
+<div class="modal fade" id="editorModal" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editorTitle">Uredi email</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-check form-switch mb-3" id="enabledWrap">
+          <input class="form-check-input" type="checkbox" id="f_enabled">
+          <label class="form-check-label small text-muted" for="f_enabled">Šalji ovaj email</label>
+        </div>
+        <div class="row g-2">
+          <div class="col-md-6">
+            <label class="form-label small">Naslov e-maila (subject)</label>
+            <input type="text" class="form-control form-control-sm" id="f_subject">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small">Natpis (heading)</label>
+            <input type="text" class="form-control form-control-sm" id="f_heading">
+          </div>
+          <div class="col-12">
+            <label class="form-label small">Uvodni tekst</label>
+            <textarea class="form-control form-control-sm" id="f_intro" rows="2"></textarea>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small">Napomena (sitni tekst ispod dugmeta, opciono)</label>
+            <input type="text" class="form-control form-control-sm" id="f_note">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small">Tekst dugmeta</label>
+            <input type="text" class="form-control form-control-sm" id="f_button">
+          </div>
+          <div class="col-md-5">
+            <label class="form-label small">Info okvir - naslov (opciono)</label>
+            <input type="text" class="form-control form-control-sm" id="f_infotitle">
+          </div>
+          <div class="col-md-7">
+            <label class="form-label small">Info okvir - tekst (opciono)</label>
+            <input type="text" class="form-control form-control-sm" id="f_infobody">
+          </div>
+        </div>
+        <p class="small text-muted mt-2 mb-0">Dostupne varijable: <code id="editorHints"></code></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-sm btn-outline-secondary me-auto" onclick="resetTemplate()">Vrati na podrazumijevano</button>
+        <button type="button" class="btn btn-sm btn-outline-primary" onclick="sendTest()"><i class="bi bi-send me-1"></i>Pošalji test</button>
+        <button type="button" class="btn btn-sm btn-primary" onclick="saveTemplate()"><i class="bi bi-save me-1"></i>Sačuvaj</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../../assets/js/auth.js"></script>
 <script src="../../assets/js/api.js"></script>
@@ -81,11 +135,11 @@ setUserInfo(user);
 buildSidebar();
 
 const CATEGORIES = [
-  { title: 'Nalog', keys: ['verify_email', 'welcome', 'invite', 'reset_password'] },
-  { title: 'Članarine', keys: ['fee_reminder_upcoming', 'fee_reminder_overdue', 'fee_created', 'fee_paid'] },
-  { title: 'Treninzi i utakmice', keys: ['match_created', 'training_created', 'match_day_before', 'rsvp_decline', 'lineup_reminder', 'result_reminder_2h', 'result_reminder_1d'] },
-  { title: 'Podrška', keys: ['ticket_reply'] },
-  { title: 'Termini', keys: ['appointment_created'] },
+  { title: 'Nalog', icon: 'person-circle', keys: ['verify_email', 'welcome', 'invite', 'reset_password'] },
+  { title: 'Članarine', icon: 'cash-coin', keys: ['fee_reminder_upcoming', 'fee_reminder_overdue', 'fee_created', 'fee_paid'] },
+  { title: 'Treninzi i utakmice', icon: 'trophy', keys: ['match_created', 'training_created', 'match_day_before', 'rsvp_decline', 'lineup_reminder', 'result_reminder_2h', 'result_reminder_1d'] },
+  { title: 'Podrška', icon: 'headset', keys: ['ticket_reply'] },
+  { title: 'Termini', icon: 'calendar-event', keys: ['appointment_created'] },
 ];
 
 const LABELS = {
@@ -112,95 +166,67 @@ const PLACEHOLDERS = {
 };
 
 let templates = {};
+let currentKey = null;
 
-function cardHtml(key) {
-  const hints = PLACEHOLDERS[key].map(p => `{{${p}}}`).join(' ');
+function rowHtml(key) {
+  const t = templates[key] || {};
+  const statusBadge = t.always_send
+    ? '<span class="badge bg-secondary-subtle text-secondary-emphasis">Uvijek se šalje</span>'
+    : (t.enabled
+        ? '<span class="badge bg-success-subtle text-success-emphasis">Uključeno</span>'
+        : '<span class="badge bg-secondary-subtle text-secondary-emphasis">Isključeno</span>');
   return `
-    <div class="card mb-3" id="card_${key}">
-      <div class="card-body">
-        <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
-          <h6 class="fw-bold mb-0">${LABELS[key] || key}</h6>
-          <div class="form-check form-switch" id="enabledWrap_${key}">
-            <input class="form-check-input" type="checkbox" id="en_${key}">
-            <label class="form-check-label small text-muted" for="en_${key}">Šalji ovaj email</label>
-          </div>
-        </div>
-        <div class="row g-2">
-          <div class="col-md-6">
-            <label class="form-label small">Naslov e-maila (subject)</label>
-            <input type="text" class="form-control form-control-sm" id="subject_${key}">
-          </div>
-          <div class="col-md-6">
-            <label class="form-label small">Natpis (heading)</label>
-            <input type="text" class="form-control form-control-sm" id="heading_${key}">
-          </div>
-          <div class="col-12">
-            <label class="form-label small">Uvodni tekst</label>
-            <textarea class="form-control form-control-sm" id="intro_${key}" rows="2"></textarea>
-          </div>
-          <div class="col-md-6">
-            <label class="form-label small">Napomena (sitni tekst ispod dugmeta, opciono)</label>
-            <input type="text" class="form-control form-control-sm" id="note_${key}">
-          </div>
-          <div class="col-md-6">
-            <label class="form-label small">Tekst dugmeta</label>
-            <input type="text" class="form-control form-control-sm" id="button_${key}">
-          </div>
-          <div class="col-md-5">
-            <label class="form-label small">Info okvir - naslov (opciono)</label>
-            <input type="text" class="form-control form-control-sm" id="infotitle_${key}">
-          </div>
-          <div class="col-md-7">
-            <label class="form-label small">Info okvir - tekst (opciono)</label>
-            <input type="text" class="form-control form-control-sm" id="infobody_${key}">
-          </div>
-        </div>
-        <p class="small text-muted mt-2 mb-0">Dostupne varijable: <code>${hints}</code></p>
-        <div class="d-flex justify-content-end gap-2 mt-3">
-          <button class="btn btn-sm btn-outline-secondary" onclick="resetTemplate('${key}')">Vrati na podrazumijevano</button>
-          <button class="btn btn-sm btn-outline-primary" onclick="sendTest('${key}')"><i class="bi bi-send me-1"></i>Pošalji test</button>
-          <button class="btn btn-sm btn-primary" onclick="saveTemplate('${key}')"><i class="bi bi-save me-1"></i>Sačuvaj</button>
-        </div>
-      </div>
-    </div>`;
+    <button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" onclick="openEditor('${key}')">
+      <span class="fw-semibold">${LABELS[key] || key}</span>
+      <span class="d-flex align-items-center gap-2">
+        ${statusBadge}
+        <i class="bi bi-chevron-right text-muted"></i>
+      </span>
+    </button>`;
 }
 
 function renderCategories() {
   document.getElementById('categories').innerHTML = CATEGORIES.map(cat => `
-    <h6 class="text-muted text-uppercase small fw-bold mt-4 mb-2">${cat.title}</h6>
-    ${cat.keys.map(cardHtml).join('')}
+    <div class="card mb-3">
+      <div class="card-header bg-white fw-bold"><i class="bi bi-${cat.icon} me-2 text-primary"></i>${cat.title}</div>
+      <div class="list-group list-group-flush">
+        ${cat.keys.map(rowHtml).join('')}
+      </div>
+    </div>
   `).join('');
 }
 
-function fillForm(key, t) {
-  document.getElementById(`subject_${key}`).value = t.subject || '';
-  document.getElementById(`heading_${key}`).value = t.heading || '';
-  document.getElementById(`intro_${key}`).value = t.intro_text || '';
-  document.getElementById(`note_${key}`).value = t.secondary_note || '';
-  document.getElementById(`button_${key}`).value = t.button_label || '';
-  document.getElementById(`infotitle_${key}`).value = t.info_title || '';
-  document.getElementById(`infobody_${key}`).value = t.info_body || '';
-  document.getElementById(`en_${key}`).checked = !!t.enabled;
-  if (t.always_send) {
-    document.getElementById(`enabledWrap_${key}`).style.display = 'none';
-  }
+function openEditor(key) {
+  currentKey = key;
+  const t = templates[key] || {};
+  document.getElementById('editorTitle').textContent = LABELS[key] || key;
+  document.getElementById('editorHints').textContent = PLACEHOLDERS[key].map(p => `{{${p}}}`).join(' ');
+  document.getElementById('f_subject').value = t.subject || '';
+  document.getElementById('f_heading').value = t.heading || '';
+  document.getElementById('f_intro').value = t.intro_text || '';
+  document.getElementById('f_note').value = t.secondary_note || '';
+  document.getElementById('f_button').value = t.button_label || '';
+  document.getElementById('f_infotitle').value = t.info_title || '';
+  document.getElementById('f_infobody').value = t.info_body || '';
+  document.getElementById('f_enabled').checked = !!t.enabled;
+  document.getElementById('enabledWrap').style.display = t.always_send ? 'none' : '';
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('editorModal')).show();
 }
 
-function collectForm(key) {
+function collectForm() {
   return {
-    subject: document.getElementById(`subject_${key}`).value.trim(),
-    heading: document.getElementById(`heading_${key}`).value.trim(),
-    intro_text: document.getElementById(`intro_${key}`).value.trim(),
-    secondary_note: document.getElementById(`note_${key}`).value.trim(),
-    button_label: document.getElementById(`button_${key}`).value.trim(),
-    info_title: document.getElementById(`infotitle_${key}`).value.trim(),
-    info_body: document.getElementById(`infobody_${key}`).value.trim(),
-    enabled: document.getElementById(`en_${key}`).checked,
+    subject: document.getElementById('f_subject').value.trim(),
+    heading: document.getElementById('f_heading').value.trim(),
+    intro_text: document.getElementById('f_intro').value.trim(),
+    secondary_note: document.getElementById('f_note').value.trim(),
+    button_label: document.getElementById('f_button').value.trim(),
+    info_title: document.getElementById('f_infotitle').value.trim(),
+    info_body: document.getElementById('f_infobody').value.trim(),
+    enabled: document.getElementById('f_enabled').checked,
   };
 }
 
 async function load() {
-  renderCategories();
   try {
     const [branding, rows] = await Promise.all([apiGet('/email-templates/branding'), apiGet('/email-templates/templates')]);
     document.getElementById('b_logo_url').value = branding.logo_url || '';
@@ -213,7 +239,7 @@ async function load() {
 
     templates = {};
     rows.forEach(t => { templates[t.template_key] = t; });
-    Object.keys(LABELS).forEach(key => { if (templates[key]) fillForm(key, templates[key]); });
+    renderCategories();
 
     document.getElementById('b_accent_color_picker').addEventListener('input', e => {
       document.getElementById('b_accent_color').value = e.target.value;
@@ -235,29 +261,36 @@ async function saveBranding() {
   } catch (e) { showToast(e.message, 'error'); }
 }
 
-async function saveTemplate(key) {
+async function saveTemplate() {
+  const key = currentKey;
   try {
-    await apiPut(`/email-templates/templates/${key}`, collectForm(key));
+    const form = collectForm();
+    await apiPut(`/email-templates/templates/${key}`, form);
+    templates[key] = { ...templates[key], ...form };
+    renderCategories();
     showToast('Email sačuvan', 'success');
   } catch (e) { showToast(e.message, 'error'); }
 }
 
-async function resetTemplate(key) {
+async function resetTemplate() {
+  const key = currentKey;
   confirmAction('Vratiti ovaj email na podrazumijevani tekst? Nesačuvane izmjene će biti izgubljene.', async () => {
     try {
       const row = await apiPost(`/email-templates/templates/${key}/reset`, {});
       templates[key] = row;
-      fillForm(key, row);
+      openEditor(key);
+      renderCategories();
       showToast('Vraćeno na podrazumijevano', 'success');
     } catch (e) { showToast(e.message, 'error'); }
   }, { title: 'Vrati na podrazumijevano', btnLabel: 'Vrati', btnClass: 'btn-warning' });
 }
 
-async function sendTest(key) {
+async function sendTest() {
+  const key = currentKey;
   const to = prompt('Pošalji testni email na adresu:', user.email || '');
   if (!to) return;
   try {
-    await apiPost(`/email-templates/templates/${key}/test`, { to, ...collectForm(key) });
+    await apiPost(`/email-templates/templates/${key}/test`, { to, ...collectForm() });
     showToast('Testni email poslan na ' + to, 'success');
   } catch (e) { showToast(e.message, 'error'); }
 }
