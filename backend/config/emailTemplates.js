@@ -279,10 +279,10 @@ function ticketReplyEmailHtml(userName, subject, body) {
 /* ── 8. Membership fee reminder ── */
 function feeReminderEmailHtml(name, clubName, amount, dueDateStr, isOverdue) {
   const amountStr = Number(amount).toFixed(2);
-  const heading = isOverdue ? 'Članarina je zakašnjela' : 'Podsjetnik: članarina uskoro dospijeva';
+  const heading = isOverdue ? 'Članarina je zakašnjela' : 'Rok za uplatu članarine uskoro dospijeva';
   const intro = isOverdue
     ? `Pozdrav ${escapeHtml(name)}, va&scaron;a &#269;lanarina u klubu <strong style="color:#0f172a;">${escapeHtml(clubName)}</strong> nije upla&#263;ena na vrijeme.`
-    : `Pozdrav ${escapeHtml(name)}, ovo je podsjetnik da va&scaron;a &#269;lanarina u klubu <strong style="color:#0f172a;">${escapeHtml(clubName)}</strong> uskoro dospijeva na napla&#263;eno.`;
+    : `Pozdrav ${escapeHtml(name)}, u klubu <strong style="color:#0f172a;">${escapeHtml(clubName)}</strong> rok za uplatu &#269;lanarine uskoro dospijeva.`;
 
   const bodyHtml = `
             <h1 class="heading" style="margin:0 0 14px;font-size:26px;font-weight:800;color:${isOverdue ? '#b91c1c' : '#0f172a'};letter-spacing:-0.4px;line-height:1.25;text-align:center;font-family:${FONT};">

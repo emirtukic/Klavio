@@ -611,13 +611,19 @@
     <div class="ctrl-card mb-3">
       <div class="ctrl-card-body">
         <div class="row g-3 align-items-end">
-          <div class="col-md-5">
+          <div class="col-md-3">
+            <label class="form-label fw-semibold small mb-1 text-muted text-uppercase" style="font-size:0.7rem;letter-spacing:0.06em">Selekcija</label>
+            <select class="form-select" id="selectionFilter" onchange="onSelectionFilterChange()">
+              <option value="">Sve selekcije</option>
+            </select>
+          </div>
+          <div class="col-md-4">
             <label class="form-label fw-semibold small mb-1 text-muted text-uppercase" style="font-size:0.7rem;letter-spacing:0.06em">Utakmica</label>
             <select class="form-select" id="matchSelect" onchange="onMatchChange()">
               <option value="">- Odaberi utakmicu -</option>
             </select>
           </div>
-          <div class="col-md-7">
+          <div class="col-md-5">
             <label class="form-label fw-semibold small mb-1 text-muted text-uppercase" style="font-size:0.7rem;letter-spacing:0.06em">Formacija</label>
             <div class="formation-btns" id="formationBtns"></div>
           </div>
@@ -733,13 +739,17 @@
               <span class="badge bg-primary" id="availBadge" style="font-size:0.75rem">0</span>
             </div>
             <div class="p-2" style="border-bottom:1px solid #f1f5f9">
-              <div class="input-group input-group-sm">
+              <div class="input-group input-group-sm mb-2">
                 <span class="input-group-text bg-white border-end-0" style="border-radius:8px 0 0 8px">
                   <i class="bi bi-search text-muted" style="font-size:0.75rem"></i>
                 </span>
                 <input type="text" class="form-control border-start-0 ps-0" id="availSearch"
                   placeholder="Pretraži igrača..." oninput="renderAvailable()"
                   autocomplete="off" style="border-radius:0 8px 8px 0">
+              </div>
+              <div class="form-check form-switch mb-0">
+                <input class="form-check-input" type="checkbox" id="rsvpOnlyToggle" onchange="renderAvailable()">
+                <label class="form-check-label small" for="rsvpOnlyToggle">Samo igrači koji su potvrdili dolazak</label>
               </div>
             </div>
             <div class="avail-list" id="availList">
@@ -819,6 +829,7 @@ let allMembers = [];
 let allMatches = [];
 let currentMatchId = null;
 let activeSlotId = null;
+let rsvpYesIds = null; // Set of member ids who confirmed 'yes' for the current match, or null if not loaded
 
 /* ── Boot ────────────────────────────────────────────────────── */
 async function init() {
@@ -831,19 +842,45 @@ async function init() {
     const [matches, members] = await Promise.all([apiGet('/matches'), apiGet('/members')]);
     allMatches = matches;
     allMembers = members;
-    const sel = document.getElementById('matchSelect');
-    const now = Date.now(), w = 60*864e5;
-    let list = matches.filter(m => Math.abs(new Date(m.match_date)-now) <= w);
-    if (!list.length) list = matches.slice(0,20);
-    list.sort((a,b) => Math.abs(new Date(a.match_date)-now) - Math.abs(new Date(b.match_date)-now));
-    list.forEach(m => sel.add(new Option(matchLabel(m), m.id)));
+    populateMatchSelect();
     renderAvailable();
   } catch(e) { showToast(e.message, 'error'); }
+
+  try {
+    const selections = user.role === 'coach' ? await apiGet('/selections/mine') : await apiGet('/selections');
+    const selFilter = document.getElementById('selectionFilter');
+    selections.forEach(s => selFilter.add(new Option(s.name, s.id)));
+  } catch (_) {}
 }
 
 function matchLabel(m) {
   const ha = {home:'Dom',away:'Gost',neutral:'N'}[m.home_away] || '';
   return `${m.opponent} - ${formatDate(m.match_date)}${ha?' ('+ha+')':''}`;
+}
+
+// Rebuild the match dropdown, optionally restricted to one selection. Without
+// a filter, only the ~20 nearest-in-time matches are offered (same as before);
+// picking a selection shows every match for it instead, since that list is
+// already small.
+function populateMatchSelect(filterSelId) {
+  const sel = document.getElementById('matchSelect');
+  sel.innerHTML = '<option value="">- Odaberi utakmicu -</option>';
+  let list = filterSelId
+    ? allMatches.filter(m => String(m.selection_id) === String(filterSelId))
+    : allMatches;
+  const now = Date.now(), w = 60*864e5;
+  if (!filterSelId) {
+    const windowed = list.filter(m => Math.abs(new Date(m.match_date)-now) <= w);
+    list = windowed.length ? windowed : list.slice(0,20);
+  }
+  list = [...list].sort((a,b) => Math.abs(new Date(a.match_date)-now) - Math.abs(new Date(b.match_date)-now));
+  list.forEach(m => sel.add(new Option(matchLabel(m), m.id)));
+}
+
+function onSelectionFilterChange() {
+  const selId = document.getElementById('selectionFilter').value || null;
+  populateMatchSelect(selId);
+  onMatchChange();
 }
 
 /* ── Formation ───────────────────────────────────────────────── */
@@ -944,14 +981,21 @@ function renderBench() {
 
 function renderAvailable() {
   const q = (document.getElementById('availSearch')?.value || '').toLowerCase();
+  const rsvpOnly = document.getElementById('rsvpOnlyToggle')?.checked && rsvpYesIds;
   const used = getUsedIds();
-  const avail = allMembers.filter(m => !used.has(m.id) && (!q || m.name.toLowerCase().includes(q)));
+  const avail = allMembers.filter(m =>
+    !used.has(m.id) &&
+    (!q || m.name.toLowerCase().includes(q)) &&
+    (!rsvpOnly || rsvpYesIds.has(m.id))
+  );
   document.getElementById('availBadge').textContent = avail.length;
   const el = document.getElementById('availList');
   if (!avail.length) {
     el.innerHTML = q
       ? `<p class="text-center text-muted small py-4">Nema rezultata za "${escHtml(q)}"</p>`
-      : `<p class="text-center text-muted small py-4"><i class="bi bi-check-circle me-1 text-success"></i>Svi igrači su raspoređeni</p>`;
+      : rsvpOnly
+        ? `<p class="text-center text-muted small py-4">Niko nije potvrdio dolazak za ovu utakmicu.</p>`
+        : `<p class="text-center text-muted small py-4"><i class="bi bi-check-circle me-1 text-success"></i>Svi igrači su raspoređeni</p>`;
     return;
   }
   el.innerHTML = avail.map(m => `
@@ -1099,6 +1143,13 @@ async function onMatchChange() {
       ? await apiGet('/members?selection_id=' + match.selection_id)
       : await apiGet('/members');
   } catch (e) { showToast(e.message, 'error'); }
+
+  rsvpYesIds = null;
+  try {
+    const rsvps = await apiGet('/availability/match/' + id);
+    rsvpYesIds = new Set(rsvps.filter(r => r.status === 'yes').map(r => r.member_id));
+  } catch (_) {}
+  document.getElementById('rsvpOnlyToggle').checked = false;
   renderAvailable();
 
   try {

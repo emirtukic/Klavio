@@ -5,12 +5,24 @@ const { feeReminderEmailHtml } = require('../config/emailTemplates');
 
 const MAIL_ENABLED = !!(process.env.MAIL_USER && process.env.BREVO_API_KEY);
 
+// A coach may only send/trigger reminders for members of their own selection(s).
+async function memberInCoachScope(req, memberId) {
+  if (req.user.role !== 'coach') return true;
+  const ids = req.user.selection_ids || [];
+  if (!ids.length) return false;
+  const [rows] = await db.query(
+    'SELECT 1 FROM member_selections WHERE member_id=? AND selection_id IN (?) LIMIT 1',
+    [memberId, ids]
+  );
+  return rows.length > 0;
+}
+
 async function sendReminderEmail(toEmail, name, clubName, amount, dueDateStr, isOverdue) {
   if (!MAIL_ENABLED || !toEmail) return;
   try {
     await sendMail({
       to: toEmail,
-      subject: isOverdue ? 'Članarina je zakašnjela' : 'Podsjetnik: članarina uskoro dospijeva',
+      subject: isOverdue ? 'Članarina je zakašnjela' : 'Rok za uplatu članarine uskoro dospijeva',
       html: feeReminderEmailHtml(name, clubName, amount, dueDateStr, isOverdue),
     });
   } catch (_) {}
@@ -28,6 +40,7 @@ exports.sendFeeReminder = async (req, res) => {
       WHERE mf.id = ? AND m.club_id = ?
     `, [feeId, club_id]);
     if (!fee) return res.status(404).json({ message: 'Članarina nije pronađena' });
+    if (!(await memberInCoachScope(req, fee.member_id))) return res.status(404).json({ message: 'Članarina nije pronađena' });
 
     const due = fee.due_date ? new Date(fee.due_date).toLocaleDateString('bs-BA') : '-';
     const isOverdue = fee.status === 'overdue';
@@ -50,6 +63,11 @@ exports.sendFeeReminder = async (req, res) => {
 exports.checkFees = async (req, res) => {
   try {
     const club_id = req.user.club_id;
+    const ids = req.user.selection_ids || [];
+    const coachFilter = req.user.role === 'coach'
+      ? (ids.length ? ' AND EXISTS (SELECT 1 FROM member_selections ms WHERE ms.member_id=m.id AND ms.selection_id IN (?))' : ' AND 1=0')
+      : '';
+    const scopeParams = req.user.role === 'coach' && ids.length ? [ids] : [];
 
     // Find overdue fees (due_date < today, status = pending)
     const [overdue] = await db.query(`
@@ -57,12 +75,17 @@ exports.checkFees = async (req, res) => {
       FROM membership_fees mf
       JOIN members m ON mf.member_id = m.id
       JOIN users u ON m.user_id = u.id
-      WHERE mf.status = 'pending' AND mf.due_date < CURDATE() AND m.club_id = ?
-    `, [club_id]);
+      WHERE mf.status = 'pending' AND mf.due_date < CURDATE() AND m.club_id = ?${coachFilter}
+    `, [club_id, ...scopeParams]);
 
     // Update them to overdue
     if (overdue.length) {
-      await db.query(`UPDATE membership_fees SET status='overdue' WHERE status='pending' AND due_date < CURDATE() AND member_id IN (SELECT id FROM members WHERE club_id = ?)`, [club_id]);
+      await db.query(
+        `UPDATE membership_fees mf JOIN members m ON mf.member_id = m.id
+         SET mf.status='overdue'
+         WHERE mf.status='pending' AND mf.due_date < CURDATE() AND m.club_id = ?${coachFilter}`,
+        [club_id, ...scopeParams]
+      );
     }
 
     // Find fees due in next 7 days
@@ -71,8 +94,8 @@ exports.checkFees = async (req, res) => {
       FROM membership_fees mf
       JOIN members m ON mf.member_id = m.id
       JOIN users u ON m.user_id = u.id
-      WHERE mf.status = 'pending' AND mf.due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY) AND m.club_id = ?
-    `, [club_id]);
+      WHERE mf.status = 'pending' AND mf.due_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY) AND m.club_id = ?${coachFilter}
+    `, [club_id, ...scopeParams]);
 
     let notifsSent = 0;
     const [[club]] = await db.query('SELECT name FROM clubs WHERE id = ?', [club_id]);

@@ -336,12 +336,9 @@ buildSidebar();
 const isAdmin = ['super_admin','admin'].includes(user.role);
 const canManage = isAdmin || user.role === 'coach';
 if (!isAdmin) {
-  // Coaches can record/edit/mark-paid fees for members of their own selection(s),
-  // but club-wide bulk actions (mass-generate, reminders, bulk select/delete) stay admin-only.
+  // Coaches get the same fee management options as admin, scoped on the
+  // backend to members of their own selection(s).
   document.getElementById('pageSubtitle').textContent = 'Praćenje uplata članova vaše selekcije';
-  document.getElementById('checkRemindersBtn').remove();
-  document.getElementById('bulkGenerateBtn').remove();
-  document.getElementById('thCb').remove();
 }
 
 let allFees = [];
@@ -358,10 +355,11 @@ async function loadSelections() {
       document.getElementById('fSelection').insertAdjacentHTML('beforeend', opts);
     } catch (_) {}
   } else {
-    // Coach - filter is scoped to the selection(s) they already belong to.
+    // Coach - filter/bulk-generate are scoped to the selection(s) they already belong to.
     const mine = getSelections();
-    document.getElementById('fSelection').insertAdjacentHTML('beforeend',
-      mine.map(s => `<option value="${s.id}">${escHtml(s.name)}</option>`).join(''));
+    const opts = mine.map(s => `<option value="${s.id}">${escHtml(s.name)}</option>`).join('');
+    document.getElementById('fSelection').insertAdjacentHTML('beforeend', opts);
+    document.getElementById('bgSelection').insertAdjacentHTML('beforeend', opts);
   }
 }
 
@@ -416,7 +414,7 @@ function renderTable() {
     const rowSel  = selectedFeeIds.has(f.id) ? 'row-selected' : '';
     return `
     <tr id="fee-row-${f.id}" class="${rowSel}">
-      ${isAdmin ? `<td class="cb-col"><input type="checkbox" class="form-check-input" data-id="${f.id}" ${checked} onchange="toggleFeeRow(${f.id},this.checked)"></td>` : ''}
+      ${canManage ? `<td class="cb-col"><input type="checkbox" class="form-check-input" data-id="${f.id}" ${checked} onchange="toggleFeeRow(${f.id},this.checked)"></td>` : ''}
       <td data-label="Član" class="fw-semibold">${f.member_name}</td>
       <td data-label="Selekcija" class="small text-muted">${escHtml(f.selection_names) || '-'}</td>
       <td data-label="Period" class="small text-muted">${formatDate(f.period_start)} - ${formatDate(f.period_end)}</td>
@@ -426,13 +424,13 @@ function renderTable() {
       <td data-label="Status">${statusBadge(f.status)}</td>
       ${canManage ? `<td>
         ${f.status !== 'paid' ? `<button class="btn btn-sm btn-success me-1" onclick="markPaid(${f.id})" title="Označi plaćeno"><i class="bi bi-check-lg"></i></button>` : ''}
-        ${isAdmin && f.status !== 'paid' ? `<button class="btn btn-sm btn-outline-warning me-1" onclick="sendFeeReminder(${f.id})" title="Pošalji podsjetnik"><i class="bi bi-bell"></i></button>` : ''}
+        ${f.status !== 'paid' ? `<button class="btn btn-sm btn-outline-warning me-1" onclick="sendFeeReminder(${f.id})" title="Pošalji podsjetnik"><i class="bi bi-bell"></i></button>` : ''}
         <button class="btn btn-sm btn-outline-secondary me-1" onclick="quickEditFee(${f.id})" title="Uredi"><i class="bi bi-pencil"></i></button>
-        ${isAdmin ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteFee(${f.id})" title="Obriši"><i class="bi bi-trash"></i></button>` : ''}
+        <button class="btn btn-sm btn-outline-danger" onclick="deleteFee(${f.id})" title="Obriši"><i class="bi bi-trash"></i></button>
       </td>` : ''}
     </tr>`;
   }).join('') :
-  `<tr><td colspan="${isAdmin ? 9 : 8}" class="text-center py-5">
+  `<tr><td colspan="${canManage ? 9 : 8}" class="text-center py-5">
     <i class="bi bi-${anyFilter ? 'search' : 'cash-coin'} fs-2 d-block mb-2 text-muted opacity-25"></i>
     <div class="fw-semibold text-muted mb-1">${anyFilter ? 'Nema pronađenih članarina' : 'Još nema unesenih članarina'}</div>
     <div class="small text-muted">${anyFilter ? 'Prilagodite filtere za pretragu.' : (canManage ? 'Dodajte prvu članarinu kluba.' : '')}</div>

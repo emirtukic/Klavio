@@ -104,6 +104,7 @@ const NAV = {
     { href:'/pages/training/schedule.html',   icon:'calendar3',      label:'Treninzi' },
     { href:'/pages/matches/list.html',        icon:'trophy',         label:'Utakmice' },
     { href:'/pages/matches/live.html',        icon:'broadcast',      label:'Live utakmica', highlight: true },
+    { href:'/pages/lineup/index.html',        icon:'grid-3x3-gap',   label:'Postava' },
     { href:'/pages/calendar/index.html',      icon:'calendar2-week', label:'Kalendar' },
     { section:'Analitika' },
     { href:'/pages/statistics/index.html',    icon:'graph-up',       label:'Statistike',       plan:'pro' },

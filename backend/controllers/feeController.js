@@ -70,10 +70,20 @@ exports.create = async (req, res) => {
   }
 };
 
-async function findOverlapping(clubId, period_start, period_end, selectionId) {
+async function findOverlapping(clubId, period_start, period_end, selectionId, coachIds) {
+  // coachIds is null for admin (no restriction); for a coach it's the list of
+  // selections they belong to (possibly empty, meaning they see no one).
+  if (coachIds && !coachIds.length) return { members: [], overlapping: [] };
+
   const params = [clubId];
   let sql = "SELECT id FROM members WHERE club_id = ? AND status = 'active'";
-  if (selectionId) { sql += ' AND selection_id = ?'; params.push(selectionId); }
+  if (selectionId) {
+    sql += ' AND EXISTS (SELECT 1 FROM member_selections ms WHERE ms.member_id=members.id AND ms.selection_id=?)';
+    params.push(selectionId);
+  } else if (coachIds) {
+    sql += ' AND EXISTS (SELECT 1 FROM member_selections ms WHERE ms.member_id=members.id AND ms.selection_id IN (?))';
+    params.push(coachIds);
+  }
   const [members] = await db.query(sql, params);
   if (!members.length) return { members: [], overlapping: [] };
 
@@ -88,13 +98,24 @@ async function findOverlapping(clubId, period_start, period_end, selectionId) {
   return { members, overlapping };
 }
 
+// A coach can only bulk-generate/preview for the selection(s) they belong to;
+// an out-of-scope selection_id pick is ignored rather than rejected, falling
+// back to "all of the coach's own selections".
+function resolveBulkScope(req, selection_id) {
+  if (req.user.role !== 'coach') return { selId: selection_id || null, coachIds: null };
+  const coachIds = req.user.selection_ids || [];
+  const selId = selection_id && coachIds.includes(Number(selection_id)) ? Number(selection_id) : null;
+  return { selId, coachIds };
+}
+
 exports.bulkPreview = async (req, res) => {
   const { period_start, period_end, selection_id } = req.body;
   if (!period_start || !period_end) {
     return res.status(400).json({ message: 'Period je obavezan' });
   }
   try {
-    const { members, overlapping } = await findOverlapping(req.user.club_id, period_start, period_end, selection_id || null);
+    const { selId, coachIds } = resolveBulkScope(req, selection_id);
+    const { members, overlapping } = await findOverlapping(req.user.club_id, period_start, period_end, selId, coachIds);
     res.json({
       totalActive: members.length,
       overlapping: overlapping.map(o => ({ id: o.member_id, name: o.name })),
@@ -111,7 +132,8 @@ exports.bulkGenerate = async (req, res) => {
     return res.status(400).json({ message: 'Iznos, period i rok uplate su obavezni' });
   }
   try {
-    const { members, overlapping } = await findOverlapping(req.user.club_id, period_start, period_end, selection_id || null);
+    const { selId, coachIds } = resolveBulkScope(req, selection_id);
+    const { members, overlapping } = await findOverlapping(req.user.club_id, period_start, period_end, selId, coachIds);
     if (!members.length) return res.json({ created: 0, skipped: 0, message: 'Nema aktivnih članova u odabranoj selekciji' });
 
     const includeIds = new Set(Array.isArray(includeOverlapIds) ? includeOverlapIds.map(Number) : []);
@@ -233,6 +255,13 @@ async function autoAddIncome(fee, date, userId) {
 
 exports.remove = async (req, res) => {
   try {
+    const [[fee]] = await db.query(
+      'SELECT mf.member_id FROM membership_fees mf JOIN members m ON mf.member_id = m.id WHERE mf.id = ? AND m.club_id = ?',
+      [req.params.id, req.user.club_id]
+    );
+    if (!fee) return res.status(404).json({ message: 'Članarina nije pronađena' });
+    if (!(await memberInCoachScope(req, fee.member_id))) return res.status(404).json({ message: 'Članarina nije pronađena' });
+
     // Delete the linked income entry too, so a deleted fee doesn't keep
     // inflating the Finansije total forever.
     await db.query(
