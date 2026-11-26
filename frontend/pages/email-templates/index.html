@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-v3.png"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="theme-color" content="#2563eb">
+  <script src="/assets/js/cookie-consent.js" defer></script>
+  <title>Email šabloni | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Email šabloni</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-danger" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+  <div class="page-body">
+    <div class="page-header">
+      <h4>Email šabloni</h4>
+      <p class="text-muted mb-0">Uredite izgled i tekst svih e-mailova koje platforma šalje. Izmjene se odmah primjenjuju na sve klubove.</p>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-body">
+        <h6 class="fw-bold mb-3"><i class="bi bi-palette me-1"></i>Brending</h6>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Logo URL</label>
+            <input type="text" class="form-control" id="b_logo_url">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Naziv brenda</label>
+            <input type="text" class="form-control" id="b_brand_name">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Boja akcenta</label>
+            <div class="d-flex gap-2">
+              <input type="color" class="form-control form-control-color" id="b_accent_color_picker" style="width:48px;">
+              <input type="text" class="form-control" id="b_accent_color">
+            </div>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Footer - slogan</label>
+            <input type="text" class="form-control" id="b_footer_tagline">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Footer - adresa</label>
+            <input type="text" class="form-control" id="b_footer_address">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Footer - email</label>
+            <input type="text" class="form-control" id="b_footer_email">
+          </div>
+        </div>
+        <div class="text-end mt-3">
+          <button class="btn btn-primary" onclick="saveBranding()"><i class="bi bi-save me-1"></i>Sačuvaj brending</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="categories"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+const user = requireRole('super_admin');
+setUserInfo(user);
+buildSidebar();
+
+const CATEGORIES = [
+  { title: 'Nalog', keys: ['verify_email', 'welcome', 'invite', 'reset_password'] },
+  { title: 'Članarine', keys: ['fee_reminder_upcoming', 'fee_reminder_overdue', 'fee_created', 'fee_paid'] },
+  { title: 'Treninzi i utakmice', keys: ['match_created', 'training_created', 'match_day_before', 'rsvp_decline', 'lineup_reminder', 'result_reminder_2h', 'result_reminder_1d'] },
+  { title: 'Podrška', keys: ['ticket_reply'] },
+  { title: 'Termini', keys: ['appointment_created'] },
+];
+
+const LABELS = {
+  verify_email: 'Potvrda e-mail adrese', welcome: 'Dobrodošlica', invite: 'Pozivnica (postavi lozinku)', reset_password: 'Reset lozinke',
+  fee_reminder_upcoming: 'Podsjetnik - članarina dospijeva', fee_reminder_overdue: 'Podsjetnik - članarina zakašnjela',
+  fee_created: 'Nova članarina', fee_paid: 'Članarina plaćena',
+  ticket_reply: 'Odgovor na support tiket',
+  match_created: 'Nova utakmica zakazana', training_created: 'Novi trening zakazan', match_day_before: 'Podsjetnik dan prije utakmice',
+  rsvp_decline: 'Otkazano prisustvo (RSVP)', lineup_reminder: 'Podsjetnik - postava nije unesena',
+  result_reminder_2h: 'Podsjetnik - rezultat (2h)', result_reminder_1d: 'Podsjetnik - rezultat (1 dan)',
+  appointment_created: 'Novi termin zakazan',
+};
+
+const PLACEHOLDERS = {
+  verify_email: ['ime', 'klub'], welcome: ['ime', 'klub'], invite: ['ime', 'klub', 'uloga'], reset_password: ['ime'],
+  fee_reminder_upcoming: ['ime', 'klub', 'iznos', 'rok'], fee_reminder_overdue: ['ime', 'klub', 'iznos', 'rok'],
+  fee_created: ['iznos', 'rok'], fee_paid: ['iznos', 'datum'],
+  ticket_reply: ['ime', 'naslov', 'odgovor'],
+  match_created: ['protivnik', 'datum', 'lokacija'], training_created: ['selekcija', 'naziv', 'datum', 'lokacija', 'opis'],
+  match_day_before: ['protivnik', 'datum', 'lokacija', 'domacin_gost', 'selekcija'],
+  rsvp_decline: ['ime', 'sta', 'datum', 'razlog'], lineup_reminder: ['protivnik', 'datum'],
+  result_reminder_2h: ['protivnik', 'datum'], result_reminder_1d: ['protivnik', 'datum'],
+  appointment_created: ['naziv', 'osoba', 'datum', 'napomena'],
+};
+
+let templates = {};
+
+function cardHtml(key) {
+  const hints = PLACEHOLDERS[key].map(p => `{{${p}}}`).join(' ');
+  return `
+    <div class="card mb-3" id="card_${key}">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-3 flex-wrap gap-2">
+          <h6 class="fw-bold mb-0">${LABELS[key] || key}</h6>
+          <div class="form-check form-switch" id="enabledWrap_${key}">
+            <input class="form-check-input" type="checkbox" id="en_${key}">
+            <label class="form-check-label small text-muted" for="en_${key}">Šalji ovaj email</label>
+          </div>
+        </div>
+        <div class="row g-2">
+          <div class="col-md-6">
+            <label class="form-label small">Naslov e-maila (subject)</label>
+            <input type="text" class="form-control form-control-sm" id="subject_${key}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small">Natpis (heading)</label>
+            <input type="text" class="form-control form-control-sm" id="heading_${key}">
+          </div>
+          <div class="col-12">
+            <label class="form-label small">Uvodni tekst</label>
+            <textarea class="form-control form-control-sm" id="intro_${key}" rows="2"></textarea>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small">Napomena (sitni tekst ispod dugmeta, opciono)</label>
+            <input type="text" class="form-control form-control-sm" id="note_${key}">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label small">Tekst dugmeta</label>
+            <input type="text" class="form-control form-control-sm" id="button_${key}">
+          </div>
+          <div class="col-md-5">
+            <label class="form-label small">Info okvir - naslov (opciono)</label>
+            <input type="text" class="form-control form-control-sm" id="infotitle_${key}">
+          </div>
+          <div class="col-md-7">
+            <label class="form-label small">Info okvir - tekst (opciono)</label>
+            <input type="text" class="form-control form-control-sm" id="infobody_${key}">
+          </div>
+        </div>
+        <p class="small text-muted mt-2 mb-0">Dostupne varijable: <code>${hints}</code></p>
+        <div class="d-flex justify-content-end gap-2 mt-3">
+          <button class="btn btn-sm btn-outline-secondary" onclick="resetTemplate('${key}')">Vrati na podrazumijevano</button>
+          <button class="btn btn-sm btn-outline-primary" onclick="sendTest('${key}')"><i class="bi bi-send me-1"></i>Pošalji test</button>
+          <button class="btn btn-sm btn-primary" onclick="saveTemplate('${key}')"><i class="bi bi-save me-1"></i>Sačuvaj</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderCategories() {
+  document.getElementById('categories').innerHTML = CATEGORIES.map(cat => `
+    <h6 class="text-muted text-uppercase small fw-bold mt-4 mb-2">${cat.title}</h6>
+    ${cat.keys.map(cardHtml).join('')}
+  `).join('');
+}
+
+function fillForm(key, t) {
+  document.getElementById(`subject_${key}`).value = t.subject || '';
+  document.getElementById(`heading_${key}`).value = t.heading || '';
+  document.getElementById(`intro_${key}`).value = t.intro_text || '';
+  document.getElementById(`note_${key}`).value = t.secondary_note || '';
+  document.getElementById(`button_${key}`).value = t.button_label || '';
+  document.getElementById(`infotitle_${key}`).value = t.info_title || '';
+  document.getElementById(`infobody_${key}`).value = t.info_body || '';
+  document.getElementById(`en_${key}`).checked = !!t.enabled;
+  if (t.always_send) {
+    document.getElementById(`enabledWrap_${key}`).style.display = 'none';
+  }
+}
+
+function collectForm(key) {
+  return {
+    subject: document.getElementById(`subject_${key}`).value.trim(),
+    heading: document.getElementById(`heading_${key}`).value.trim(),
+    intro_text: document.getElementById(`intro_${key}`).value.trim(),
+    secondary_note: document.getElementById(`note_${key}`).value.trim(),
+    button_label: document.getElementById(`button_${key}`).value.trim(),
+    info_title: document.getElementById(`infotitle_${key}`).value.trim(),
+    info_body: document.getElementById(`infobody_${key}`).value.trim(),
+    enabled: document.getElementById(`en_${key}`).checked,
+  };
+}
+
+async function load() {
+  renderCategories();
+  try {
+    const [branding, rows] = await Promise.all([apiGet('/email-templates/branding'), apiGet('/email-templates/templates')]);
+    document.getElementById('b_logo_url').value = branding.logo_url || '';
+    document.getElementById('b_brand_name').value = branding.brand_name || '';
+    document.getElementById('b_accent_color').value = branding.accent_color || '#2563eb';
+    document.getElementById('b_accent_color_picker').value = branding.accent_color || '#2563eb';
+    document.getElementById('b_footer_tagline').value = branding.footer_tagline || '';
+    document.getElementById('b_footer_address').value = branding.footer_address || '';
+    document.getElementById('b_footer_email').value = branding.footer_email || '';
+
+    templates = {};
+    rows.forEach(t => { templates[t.template_key] = t; });
+    Object.keys(LABELS).forEach(key => { if (templates[key]) fillForm(key, templates[key]); });
+
+    document.getElementById('b_accent_color_picker').addEventListener('input', e => {
+      document.getElementById('b_accent_color').value = e.target.value;
+    });
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function saveBranding() {
+  try {
+    await apiPut('/email-templates/branding', {
+      logo_url: document.getElementById('b_logo_url').value.trim(),
+      brand_name: document.getElementById('b_brand_name').value.trim(),
+      accent_color: document.getElementById('b_accent_color').value.trim(),
+      footer_tagline: document.getElementById('b_footer_tagline').value.trim(),
+      footer_address: document.getElementById('b_footer_address').value.trim(),
+      footer_email: document.getElementById('b_footer_email').value.trim(),
+    });
+    showToast('Brending sačuvan', 'success');
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function saveTemplate(key) {
+  try {
+    await apiPut(`/email-templates/templates/${key}`, collectForm(key));
+    showToast('Email sačuvan', 'success');
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function resetTemplate(key) {
+  confirmAction('Vratiti ovaj email na podrazumijevani tekst? Nesačuvane izmjene će biti izgubljene.', async () => {
+    try {
+      const row = await apiPost(`/email-templates/templates/${key}/reset`, {});
+      templates[key] = row;
+      fillForm(key, row);
+      showToast('Vraćeno na podrazumijevano', 'success');
+    } catch (e) { showToast(e.message, 'error'); }
+  }, { title: 'Vrati na podrazumijevano', btnLabel: 'Vrati', btnClass: 'btn-warning' });
+}
+
+async function sendTest(key) {
+  const to = prompt('Pošalji testni email na adresu:', user.email || '');
+  if (!to) return;
+  try {
+    await apiPost(`/email-templates/templates/${key}/test`, { to, ...collectForm(key) });
+    showToast('Testni email poslan na ' + to, 'success');
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+load();
+</script>
+</body>
+</html>

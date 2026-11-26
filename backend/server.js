@@ -72,6 +72,7 @@ app.use('/api/backup', require('./routes/backup'));
 app.use('/api/platform', require('./routes/platform'));
 app.use('/api/platform-messaging', require('./routes/platform-messaging'));
 app.use('/api/system-notifications', require('./routes/system-notifications'));
+app.use('/api/email-templates', require('./routes/emailTemplates'));
 app.use('/api/invoices', require('./routes/invoices'));
 app.use('/api/support-tickets', require('./routes/support-tickets'));
 app.use('/api/analytics',      require('./routes/analytics'));

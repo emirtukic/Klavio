@@ -1,6 +1,6 @@
 const db     = require('../config/db');
 const mailer = require('../config/mailer');
-const { eventNotificationHtml } = require('../config/emailTemplates');
+const { renderEmail } = require('../config/emailTemplateStore');
 
 const MATCH_TYPE_LABEL = { friendly: 'Prijateljska', league: 'Liga', cup: 'Kup' };
 const HOME_AWAY_LABEL  = { home: 'Domaćin', away: 'Gost', neutral: 'Neutralno' };
@@ -52,15 +52,14 @@ exports.notifyMatchCreated = async (match, clubId, selectionId, creatorUserId) =
       [clubId, selectionId, creatorUserId]
     );
 
-    const emailHtml = eventNotificationHtml(
-      'Nova utakmica zakazana', null,
-      [['Protivnik', match.opponent], ['Datum', fmtDate(match.match_date)], ['Lokacija', match.location || 'TBD']],
-      `${APP_URL}/pages/matches/list.html`, 'Pogledaj raspored'
+    const r = await renderEmail('match_created',
+      { protivnik: match.opponent, datum: fmtDate(match.match_date), lokacija: match.location || 'TBD', __link: `${APP_URL}${link}` },
+      [['Protivnik', match.opponent], ['Datum', fmtDate(match.match_date)], ['Lokacija', match.location || 'TBD']]
     );
 
     for (const u of [...members, ...coaches]) {
       await insertNotif(u.id, clubId, title, msg, 'info', link);
-      sendEmail(u.email, title, emailHtml);
+      if (r.enabled) sendEmail(u.email, r.subject, r.html);
     }
   } catch (err) {
     console.error('[notif] notifyMatchCreated error:', err.message);
@@ -94,21 +93,20 @@ exports.notifyTrainingCreated = async (session, clubId, selectionId, creatorUser
       [clubId, selectionId, creatorUserId]
     );
 
-    const emailHtml = eventNotificationHtml(
-      'Novi trening zakazan', null,
+    const r = await renderEmail('training_created',
+      { selekcija: selName, naziv: session.title, datum: `${when} - ${session.end_time || ''}`, lokacija: session.location || 'TBD', opis: session.description || '', __link: `${APP_URL}${link}` },
       [
         ['Selekcija', selName],
         ['Naziv', session.title],
         ['Datum i vrijeme', `${when} - ${session.end_time || ''}`],
         ['Lokacija', session.location || 'TBD'],
         ...(session.description ? [['Opis', session.description]] : []),
-      ],
-      `${APP_URL}/pages/training/schedule.html`, 'Pogledaj raspored'
+      ]
     );
 
     for (const u of [...members, ...coaches]) {
       await insertNotif(u.id, clubId, title, msg, 'info', link);
-      sendEmail(u.email, title, emailHtml);
+      if (r.enabled) sendEmail(u.email, r.subject, r.html);
     }
   } catch (err) {
     console.error('[notif] notifyTrainingCreated error:', err.message);
@@ -136,12 +134,10 @@ exports.sendDayBeforeReminders = async () => {
       const loc    = match.location || 'TBD';
       const selName = match.selection_name || 'Selekcija';
 
-      const matchEmailBody = (intro) =>
-        eventNotificationHtml(
-          'Utakmica sutra - podsjetnik', intro,
-          [['Protivnik', match.opponent], ['Datum', dtStr], ['Lokacija', loc], ['Domaćin/Gost', HOME_AWAY_LABEL[match.home_away] || match.home_away]],
-          `${APP_URL}/pages/matches/list.html`, 'Pogledaj detalje'
-        );
+      const r = await renderEmail('match_day_before',
+        { protivnik: match.opponent, datum: dtStr, lokacija: loc, domacin_gost: HOME_AWAY_LABEL[match.home_away] || match.home_away, selekcija: selName, __link: `${APP_URL}${link}` },
+        [['Protivnik', match.opponent], ['Datum', dtStr], ['Lokacija', loc], ['Domaćin/Gost', HOME_AWAY_LABEL[match.home_away] || match.home_away]]
+      );
 
       // ── Members ──
       if (match.selection_id) {
@@ -155,7 +151,7 @@ exports.sendDayBeforeReminders = async () => {
             '⚽ Utakmica sutra!',
             `vs ${match.opponent} · ${dtStr} · ${loc}`,
             'warning', link);
-          sendEmail(u.email, `⚽ Utakmica sutra! vs ${match.opponent}`, matchEmailBody(`Imaš utakmicu sutra (${selName}).`));
+          if (r.enabled) sendEmail(u.email, r.subject, r.html);
           sent++;
         }
 
@@ -170,7 +166,7 @@ exports.sendDayBeforeReminders = async () => {
             '⚽ Utakmica sutra - podsjetnik',
             `${selName} igra sutra: vs ${match.opponent} · ${dtStr} · ${loc}`,
             'warning', link);
-          sendEmail(u.email, `⚽ Utakmica sutra - ${selName}`, matchEmailBody(`${selName} igra sutra.`));
+          if (r.enabled) sendEmail(u.email, r.subject, r.html);
           sent++;
         }
       }
@@ -186,7 +182,7 @@ exports.sendDayBeforeReminders = async () => {
           `⚽ Utakmica sutra - ${selName}`,
           adminMsg,
           'warning', link);
-        sendEmail(u.email, `⚽ Utakmica sutra - ${selName} vs ${match.opponent}`, matchEmailBody(`${selName} igra sutra (vaš klub).`));
+        if (r.enabled) sendEmail(u.email, r.subject, r.html);
         sent++;
       }
     }
@@ -224,13 +220,15 @@ async function getSelectionTaskRecipients(clubId, selectionId) {
 /**
  * Notifies the match's own coach(es) (if it has a selection) plus every
  * club admin about an outstanding task on that match - deduped per user.
+ * In-app title/msg are fixed (not admin-editable); the email body comes
+ * from the editable `key` template.
  */
-async function notifyMatchTask(match, { title, msg, emailSubject, emailIntro, link }) {
+async function notifyMatchTask(match, { key, vars, title, msg, link }) {
   const recipients = await getSelectionTaskRecipients(match.club_id, match.selection_id);
-  const emailHtml = eventNotificationHtml(emailSubject, emailIntro, null, `${APP_URL}${link}`, 'Otvori');
+  const r = await renderEmail(key, { ...vars, __link: `${APP_URL}${link}` });
   for (const u of recipients) {
     await insertNotif(u.id, match.club_id, title, msg, 'warning', link);
-    sendEmail(u.email, emailSubject, emailHtml);
+    if (r.enabled) sendEmail(u.email, r.subject, r.html);
   }
 }
 
@@ -251,10 +249,10 @@ exports.notifyRsvpDecline = async (eventType, event, memberName, note) => {
     const link = isTraining ? '/pages/training/schedule.html' : '/pages/matches/list.html';
 
     const recipients = await getSelectionTaskRecipients(event.club_id, event.selection_id);
-    const emailHtml = eventNotificationHtml(title, msg, null, `${APP_URL}${link}`, 'Otvori');
+    const r = await renderEmail('rsvp_decline', { ime: memberName, sta: whatLabel, datum: when, razlog: note, __link: `${APP_URL}${link}` });
     for (const u of recipients) {
       await insertNotif(u.id, event.club_id, title, msg, 'warning', link);
-      sendEmail(u.email, title, emailHtml);
+      if (r.enabled) sendEmail(u.email, r.subject, r.html);
     }
   } catch (err) {
     console.error('[notif] notifyRsvpDecline error:', err.message);
@@ -276,10 +274,10 @@ exports.checkLineupReminders = async () => {
     `);
     for (const match of matches) {
       await notifyMatchTask(match, {
+        key: 'lineup_reminder',
+        vars: { protivnik: match.opponent, datum: fmtDate(match.match_date) },
         title: '📋 Postava nije unesena',
         msg: `Utakmica vs ${match.opponent} počinje za manje od 2 sata - postava nije unesena.`,
-        emailSubject: `Postava nije unesena - vs ${match.opponent}`,
-        emailIntro: `Utakmica vs ${match.opponent} (${fmtDate(match.match_date)}) počinje uskoro, a postava još nije unesena.`,
         link: '/pages/lineup/index.html',
       });
       await db.query('UPDATE matches SET lineup_reminder_sent = 1 WHERE id = ?', [match.id]);
@@ -304,10 +302,10 @@ exports.checkResultReminders = async () => {
     `);
     for (const match of due2h) {
       await notifyMatchTask(match, {
+        key: 'result_reminder_2h',
+        vars: { protivnik: match.opponent, datum: fmtDate(match.match_date) },
         title: '📝 Unesi rezultat utakmice',
         msg: `Utakmica vs ${match.opponent} je odigrana - unesite rezultat i statistiku igrača.`,
-        emailSubject: `Unesi rezultat - vs ${match.opponent}`,
-        emailIntro: `Utakmica vs ${match.opponent} (${fmtDate(match.match_date)}) je odigrana, a rezultat još nije unesen.`,
         link: '/pages/matches/list.html',
       });
       await db.query('UPDATE matches SET result_reminder_2h_sent = 1 WHERE id = ?', [match.id]);
@@ -321,10 +319,10 @@ exports.checkResultReminders = async () => {
     `);
     for (const match of due1d) {
       await notifyMatchTask(match, {
+        key: 'result_reminder_1d',
+        vars: { protivnik: match.opponent, datum: fmtDate(match.match_date) },
         title: '⏰ Rezultat utakmice i dalje nije unesen',
         msg: `Prošao je dan od utakmice vs ${match.opponent}, a rezultat još nije unesen.`,
-        emailSubject: `Podsjetnik: rezultat i dalje nije unesen - vs ${match.opponent}`,
-        emailIntro: `Prošao je dan od utakmice vs ${match.opponent} (${fmtDate(match.match_date)}), a rezultat, strijelci i statistika i dalje nisu uneseni.`,
         link: '/pages/matches/list.html',
       });
       await db.query('UPDATE matches SET result_reminder_1d_sent = 1 WHERE id = ?', [match.id]);

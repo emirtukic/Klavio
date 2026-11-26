@@ -1,9 +1,10 @@
 const db = require('../config/db');
 const { createNotification } = require('./notificationController');
 const { send: sendMail } = require('../config/mailer');
-const { feeReminderEmailHtml } = require('../config/emailTemplates');
+const { renderEmail } = require('../config/emailTemplateStore');
 
 const MAIL_ENABLED = !!(process.env.MAIL_USER && process.env.BREVO_API_KEY);
+const APP_URL = process.env.APP_URL || 'http://localhost:3000';
 
 // A coach may only send/trigger reminders for members of their own selection(s).
 async function memberInCoachScope(req, memberId) {
@@ -20,11 +21,11 @@ async function memberInCoachScope(req, memberId) {
 async function sendReminderEmail(toEmail, name, clubName, amount, dueDateStr, isOverdue) {
   if (!MAIL_ENABLED || !toEmail) return;
   try {
-    await sendMail({
-      to: toEmail,
-      subject: isOverdue ? 'Članarina je zakašnjela' : 'Rok za uplatu članarine uskoro dospijeva',
-      html: feeReminderEmailHtml(name, clubName, amount, dueDateStr, isOverdue),
-    });
+    const amountStr = Number(amount).toFixed(2);
+    const key = isOverdue ? 'fee_reminder_overdue' : 'fee_reminder_upcoming';
+    const r = await renderEmail(key, { ime: name, klub: clubName, iznos: amountStr, rok: dueDateStr, __link: `${APP_URL}/pages/my-fees/index.html` },
+      [['Iznos', `${amountStr} KM`], ['Rok uplate', dueDateStr]]);
+    if (r.enabled) await sendMail({ to: toEmail, subject: r.subject, html: r.html });
   } catch (_) {}
 }
 

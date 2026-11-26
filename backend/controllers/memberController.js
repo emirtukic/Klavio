@@ -2,7 +2,7 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const db = require('../config/db');
 const { send: sendMail } = require('../config/mailer');
-const { inviteEmailHtml } = require('../config/emailTemplates');
+const { inviteEmailHtml } = require('../config/emailTemplateStore');
 
 function selScopeWhere(req, alias) {
   const a = alias ? alias + '.' : '';
@@ -108,12 +108,12 @@ exports.create = async (req, res) => {
     const link = `${appUrl}/app/set-password.html?token=${token}`;
     const [clubRows] = await db.query('SELECT name FROM clubs WHERE id = ?', [club_id]);
     const clubName = clubRows[0]?.name || 'Klavio';
-    sendMail({
+    inviteEmailHtml(name, 'member', clubName, link).then(html => sendMail({
       to: email,
       subject: `Dobrodošli u ${clubName} - Aktivirajte nalog`,
       text: `Pozdrav ${name},\n\nAdministrator kluba "${clubName}" je kreirao vaš članski nalog na Klavio platformi.\n\nKliknite na link ispod da postavite lozinku i aktivirate nalog:\n\n${link}\n\nLink je valjan 7 dana.\n\n© 2026 Klavio`,
-      html: inviteEmailHtml(name, 'member', clubName, link),
-    }).catch(err => console.error('Welcome mail error:', err.message));
+      html,
+    })).catch(err => console.error('Welcome mail error:', err.message));
 
     res.status(201).json({ id: memberResult.insertId, user_id: userResult.insertId, name, email });
   } catch (err) {

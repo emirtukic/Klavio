@@ -1,7 +1,10 @@
 const db = require('../config/db');
 const { assertClubOwned } = require('../utils/clubScope');
 const { send: sendMail } = require('../config/mailer');
-const { newTicketNotificationHtml, ticketReplyEmailHtml } = require('../config/emailTemplates');
+const { newTicketNotificationHtml } = require('../config/emailTemplates');
+const { renderEmail } = require('../config/emailTemplateStore');
+
+const APP_URL = process.env.APP_URL || 'http://localhost:3000';
 
 exports.getAll = async (req, res) => {
   try {
@@ -105,12 +108,9 @@ exports.reply = async (req, res) => {
           'INSERT INTO notifications (user_id, club_id, title, message, type) VALUES (?,?,?,?,?)',
           [ticket[0].created_by, ticket[0].club_id, `💬 Odgovor na tiket: ${ticket[0].subject}`, body.slice(0, 200), 'info']
         );
-        sendMail({
-          to: ticket[0].user_email,
-          subject: `Odgovor na tiket: ${ticket[0].subject}`,
-          text: `Pozdrav ${ticket[0].user_name},\n\nStigao je odgovor na vaš tiket "${ticket[0].subject}":\n\n${body}`,
-          html: ticketReplyEmailHtml(ticket[0].user_name, ticket[0].subject, body),
-        }).catch(err => console.error('Ticket reply notification mail error:', err.message));
+        renderEmail('ticket_reply', { ime: ticket[0].user_name, naslov: ticket[0].subject, odgovor: body, __link: `${APP_URL}/pages/support/index.html` })
+          .then(r => { if (r.enabled) return sendMail({ to: ticket[0].user_email, subject: r.subject, html: r.html }); })
+          .catch(err => console.error('Ticket reply notification mail error:', err.message));
       }
     }
     res.json({ message: 'Odgovor poslan' });

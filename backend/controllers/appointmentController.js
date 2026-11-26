@@ -1,7 +1,7 @@
 const db = require('../config/db');
 const { createNotification } = require('./notificationController');
 const { send: sendMail } = require('../config/mailer');
-const { eventNotificationHtml } = require('../config/emailTemplates');
+const { renderEmail } = require('../config/emailTemplateStore');
 
 const MAIL_ENABLED = !!(process.env.MAIL_USER && process.env.BREVO_API_KEY);
 const APP_URL = process.env.APP_URL || 'http://localhost:3000';
@@ -33,12 +33,11 @@ async function notifyAppointmentCreated(appointmentId, creatorSide) {
     await createNotification(recipient.userId, appt.club_id, title, msg, 'info', link);
 
     if (MAIL_ENABLED && recipient.email) {
-      const html = eventNotificationHtml(
-        title, msg,
-        [['Naziv', appt.title], ['Datum i vrijeme', when], ...(appt.notes ? [['Napomena', appt.notes]] : [])],
-        `${APP_URL}${link}`, 'Pogledaj termin'
-      );
-      try { await sendMail({ to: recipient.email, subject: title, html }); } catch (_) {}
+      const rows = [['Naziv', appt.title], ['Datum i vrijeme', when], ...(appt.notes ? [['Napomena', appt.notes]] : [])];
+      try {
+        const r = await renderEmail('appointment_created', { naziv: appt.title, osoba: recipient.otherName, datum: when, napomena: appt.notes || '', __link: `${APP_URL}${link}` }, rows);
+        if (r.enabled) await sendMail({ to: recipient.email, subject: r.subject, html: r.html });
+      } catch (_) {}
     }
   } catch (err) {
     console.error('[notif] notifyAppointmentCreated error:', err.message);

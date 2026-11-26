@@ -2,7 +2,7 @@ const db = require('../config/db');
 const { assertClubOwned } = require('../utils/clubScope');
 const { createNotification } = require('./notificationController');
 const { send: sendMail } = require('../config/mailer');
-const { eventNotificationHtml } = require('../config/emailTemplates');
+const { renderEmail } = require('../config/emailTemplateStore');
 
 const MAIL_ENABLED = !!(process.env.MAIL_USER && process.env.BREVO_API_KEY);
 const APP_URL = process.env.APP_URL || 'http://localhost:3000';
@@ -26,12 +26,13 @@ async function notifyFeeEvent(memberId, clubId, amount, kind, dateStr) {
     await createNotification(m.user_id, clubId, title, msg, isPaid ? 'success' : 'info', link);
 
     if (MAIL_ENABLED && m.email) {
-      const html = eventNotificationHtml(
-        title, msg,
-        [['Iznos', `${amount} KM`], [isPaid ? 'Datum uplate' : 'Rok uplate', dateStr]],
-        `${APP_URL}${link}`, 'Pogledaj članarinu'
-      );
-      try { await sendMail({ to: m.email, subject: title, html }); } catch (_) {}
+      const key = isPaid ? 'fee_paid' : 'fee_created';
+      const vars = isPaid ? { iznos: amount, datum: dateStr, __link: `${APP_URL}${link}` } : { iznos: amount, rok: dateStr, __link: `${APP_URL}${link}` };
+      const rows = [['Iznos', `${amount} KM`], [isPaid ? 'Datum uplate' : 'Rok uplate', dateStr]];
+      try {
+        const r = await renderEmail(key, vars, rows);
+        if (r.enabled) await sendMail({ to: m.email, subject: r.subject, html: r.html });
+      } catch (_) {}
     }
   } catch (err) {
     console.error('[notif] notifyFeeEvent error:', err.message);

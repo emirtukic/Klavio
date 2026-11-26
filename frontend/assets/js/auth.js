@@ -89,6 +89,7 @@ const NAV = {
     { href:'/pages/platform-messages/index.html',     icon:'chat-dots',      label:'Poruke' },
     { href:'/pages/system-notifications/index.html',  icon:'megaphone',      label:'Sistemske obavijesti' },
     { href:'/pages/support-tickets/index.html',       icon:'headset',        label:'Support ticketi' },
+    { href:'/pages/email-templates/index.html',       icon:'envelope-paper', label:'Email šabloni' },
     { section:'Monitoring' },
     { href:'/pages/platform-activity/index.html',     icon:'journal-text',   label:'Log aktivnosti' },
     { section:'Račun' },
