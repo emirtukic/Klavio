@@ -661,7 +661,7 @@ async function loadPlayerStats(matchId) {
         </td>
         <td data-label="Min" class="text-center">
           <input type="number" class="form-control form-control-sm" id="ps_m_${m.id}"
-            value="${s.minutes_played ?? ((hasData || started) ? 90 : 0)}" min="0" max="120" style="width:62px;text-align:center;">
+            value="${s.minutes_played ?? ((hasData || started) ? 90 : 0)}" min="0" max="90" style="width:62px;text-align:center;">
         </td>
       </tr>`;
     }).join('');
@@ -673,6 +673,28 @@ async function loadPlayerStats(matchId) {
 
 /* ── Save ── */
 async function saveResult() {
+  const goalsFor = parseInt(document.getElementById('eGoalsFor').value) || 0;
+
+  const playerRows = (canEdit && psMembers.length) ? psMembers.map(m => ({
+    m,
+    started: document.getElementById('ps_s_' + m.id)?.checked || false,
+    goals:   parseInt(document.getElementById('ps_g_' + m.id)?.value) || 0,
+    assists: parseInt(document.getElementById('ps_a_' + m.id)?.value) || 0,
+    yellow:  parseInt(document.getElementById('ps_y_' + m.id)?.value) || 0,
+    red:     parseInt(document.getElementById('ps_r_' + m.id)?.value) || 0,
+    minutes: Math.min(parseInt(document.getElementById('ps_m_' + m.id)?.value) || 0, 90)
+  })) : [];
+
+  // Individual player goals must add up to the team's own recorded result -
+  // an easy typo (e.g. 47 instead of 1) is otherwise invisible until it
+  // shows up in Statistike. Skip the check while stats haven't been
+  // entered yet (sum 0) so saving just the score first still works.
+  const goalsEntered = playerRows.reduce((sum, r) => sum + r.goals, 0);
+  if (goalsEntered > 0 && goalsEntered !== goalsFor) {
+    showToast(`Zbir golova igrača (${goalsEntered}) ne odgovara rezultatu utakmice (${goalsFor}). Ispravite prije spremanja.`, 'error');
+    return;
+  }
+
   const spinner = document.getElementById('saveSpinner');
   spinner.classList.remove('d-none');
   document.querySelector('#resultModal .btn-primary').disabled = true;
@@ -680,26 +702,18 @@ async function saveResult() {
   try {
     await apiPut('/matches/' + editMatchId, {
       result:        selectedResult,
-      goals_for:     parseInt(document.getElementById('eGoalsFor').value)     || 0,
+      goals_for:     goalsFor,
       goals_against: parseInt(document.getElementById('eGoalsAgainst').value) || 0,
       notes:         document.getElementById('eNotes').value.trim()
     });
 
-    if (canEdit && psMembers.length) {
-      for (const m of psMembers) {
-        const started = document.getElementById('ps_s_' + m.id)?.checked || false;
-        const goals   = parseInt(document.getElementById('ps_g_' + m.id)?.value) || 0;
-        const assists = parseInt(document.getElementById('ps_a_' + m.id)?.value) || 0;
-        const yellow  = parseInt(document.getElementById('ps_y_' + m.id)?.value) || 0;
-        const red     = parseInt(document.getElementById('ps_r_' + m.id)?.value) || 0;
-        const minutes = parseInt(document.getElementById('ps_m_' + m.id)?.value) || 0;
-        if (started || goals || assists || yellow || red || minutes) {
-          await apiPost('/stats/match/' + editMatchId, {
-            member_id: m.id, goals, assists,
-            yellow_cards: yellow, red_cards: red,
-            minutes_played: minutes, started
-          });
-        }
+    for (const { m, started, goals, assists, yellow, red, minutes } of playerRows) {
+      if (started || goals || assists || yellow || red || minutes) {
+        await apiPost('/stats/match/' + editMatchId, {
+          member_id: m.id, goals, assists,
+          yellow_cards: yellow, red_cards: red,
+          minutes_played: minutes, started
+        });
       }
     }
 

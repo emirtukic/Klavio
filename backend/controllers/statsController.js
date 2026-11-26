@@ -98,12 +98,13 @@ exports.upsertStats = async (req, res) => {
   try {
     if (!(await assertClubOwned('matches', match_id, req.user.club_id))) return res.status(404).json({ message: 'Utakmica nije pronađena' });
     if (!(await assertClubOwned('members', member_id, req.user.club_id))) return res.status(404).json({ message: 'Član nije pronađen' });
+    const minutes = Math.min(Math.max(parseInt(minutes_played) || 90, 0), 90);
     await db.query(`
       INSERT INTO player_stats (member_id, match_id, club_id, goals, assists, yellow_cards, red_cards, minutes_played, started)
       VALUES (?,?,?,?,?,?,?,?,?)
       ON DUPLICATE KEY UPDATE goals=VALUES(goals), assists=VALUES(assists), yellow_cards=VALUES(yellow_cards),
         red_cards=VALUES(red_cards), minutes_played=VALUES(minutes_played), started=VALUES(started)
-    `, [member_id, match_id, req.user.club_id, goals||0, assists||0, yellow_cards||0, red_cards||0, minutes_played||90, started??true]);
+    `, [member_id, match_id, req.user.club_id, goals||0, assists||0, yellow_cards||0, red_cards||0, minutes, started??true]);
     res.json({ message: 'Statistika ažurirana' });
   } catch (err) { res.status(500).json({ message: 'Server error' }); }
 };
