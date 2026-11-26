@@ -103,7 +103,7 @@ CREATE TABLE IF NOT EXISTS membership_fees (
 
 CREATE TABLE IF NOT EXISTS training_sessions (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  coach_id INT NOT NULL,
+  coach_id INT NULL,
   club_id INT NOT NULL DEFAULT 1,
   selection_id INT NULL,
   title VARCHAR(200) NOT NULL,
@@ -115,7 +115,7 @@ CREATE TABLE IF NOT EXISTS training_sessions (
   max_participants INT DEFAULT 20,
   status ENUM('scheduled','cancelled','completed') DEFAULT 'scheduled',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (coach_id) REFERENCES coaches(id),
+  FOREIGN KEY (coach_id) REFERENCES coaches(id) ON DELETE SET NULL,
   FOREIGN KEY (club_id) REFERENCES clubs(id),
   FOREIGN KEY (selection_id) REFERENCES selections(id) ON DELETE SET NULL
 );
@@ -152,7 +152,7 @@ CREATE TABLE IF NOT EXISTS matches (
 
 CREATE TABLE IF NOT EXISTS appointments (
   id INT AUTO_INCREMENT PRIMARY KEY,
-  coach_id INT NOT NULL,
+  coach_id INT NULL,
   member_id INT NOT NULL,
   club_id INT NOT NULL DEFAULT 1,
   title VARCHAR(200) NOT NULL,
@@ -162,7 +162,7 @@ CREATE TABLE IF NOT EXISTS appointments (
   status ENUM('pending','confirmed','cancelled','completed') DEFAULT 'pending',
   notes TEXT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (coach_id) REFERENCES coaches(id),
+  FOREIGN KEY (coach_id) REFERENCES coaches(id) ON DELETE SET NULL,
   FOREIGN KEY (member_id) REFERENCES members(id),
   FOREIGN KEY (club_id) REFERENCES clubs(id)
 );
