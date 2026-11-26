@@ -198,35 +198,68 @@ exports.sendDayBeforeReminders = async () => {
 };
 
 /**
- * Notifies the match's own coach(es) (if it has a selection) plus every
- * club admin about an outstanding task on that match - deduped per user.
+ * Every coach of a selection (if any) plus every club admin - deduped.
+ * Shared by any notification whose audience is "whoever is responsible
+ * for this selection's matches/trainings".
  */
-async function notifyMatchTask(match, { title, msg, emailSubject, emailIntro, link }) {
+async function getSelectionTaskRecipients(clubId, selectionId) {
   const recipients = [];
-  if (match.selection_id) {
+  if (selectionId) {
     const [coaches] = await db.query(
       `SELECT u.id, u.email FROM coaches c JOIN users u ON c.user_id = u.id
        WHERE c.club_id = ? AND EXISTS (SELECT 1 FROM coach_selections cs WHERE cs.coach_id=c.id AND cs.selection_id=?) AND u.is_active = TRUE`,
-      [match.club_id, match.selection_id]
+      [clubId, selectionId]
     );
     recipients.push(...coaches);
   }
   const [admins] = await db.query(
     `SELECT id, email FROM users WHERE club_id = ? AND role IN ('admin','super_admin') AND is_active = TRUE`,
-    [match.club_id]
+    [clubId]
   );
   recipients.push(...admins);
-
-  const emailHtml = eventNotificationHtml(emailSubject, emailIntro, null, `${APP_URL}${link}`, 'Otvori');
-
   const seen = new Set();
+  return recipients.filter(u => (seen.has(u.id) ? false : seen.add(u.id)));
+}
+
+/**
+ * Notifies the match's own coach(es) (if it has a selection) plus every
+ * club admin about an outstanding task on that match - deduped per user.
+ */
+async function notifyMatchTask(match, { title, msg, emailSubject, emailIntro, link }) {
+  const recipients = await getSelectionTaskRecipients(match.club_id, match.selection_id);
+  const emailHtml = eventNotificationHtml(emailSubject, emailIntro, null, `${APP_URL}${link}`, 'Otvori');
   for (const u of recipients) {
-    if (seen.has(u.id)) continue;
-    seen.add(u.id);
     await insertNotif(u.id, match.club_id, title, msg, 'warning', link);
     sendEmail(u.email, emailSubject, emailHtml);
   }
 }
+
+/**
+ * Fired when a member declines (RSVP "no") a training or match and gives a
+ * reason - the coach(es) of that selection plus every admin get notified,
+ * since otherwise nobody finds out unless they happen to open the RSVP list.
+ */
+exports.notifyRsvpDecline = async (eventType, event, memberName, note) => {
+  try {
+    const isTraining = eventType === 'training';
+    const title = isTraining ? 'Otkazano prisustvo na treningu' : 'Otkazano prisustvo na utakmicu';
+    const whatLabel = isTraining ? `trening "${event.title}"` : `utakmicu vs ${event.opponent}`;
+    const when = isTraining
+      ? fmtDate(event.session_date + 'T' + event.start_time)
+      : fmtDate(event.match_date);
+    const msg = `${memberName} neće doći na ${whatLabel} (${when}). Razlog: ${note}`;
+    const link = isTraining ? '/pages/training/schedule.html' : '/pages/matches/list.html';
+
+    const recipients = await getSelectionTaskRecipients(event.club_id, event.selection_id);
+    const emailHtml = eventNotificationHtml(title, msg, null, `${APP_URL}${link}`, 'Otvori');
+    for (const u of recipients) {
+      await insertNotif(u.id, event.club_id, title, msg, 'warning', link);
+      sendEmail(u.email, title, emailHtml);
+    }
+  } catch (err) {
+    console.error('[notif] notifyRsvpDecline error:', err.message);
+  }
+};
 
 /**
  * Run every 5 min (cron). Finds matches kicking off within 2 hours that

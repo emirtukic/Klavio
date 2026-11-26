@@ -1,4 +1,49 @@
 const db = require('../config/db');
+const { createNotification } = require('./notificationController');
+const { send: sendMail } = require('../config/mailer');
+const { eventNotificationHtml } = require('../config/emailTemplates');
+
+const MAIL_ENABLED = !!(process.env.MAIL_USER && process.env.BREVO_API_KEY);
+const APP_URL = process.env.APP_URL || 'http://localhost:3000';
+
+// Notifies whichever side (coach or member) didn't create the appointment -
+// otherwise they'd only find out by opening Termini themselves.
+async function notifyAppointmentCreated(appointmentId, creatorSide) {
+  try {
+    const [[appt]] = await db.query(`
+      SELECT a.*, c.club_id,
+             uc.id as coach_user_id, uc.email as coach_email, uc.name as coach_name,
+             um.id as member_user_id, um.email as member_email, um.name as member_name
+      FROM appointments a
+      JOIN coaches c ON a.coach_id = c.id JOIN users uc ON c.user_id = uc.id
+      JOIN members m ON a.member_id = m.id JOIN users um ON m.user_id = um.id
+      WHERE a.id = ?
+    `, [appointmentId]);
+    if (!appt) return;
+
+    const when = `${new Date(appt.appointment_date).toLocaleDateString('bs-BA')} ${appt.start_time}`;
+    const title = 'Novi termin zakazan';
+    const link = '/pages/appointments/list.html';
+
+    const recipient = creatorSide === 'member'
+      ? { userId: appt.coach_user_id, email: appt.coach_email, otherName: appt.member_name }
+      : { userId: appt.member_user_id, email: appt.member_email, otherName: appt.coach_name };
+
+    const msg = `Termin "${appt.title}" sa ${recipient.otherName} - ${when}`;
+    await createNotification(recipient.userId, appt.club_id, title, msg, 'info', link);
+
+    if (MAIL_ENABLED && recipient.email) {
+      const html = eventNotificationHtml(
+        title, msg,
+        [['Naziv', appt.title], ['Datum i vrijeme', when], ...(appt.notes ? [['Napomena', appt.notes]] : [])],
+        `${APP_URL}${link}`, 'Pogledaj termin'
+      );
+      try { await sendMail({ to: recipient.email, subject: title, html }); } catch (_) {}
+    }
+  } catch (err) {
+    console.error('[notif] notifyAppointmentCreated error:', err.message);
+  }
+}
 
 exports.getAll = async (req, res) => {
   try {
@@ -56,6 +101,9 @@ exports.create = async (req, res) => {
       'INSERT INTO appointments (coach_id, member_id, title, appointment_date, start_time, end_time, notes) VALUES (?, ?, ?, ?, ?, ?, ?)',
       [coach_id, memberId, title, appointment_date, start_time, end_time, notes]
     );
+
+    notifyAppointmentCreated(result.insertId, req.user.role === 'member' ? 'member' : 'coach').catch(() => {});
+
     res.status(201).json({ id: result.insertId });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });

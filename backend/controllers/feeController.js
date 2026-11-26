@@ -1,5 +1,42 @@
 const db = require('../config/db');
 const { assertClubOwned } = require('../utils/clubScope');
+const { createNotification } = require('./notificationController');
+const { send: sendMail } = require('../config/mailer');
+const { eventNotificationHtml } = require('../config/emailTemplates');
+
+const MAIL_ENABLED = !!(process.env.MAIL_USER && process.env.BREVO_API_KEY);
+const APP_URL = process.env.APP_URL || 'http://localhost:3000';
+
+// Lets the member know a fee was added for them, or that one got marked paid -
+// otherwise they'd only find out by opening Moje članarine themselves.
+async function notifyFeeEvent(memberId, clubId, amount, kind, dateStr) {
+  try {
+    const [[m]] = await db.query(
+      'SELECT u.id as user_id, u.email FROM members m JOIN users u ON m.user_id=u.id WHERE m.id=?',
+      [memberId]
+    );
+    if (!m) return;
+    const isPaid = kind === 'paid';
+    const title = isPaid ? 'Članarina označena kao plaćena' : 'Nova članarina';
+    const msg = isPaid
+      ? `Vaša članarina od ${amount} KM je označena kao plaćena.`
+      : `Dodana vam je nova članarina od ${amount} KM (rok uplate: ${dateStr}).`;
+    const link = '/pages/my-fees/index.html';
+
+    await createNotification(m.user_id, clubId, title, msg, isPaid ? 'success' : 'info', link);
+
+    if (MAIL_ENABLED && m.email) {
+      const html = eventNotificationHtml(
+        title, msg,
+        [['Iznos', `${amount} KM`], [isPaid ? 'Datum uplate' : 'Rok uplate', dateStr]],
+        `${APP_URL}${link}`, 'Pogledaj članarinu'
+      );
+      try { await sendMail({ to: m.email, subject: title, html }); } catch (_) {}
+    }
+  } catch (err) {
+    console.error('[notif] notifyFeeEvent error:', err.message);
+  }
+}
 
 // A coach may only record/edit fees for members of the selection(s) they belong to.
 async function memberInCoachScope(req, memberId) {
@@ -64,6 +101,10 @@ exports.create = async (req, res) => {
       'INSERT INTO membership_fees (member_id, amount, period_start, period_end, due_date, payment_method, notes, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
       [member_id, amount, period_start, period_end, due_date, payment_method, notes, req.user.id]
     );
+
+    const dueStr = due_date ? new Date(due_date).toLocaleDateString('bs-BA') : '-';
+    notifyFeeEvent(member_id, req.user.club_id, amount, 'created', dueStr).catch(() => {});
+
     res.status(201).json({ id: result.insertId });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
@@ -182,7 +223,10 @@ exports.update = async (req, res) => {
 
     // Auto-create finance income entry when marked as paid
     if (status === 'paid' && fee && fee.status !== 'paid') {
-      await autoAddIncome(fee, paid_date || new Date().toISOString().slice(0, 10), req.user.id);
+      const effectiveDate = paid_date || new Date().toISOString().slice(0, 10);
+      await autoAddIncome(fee, effectiveDate, req.user.id);
+      const paidStr = new Date(effectiveDate).toLocaleDateString('bs-BA');
+      notifyFeeEvent(fee.member_id, fee.club_id, amount != null ? amount : fee.amount, 'paid', paidStr).catch(() => {});
     }
     // Remove the linked income entry when a fee is reverted away from paid
     // (e.g. back to pending/overdue) - it no longer represents real income.
@@ -225,7 +269,9 @@ exports.markPaid = async (req, res) => {
     );
 
     if (fee && fee.status !== 'paid') {
-      await autoAddIncome(fee, new Date().toISOString().slice(0, 10), req.user.id);
+      const today = new Date().toISOString().slice(0, 10);
+      await autoAddIncome(fee, today, req.user.id);
+      notifyFeeEvent(fee.member_id, fee.club_id, fee.amount, 'paid', new Date(today).toLocaleDateString('bs-BA')).catch(() => {});
     }
 
     res.json({ message: 'Označeno kao plaćeno' });
