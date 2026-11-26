@@ -1,0 +1,3 @@
+ALTER TABLE matches ADD COLUMN lineup_reminder_sent TINYINT(1) NOT NULL DEFAULT 0;
+ALTER TABLE matches ADD COLUMN result_reminder_2h_sent TINYINT(1) NOT NULL DEFAULT 0;
+ALTER TABLE matches ADD COLUMN result_reminder_1d_sent TINYINT(1) NOT NULL DEFAULT 0;

@@ -135,16 +135,20 @@
 const user = requireAuth();
 setUserInfo(user); buildSidebar();
 
-let allSelections = [];
-let allMatches    = [];
-let currentType   = '';
+let allSelections  = [];
+let allMatches     = [];
+let standingsBySel = {}; // selection id -> { played, wins, draws, losses, gf, ga, points } from the backend
+let currentType    = '';
 
 async function load() {
   try {
-    [allSelections, allMatches] = await Promise.all([
+    const [selections, matches] = await Promise.all([
       apiGet('/selections'),
       apiGet('/matches')
     ]);
+    allSelections = selections;
+    allMatches    = matches;
+    await loadStandings();
     render();
   } catch(e) {
     showToast(e.message, 'error');
@@ -153,10 +157,22 @@ async function load() {
   }
 }
 
-function setType(btn, type) {
+// Wins/draws/losses/points/goals come from the same backend endpoint the
+// standings table itself is built from, so this card view can never drift
+// from the "official" numbers - only the form guide/recent/upcoming lists
+// below still need the raw match list, which the backend summary doesn't carry.
+async function loadStandings() {
+  const qs = currentType ? '?type=' + currentType : '';
+  const rows = await apiGet('/matches/standings' + qs).catch(() => []);
+  standingsBySel = {};
+  rows.forEach(r => { standingsBySel[r.id] = r; });
+}
+
+async function setType(btn, type) {
   currentType = type;
   document.querySelectorAll('.mf-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+  await loadStandings();
   render();
 }
 
@@ -176,13 +192,18 @@ function render() {
     ).sort((a, b) => new Date(b.match_date) - new Date(a.match_date));
 
     const played = matches.filter(m => m.result && m.result !== 'pending');
-    const wins   = played.filter(m => m.result === 'win').length;
-    const draws  = played.filter(m => m.result === 'draw').length;
-    const losses = played.filter(m => m.result === 'loss').length;
-    const gf     = played.reduce((s, m) => s + (m.goals_for     || 0), 0);
-    const ga     = played.reduce((s, m) => s + (m.goals_against || 0), 0);
-    const pts    = wins * 3 + draws;
-    const pct    = played.length > 0 ? Math.round((wins / played.length) * 100) : null;
+
+    // Summary numbers (points/W-D-L/goals) come from the backend standings
+    // endpoint, not recomputed here, so they can't drift from it over time.
+    const official = standingsBySel[sel.id] || {};
+    const wins   = Number(official.wins   || 0);
+    const draws  = Number(official.draws  || 0);
+    const losses = Number(official.losses || 0);
+    const gf     = Number(official.gf     || 0);
+    const ga     = Number(official.ga     || 0);
+    const pts    = Number(official.points != null ? official.points : wins * 3 + draws);
+    const playedCount = Number(official.played != null ? official.played : played.length);
+    const pct    = playedCount > 0 ? Math.round((wins / playedCount) * 100) : null;
 
     // Last 5 finished matches for form guide
     const form = played.slice(0, 5).reverse();
@@ -257,7 +278,7 @@ function render() {
             <!-- Stat pills -->
             <div class="d-flex gap-2 mt-3">
               <div class="stat-pill" style="background:rgba(255,255,255,0.15)">
-                <span class="val text-white">${played.length}</span>
+                <span class="val text-white">${playedCount}</span>
                 <span class="lbl text-white">Igr.</span>
               </div>
               <div class="stat-pill" style="background:rgba(34,197,94,0.25)">

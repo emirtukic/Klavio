@@ -79,6 +79,15 @@ exports.update = async (req, res) => {
   const params = [opponent, location, match_date, match_type, home_away, result, goals_for, goals_against, notes, req.params.id, req.user.club_id];
   if (coachClause) params.push(ids);
   try {
+    // A result can't exist for a match that hasn't been played yet.
+    if (result != null && result !== 'pending') {
+      const [[existing]] = await db.query('SELECT match_date FROM matches WHERE id=? AND club_id=?', [req.params.id, req.user.club_id]);
+      if (!existing) return res.status(404).json({ message: 'Utakmica nije pronađena' });
+      const effectiveDate = new Date(match_date || existing.match_date);
+      if (effectiveDate > new Date()) {
+        return res.status(400).json({ message: 'Ne možete unijeti rezultat za utakmicu koja još nije odigrana' });
+      }
+    }
     await db.query(
       `UPDATE matches SET opponent=COALESCE(?,opponent), location=COALESCE(?,location), match_date=COALESCE(?,match_date), match_type=COALESCE(?,match_type), home_away=COALESCE(?,home_away), result=COALESCE(?,result), goals_for=COALESCE(?,goals_for), goals_against=COALESCE(?,goals_against), notes=COALESCE(?,notes) WHERE id=? AND club_id=?${coachClause}`,
       params
@@ -104,6 +113,8 @@ exports.remove = async (req, res) => {
 
 exports.getStandings = async (req, res) => {
   try {
+    const type = ['league', 'cup', 'friendly'].includes(req.query.type) ? req.query.type : null;
+    const typeClause = type ? ' AND m.match_type = ?' : '';
     const [rows] = await db.query(`
       SELECT
         s.id, s.name, s.description,
@@ -114,10 +125,10 @@ exports.getStandings = async (req, res) => {
         COALESCE(SUM(CASE WHEN m.result IN ('win','draw','loss') THEN m.goals_for   ELSE 0 END), 0) as gf,
         COALESCE(SUM(CASE WHEN m.result IN ('win','draw','loss') THEN m.goals_against ELSE 0 END), 0) as ga
       FROM selections s
-      LEFT JOIN matches m ON m.selection_id = s.id AND m.club_id = s.club_id
+      LEFT JOIN matches m ON m.selection_id = s.id AND m.club_id = s.club_id${typeClause}
       WHERE s.club_id = ?
       GROUP BY s.id, s.name, s.description
-    `, [req.user.club_id]);
+    `, type ? [type, req.user.club_id] : [req.user.club_id]);
 
     const table = rows.map(r => ({
       ...r,

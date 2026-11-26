@@ -126,8 +126,11 @@ cron.schedule('0 3 * * *', () => {
 
 // Every 5 min - auto-end live matches nobody closed after 90 minutes
 const { autoEndStaleMatches } = require('./controllers/liveMatchController');
+const { checkLineupReminders, checkResultReminders } = require('./services/matchNotificationService');
 cron.schedule('*/5 * * * *', () => {
   autoEndStaleMatches();
+  checkLineupReminders();
+  checkResultReminders();
 });
 
 console.log('[boot] liveMatch controller version: 2 (uses users.name)');

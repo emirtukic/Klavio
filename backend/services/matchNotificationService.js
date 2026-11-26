@@ -211,3 +211,113 @@ exports.sendDayBeforeReminders = async () => {
     console.error('[cron] sendDayBeforeReminders error:', err.message);
   }
 };
+
+/**
+ * Notifies the match's own coach(es) (if it has a selection) plus every
+ * club admin about an outstanding task on that match - deduped per user.
+ */
+async function notifyMatchTask(match, { title, msg, emailSubject, emailIntro, link }) {
+  const recipients = [];
+  if (match.selection_id) {
+    const [coaches] = await db.query(
+      `SELECT u.id, u.email FROM coaches c JOIN users u ON c.user_id = u.id
+       WHERE c.club_id = ? AND EXISTS (SELECT 1 FROM coach_selections cs WHERE cs.coach_id=c.id AND cs.selection_id=?) AND u.is_active = TRUE`,
+      [match.club_id, match.selection_id]
+    );
+    recipients.push(...coaches);
+  }
+  const [admins] = await db.query(
+    `SELECT id, email FROM users WHERE club_id = ? AND role IN ('admin','super_admin') AND is_active = TRUE`,
+    [match.club_id]
+  );
+  recipients.push(...admins);
+
+  const emailHtml = matchEmailHtml(emailSubject,
+    `<p>${emailIntro}</p>
+     <p style="margin-top:16px;"><a href="${process.env.APP_URL || 'http://localhost:3000'}${link}" style="background:#3b82f6;color:#fff;padding:8px 18px;border-radius:6px;text-decoration:none;font-weight:600;">Otvori</a></p>`
+  );
+
+  const seen = new Set();
+  for (const u of recipients) {
+    if (seen.has(u.id)) continue;
+    seen.add(u.id);
+    await insertNotif(u.id, match.club_id, title, msg, 'warning', link);
+    sendEmail(u.email, emailSubject, emailHtml);
+  }
+}
+
+/**
+ * Run every 5 min (cron). Finds matches kicking off within 2 hours that
+ * still have no lineup, and nudges the coach(es)/admins - once per match.
+ */
+exports.checkLineupReminders = async () => {
+  try {
+    const [matches] = await db.query(`
+      SELECT m.* FROM matches m
+      WHERE m.lineup_reminder_sent = 0
+        AND m.match_date > NOW()
+        AND m.match_date <= DATE_ADD(NOW(), INTERVAL 2 HOUR)
+        AND NOT EXISTS (SELECT 1 FROM match_lineup ml WHERE ml.match_id = m.id)
+    `);
+    for (const match of matches) {
+      await notifyMatchTask(match, {
+        title: '📋 Postava nije unesena',
+        msg: `Utakmica vs ${match.opponent} počinje za manje od 2 sata - postava nije unesena.`,
+        emailSubject: `Postava nije unesena - vs ${match.opponent}`,
+        emailIntro: `Utakmica vs ${match.opponent} (${fmtDate(match.match_date)}) počinje uskoro, a postava još nije unesena.`,
+        link: '/pages/lineup/index.html',
+      });
+      await db.query('UPDATE matches SET lineup_reminder_sent = 1 WHERE id = ?', [match.id]);
+    }
+    if (matches.length) console.log(`[cron] Lineup reminders sent for ${matches.length} match(es).`);
+  } catch (err) {
+    console.error('[cron] checkLineupReminders error:', err.message);
+  }
+};
+
+/**
+ * Run every 5 min (cron). Finds matches that are 2h/1d past kickoff with
+ * no result entered yet, and nudges the coach(es)/admins - once per stage.
+ */
+exports.checkResultReminders = async () => {
+  try {
+    const [due2h] = await db.query(`
+      SELECT m.* FROM matches m
+      WHERE m.result_reminder_2h_sent = 0
+        AND m.result = 'pending'
+        AND m.match_date <= DATE_SUB(NOW(), INTERVAL 2 HOUR)
+    `);
+    for (const match of due2h) {
+      await notifyMatchTask(match, {
+        title: '📝 Unesi rezultat utakmice',
+        msg: `Utakmica vs ${match.opponent} je odigrana - unesite rezultat i statistiku igrača.`,
+        emailSubject: `Unesi rezultat - vs ${match.opponent}`,
+        emailIntro: `Utakmica vs ${match.opponent} (${fmtDate(match.match_date)}) je odigrana, a rezultat još nije unesen.`,
+        link: '/pages/matches/list.html',
+      });
+      await db.query('UPDATE matches SET result_reminder_2h_sent = 1 WHERE id = ?', [match.id]);
+    }
+
+    const [due1d] = await db.query(`
+      SELECT m.* FROM matches m
+      WHERE m.result_reminder_1d_sent = 0
+        AND m.result = 'pending'
+        AND m.match_date <= DATE_SUB(NOW(), INTERVAL 1 DAY)
+    `);
+    for (const match of due1d) {
+      await notifyMatchTask(match, {
+        title: '⏰ Rezultat utakmice i dalje nije unesen',
+        msg: `Prošao je dan od utakmice vs ${match.opponent}, a rezultat još nije unesen.`,
+        emailSubject: `Podsjetnik: rezultat i dalje nije unesen - vs ${match.opponent}`,
+        emailIntro: `Prošao je dan od utakmice vs ${match.opponent} (${fmtDate(match.match_date)}), a rezultat, strijelci i statistika i dalje nisu uneseni.`,
+        link: '/pages/matches/list.html',
+      });
+      await db.query('UPDATE matches SET result_reminder_1d_sent = 1 WHERE id = ?', [match.id]);
+    }
+
+    if (due2h.length || due1d.length)
+      console.log(`[cron] Result reminders: ${due2h.length} at 2h, ${due1d.length} at 1d.`);
+  } catch (err) {
+    console.error('[cron] checkResultReminders error:', err.message);
+  }
+};

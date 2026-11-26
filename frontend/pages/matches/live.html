@@ -671,6 +671,8 @@ function renderTimeline() {
     let subLine = '';
     if (e.event_type === 'substitution') {
       subLine = `<div class="tl-sub-name">↑ ${e.member_name_2_cache || '?'}</div>`;
+    } else if (e.event_type === 'goal' && e.member_name_2_cache) {
+      subLine = `<div class="tl-sub-name">🎯 asist: ${e.member_name_2_cache}</div>`;
     }
 
     return `<div class="tl-event${isOpp?' opponent':''}">
@@ -722,6 +724,7 @@ function toggleOpponent() {
 function updateEventFormVisibility() {
   const p1w = document.getElementById('player1Wrap');
   const p2w = document.getElementById('player2Wrap');
+  const p2Label = document.getElementById('player2Label');
   const oppNameWrap = document.getElementById('oppNameWrap');
   if (!p1w) return;
 
@@ -733,6 +736,10 @@ function updateEventFormVisibility() {
 
   if (selectedType === 'substitution') {
     p2w.classList.remove('d-none');
+    if (p2Label) p2Label.textContent = 'Ulazi';
+  } else if (selectedType === 'goal' && !isOpponent) {
+    p2w.classList.remove('d-none');
+    if (p2Label) p2Label.textContent = 'Asistencija (opciono)';
   } else {
     p2w.classList.add('d-none');
   }

@@ -354,7 +354,10 @@
       document.getElementById('notesContent').textContent = match.notes || '-';
       document.getElementById('pageTitle').textContent = `vs ${match.opponent}`;
       if (canEdit) {
-        document.getElementById('editBtnWrap').classList.remove('d-none');
+        // Entering a result only makes sense once the match has actually happened.
+        if (new Date(match.match_date) <= new Date()) {
+          document.getElementById('editBtnWrap').classList.remove('d-none');
+        }
         document.getElementById('addStatBtn').classList.remove('d-none');
         document.getElementById('statFab').classList.remove('d-none');
       }

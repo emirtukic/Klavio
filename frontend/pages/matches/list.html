@@ -470,9 +470,10 @@ function renderTable() {
         </a>
         ${liveBtn(m)}
         ${canEdit ? `
+          ${new Date(m.match_date) <= new Date() ? `
           <button class="btn btn-sm btn-primary me-1" onclick="openResultModal(${m.id})" title="Unesi rezultat">
             <i class="bi bi-pencil-square"></i>
-          </button>
+          </button>` : ''}
           <button class="btn btn-sm btn-outline-danger" onclick="deleteMatch(${m.id})" title="Obriši">
             <i class="bi bi-trash"></i>
           </button>` : ''}

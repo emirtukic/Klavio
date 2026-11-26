@@ -340,24 +340,32 @@ async function autoStats(matchId, clubId) {
 
   const statsMap = {};
 
+  const emptyStat = () => ({ goals: 0, assists: 0, yellow_cards: 0, red_cards: 0, started: 0, subbed_off_at: null, subbed_on_at: null });
+
   for (const e of events) {
     if (!e.member_id) continue;
-    if (!statsMap[e.member_id]) statsMap[e.member_id] = { goals: 0, yellow_cards: 0, red_cards: 0, started: 0, subbed_off_at: null, subbed_on_at: null };
+    if (!statsMap[e.member_id]) statsMap[e.member_id] = emptyStat();
     const s = statsMap[e.member_id];
     if (e.event_type === 'goal' || e.event_type === 'penalty') s.goals++;
     if (e.event_type === 'yellow_card') s.yellow_cards++;
     if (e.event_type === 'red_card')    s.red_cards++;
     if (e.event_type === 'substitution') s.subbed_off_at = e.minute;
     if (e.event_type === 'substitution' && e.member_id_2) {
-      if (!statsMap[e.member_id_2]) statsMap[e.member_id_2] = { goals: 0, yellow_cards: 0, red_cards: 0, started: 0, subbed_off_at: null, subbed_on_at: null };
+      if (!statsMap[e.member_id_2]) statsMap[e.member_id_2] = emptyStat();
       statsMap[e.member_id_2].subbed_on_at = e.minute;
+    }
+    // member_id_2 on a goal is the assist provider (reusing the same column
+    // substitution uses for "player coming on" - different meaning per event type).
+    if (e.event_type === 'goal' && e.member_id_2 && e.member_id_2 !== e.member_id) {
+      if (!statsMap[e.member_id_2]) statsMap[e.member_id_2] = emptyStat();
+      statsMap[e.member_id_2].assists++;
     }
   }
 
   // Mark starters from lineup if exists
   const [lineup] = await db.query(`SELECT member_id, is_starter FROM match_lineup WHERE match_id = ?`, [matchId]);
   for (const l of lineup) {
-    if (!statsMap[l.member_id]) statsMap[l.member_id] = { goals: 0, yellow_cards: 0, red_cards: 0, started: 0, subbed_off_at: null, subbed_on_at: null };
+    if (!statsMap[l.member_id]) statsMap[l.member_id] = emptyStat();
     if (l.is_starter) statsMap[l.member_id].started = 1;
   }
 
@@ -370,11 +378,11 @@ async function autoStats(matchId, clubId) {
 
     await db.query(`
       INSERT INTO player_stats (member_id, match_id, club_id, goals, assists, yellow_cards, red_cards, minutes_played, started)
-      VALUES (?,?,?,?,0,?,?,?,?)
+      VALUES (?,?,?,?,?,?,?,?,?)
       ON DUPLICATE KEY UPDATE
-        goals=VALUES(goals), yellow_cards=VALUES(yellow_cards),
+        goals=VALUES(goals), assists=VALUES(assists), yellow_cards=VALUES(yellow_cards),
         red_cards=VALUES(red_cards), minutes_played=VALUES(minutes_played), started=VALUES(started)
-    `, [memberId, matchId, clubId, s.goals, s.yellow_cards, s.red_cards, mins, s.started]);
+    `, [memberId, matchId, clubId, s.goals, s.assists, s.yellow_cards, s.red_cards, mins, s.started]);
   }
   console.log(`[autoStats] Done for match=${matchId}`);
 }
