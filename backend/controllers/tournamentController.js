@@ -11,13 +11,20 @@ function fmtDate(d) {
   return d ? new Date(d).toLocaleDateString('bs-BA') : '-';
 }
 
-// A coach may only act on a tournament whose selection is one of their own.
+async function getTournamentSelectionIds(tournamentId) {
+  const [rows] = await db.query('SELECT selection_id FROM tournament_selections WHERE tournament_id=?', [tournamentId]);
+  return rows.map(r => r.selection_id);
+}
+
+// A coach may only act on a tournament that includes at least one of their own selections.
 async function tournamentInCoachScope(req, tournamentId) {
   if (req.user.role !== 'coach') return true;
   const ids = req.user.selection_ids || [];
   if (!ids.length) return false;
   const [rows] = await db.query(
-    'SELECT 1 FROM tournaments WHERE id=? AND club_id=? AND selection_id IN (?) LIMIT 1',
+    `SELECT 1 FROM tournament_selections ts
+     JOIN tournaments t ON t.id = ts.tournament_id
+     WHERE ts.tournament_id=? AND t.club_id=? AND ts.selection_id IN (?) LIMIT 1`,
     [tournamentId, req.user.club_id, ids]
   );
   return rows.length > 0;
@@ -27,17 +34,17 @@ exports.getAll = async (req, res) => {
   try {
     const ids = req.user.selection_ids || [];
     const coachFilter = req.user.role === 'coach'
-      ? (ids.length ? ' AND t.selection_id IN (?)' : ' AND 1=0')
+      ? (ids.length ? ' AND EXISTS (SELECT 1 FROM tournament_selections ts WHERE ts.tournament_id=t.id AND ts.selection_id IN (?))' : ' AND 1=0')
       : '';
     const params = [req.user.club_id];
     if (req.user.role === 'coach' && ids.length) params.push(ids);
     const [rows] = await db.query(`
-      SELECT t.*, s.name as selection_name,
-        (SELECT COUNT(*) FROM tournament_teams tt WHERE tt.tournament_id=t.id) as team_count,
+      SELECT t.*,
+        (SELECT GROUP_CONCAT(s.name ORDER BY s.name SEPARATOR ', ') FROM tournament_selections ts JOIN selections s ON s.id=ts.selection_id WHERE ts.tournament_id=t.id) as selection_names,
+        (SELECT COUNT(*) FROM matches m WHERE m.tournament_id=t.id) as match_count,
         (SELECT COUNT(*) FROM member_availability ma WHERE ma.event_type='tournament' AND ma.event_id=t.id) as invited_count,
         (SELECT COUNT(*) FROM member_availability ma WHERE ma.event_type='tournament' AND ma.event_id=t.id AND ma.status='yes') as confirmed_count
       FROM tournaments t
-      JOIN selections s ON s.id = t.selection_id
       WHERE t.club_id = ?${coachFilter}
       ORDER BY t.date_start DESC
     `, params);
@@ -52,11 +59,12 @@ exports.getMine = async (req, res) => {
     const [[member]] = await db.query('SELECT id FROM members WHERE user_id=? AND club_id=?', [req.user.id, req.user.club_id]);
     if (!member) return res.json([]);
     const [rows] = await db.query(`
-      SELECT t.*, s.name as selection_name, ma.status as rsvp_status, ma.note as rsvp_note,
+      SELECT t.*,
+        (SELECT GROUP_CONCAT(s.name ORDER BY s.name SEPARATOR ', ') FROM tournament_selections ts JOIN selections s ON s.id=ts.selection_id WHERE ts.tournament_id=t.id) as selection_names,
+        ma.status as rsvp_status, ma.note as rsvp_note,
         tef.status as fee_status, tef.amount as fee_amount
       FROM member_availability ma
       JOIN tournaments t ON t.id = ma.event_id AND ma.event_type = 'tournament'
-      JOIN selections s ON s.id = t.selection_id
       LEFT JOIN tournament_entry_fees tef ON tef.tournament_id = t.id AND tef.member_id = ma.member_id
       WHERE ma.member_id = ?
       ORDER BY t.date_start DESC
@@ -69,15 +77,28 @@ exports.getMine = async (req, res) => {
 
 exports.getOne = async (req, res) => {
   try {
-    const [[tournament]] = await db.query(
-      'SELECT t.*, s.name as selection_name FROM tournaments t JOIN selections s ON s.id = t.selection_id WHERE t.id = ? AND t.club_id = ?',
-      [req.params.id, req.user.club_id]
-    );
+    const [[tournament]] = await db.query('SELECT * FROM tournaments WHERE id = ? AND club_id = ?', [req.params.id, req.user.club_id]);
     if (!tournament) return res.status(404).json({ message: 'Turnir nije pronađen' });
-    if (!(await tournamentInCoachScope(req, tournament.id))) return res.status(404).json({ message: 'Turnir nije pronađen' });
 
-    const [teams] = await db.query('SELECT * FROM tournament_teams WHERE tournament_id=? ORDER BY id', [tournament.id]);
-    const [matches] = await db.query('SELECT * FROM matches WHERE tournament_id=? ORDER BY match_date', [tournament.id]);
+    if (req.user.role === 'member') {
+      const [[member]] = await db.query('SELECT id FROM members WHERE user_id=? AND club_id=?', [req.user.id, req.user.club_id]);
+      const [[invited]] = member ? await db.query(
+        `SELECT 1 FROM member_availability WHERE event_type='tournament' AND event_id=? AND member_id=? LIMIT 1`,
+        [tournament.id, member.id]
+      ) : [[null]];
+      if (!invited) return res.status(404).json({ message: 'Turnir nije pronađen' });
+    } else if (!(await tournamentInCoachScope(req, tournament.id))) {
+      return res.status(404).json({ message: 'Turnir nije pronađen' });
+    }
+
+    const [selections] = await db.query(
+      'SELECT s.id, s.name FROM tournament_selections ts JOIN selections s ON s.id = ts.selection_id WHERE ts.tournament_id=? ORDER BY s.name',
+      [tournament.id]
+    );
+    const [matches] = await db.query(
+      'SELECT m.*, s.name as selection_name FROM matches m LEFT JOIN selections s ON s.id = m.selection_id WHERE m.tournament_id=? ORDER BY m.match_date',
+      [tournament.id]
+    );
     const [invited] = await db.query(`
       SELECT m.id as member_id, u.name as member_name,
         ma.status as rsvp_status, ma.note as rsvp_note,
@@ -90,60 +111,91 @@ exports.getOne = async (req, res) => {
       ORDER BY u.name
     `, [tournament.id]);
 
-    res.json({ ...tournament, teams, matches, invited });
+    res.json({ ...tournament, selections, matches, invited });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
 };
 
 exports.create = async (req, res) => {
-  const { selection_id, name, location, date_start, date_end, default_time, match_type, home_away, entry_fee_amount, teams } = req.body;
+  const { selection_ids, name, location, date_start, date_end, entry_fee_amount } = req.body;
   if (!name || !date_start || !date_end) return res.status(400).json({ message: 'Naziv i period su obavezni' });
-  const teamList = (Array.isArray(teams) ? teams : []).map(t => String(t).trim()).filter(Boolean);
-  if (!teamList.length) return res.status(400).json({ message: 'Dodajte bar jedan tim' });
 
-  let selId;
+  let selIds = (Array.isArray(selection_ids) ? selection_ids : []).map(Number).filter(Boolean);
   if (req.user.role === 'coach') {
     const ids = req.user.selection_ids || [];
-    selId = (selection_id && ids.includes(Number(selection_id))) ? Number(selection_id) : req.user.selection_id;
-    if (!selId) return res.status(400).json({ message: 'Trener mora biti dodijeljen selekciji' });
-  } else {
-    if (!selection_id) return res.status(400).json({ message: 'Selekcija je obavezna' });
-    selId = Number(selection_id);
+    selIds = selIds.length ? selIds.filter(id => ids.includes(id)) : ids;
+    if (!selIds.length) return res.status(400).json({ message: 'Trener mora biti dodijeljen selekciji' });
+  } else if (!selIds.length) {
+    return res.status(400).json({ message: 'Odaberite bar jednu selekciju' });
   }
-
-  const defaultMatchDate = `${date_start} ${default_time || '12:00'}:00`;
-  const matchType = ['friendly', 'league', 'cup'].includes(match_type) ? match_type : 'cup';
-  const homeAway = ['home', 'away', 'neutral'].includes(home_away) ? home_away : 'neutral';
 
   try {
     const [result] = await db.query(
-      `INSERT INTO tournaments (club_id, selection_id, name, location, date_start, date_end, default_match_date, default_match_type, default_home_away, entry_fee_amount, created_by)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-      [req.user.club_id, selId, name, location || null, date_start, date_end, defaultMatchDate, matchType, homeAway, entry_fee_amount || null, req.user.id]
+      `INSERT INTO tournaments (club_id, name, location, date_start, date_end, entry_fee_amount, created_by) VALUES (?,?,?,?,?,?,?)`,
+      [req.user.club_id, name, location || null, date_start, date_end, entry_fee_amount || null, req.user.id]
     );
     const tournamentId = result.insertId;
 
     await db.query(
-      'INSERT INTO tournament_teams (tournament_id, name) VALUES ?',
-      [teamList.map(t => [tournamentId, t])]
+      'INSERT INTO tournament_selections (tournament_id, selection_id) VALUES ?',
+      [selIds.map(id => [tournamentId, id])]
     );
-
-    await db.query(
-      'INSERT INTO matches (club_id, selection_id, tournament_id, opponent, location, match_date, match_type, home_away) VALUES ?',
-      [teamList.map(t => [req.user.club_id, selId, tournamentId, t, location || null, defaultMatchDate, matchType, homeAway])]
-    );
-
-    for (const team of teamList) {
-      notifyMatchCreated(
-        { opponent: team, location, match_date: defaultMatchDate, match_type: matchType, home_away: homeAway },
-        req.user.club_id, selId, req.user.id
-      ).catch(() => {});
-    }
 
     res.status(201).json({ id: tournamentId });
   } catch (err) {
     console.error('Tournament create error:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.addMatch = async (req, res) => {
+  const { selection_id, opponent, location, match_date, match_type, home_away, notes } = req.body;
+  if (!opponent || !match_date) return res.status(400).json({ message: 'Protivnik i datum/vrijeme su obavezni' });
+  try {
+    const [[tournament]] = await db.query('SELECT * FROM tournaments WHERE id=? AND club_id=?', [req.params.id, req.user.club_id]);
+    if (!tournament) return res.status(404).json({ message: 'Turnir nije pronađen' });
+    if (!(await tournamentInCoachScope(req, tournament.id))) return res.status(404).json({ message: 'Turnir nije pronađen' });
+
+    const tournamentSelIds = await getTournamentSelectionIds(tournament.id);
+    const selId = Number(selection_id);
+    if (!selId || !tournamentSelIds.includes(selId)) {
+      return res.status(400).json({ message: 'Selekcija mora biti jedna od selekcija ovog turnira' });
+    }
+    if (req.user.role === 'coach' && !(req.user.selection_ids || []).includes(selId)) {
+      return res.status(403).json({ message: 'Nemate pristup ovoj selekciji' });
+    }
+
+    const matchType = ['friendly', 'league', 'cup'].includes(match_type) ? match_type : 'cup';
+    const homeAway = ['home', 'away', 'neutral'].includes(home_away) ? home_away : 'neutral';
+
+    const [result] = await db.query(
+      'INSERT INTO matches (club_id, selection_id, tournament_id, opponent, location, match_date, match_type, home_away, notes) VALUES (?,?,?,?,?,?,?,?,?)',
+      [req.user.club_id, selId, tournament.id, opponent, location || tournament.location || null, match_date, matchType, homeAway, notes || null]
+    );
+
+    notifyMatchCreated(
+      { opponent, location: location || tournament.location, match_date, match_type: matchType, home_away: homeAway },
+      req.user.club_id, selId, req.user.id
+    ).catch(() => {});
+
+    res.status(201).json({ id: result.insertId });
+  } catch (err) {
+    console.error('Tournament addMatch error:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.removeMatch = async (req, res) => {
+  try {
+    if (!(await tournamentInCoachScope(req, req.params.id))) return res.status(404).json({ message: 'Turnir nije pronađen' });
+    await db.query(
+      `DELETE m FROM matches m JOIN tournaments t ON t.id = m.tournament_id
+       WHERE m.id=? AND m.tournament_id=? AND t.club_id=?`,
+      [req.params.matchId, req.params.id, req.user.club_id]
+    );
+    res.json({ message: 'Utakmica obrisana' });
+  } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -153,12 +205,14 @@ exports.invite = async (req, res) => {
   const ids = Array.isArray(member_ids) ? member_ids.map(Number).filter(Boolean) : [];
   if (!ids.length) return res.status(400).json({ message: 'Izaberite bar jednog igrača' });
   try {
-    const [[tournament]] = await db.query(
-      'SELECT t.*, s.name as selection_name FROM tournaments t JOIN selections s ON s.id = t.selection_id WHERE t.id=? AND t.club_id=?',
-      [req.params.id, req.user.club_id]
-    );
+    const [[tournament]] = await db.query('SELECT * FROM tournaments WHERE id=? AND club_id=?', [req.params.id, req.user.club_id]);
     if (!tournament) return res.status(404).json({ message: 'Turnir nije pronađen' });
     if (!(await tournamentInCoachScope(req, tournament.id))) return res.status(404).json({ message: 'Turnir nije pronađen' });
+
+    const [[{ selection_names }]] = await db.query(
+      `SELECT GROUP_CONCAT(s.name ORDER BY s.name SEPARATOR ', ') as selection_names FROM tournament_selections ts JOIN selections s ON s.id=ts.selection_id WHERE ts.tournament_id=?`,
+      [tournament.id]
+    );
 
     const [members] = await db.query(
       'SELECT m.id, u.id as user_id, u.name, u.email FROM members m JOIN users u ON m.user_id=u.id WHERE m.id IN (?) AND m.club_id=?',
@@ -191,7 +245,7 @@ exports.invite = async (req, res) => {
       if (MAIL_ENABLED && m.email) {
         try {
           const r = await renderEmail('tournament_invite', {
-            ime: m.name, turnir: tournament.name, selekcija: tournament.selection_name,
+            ime: m.name, turnir: tournament.name, selekcija: selection_names || '-',
             datum_od: fmtDate(tournament.date_start), datum_do: fmtDate(tournament.date_end),
             lokacija: tournament.location || '-', __link: `${APP_URL}${link}`,
           });
@@ -235,7 +289,7 @@ async function autoAddTournamentIncome(fee, tournamentName, date, userId, clubId
 exports.markFeePaid = async (req, res) => {
   try {
     const [[fee]] = await db.query(`
-      SELECT tef.*, t.name as tournament_name, t.selection_id, u.id as user_id, u.name as member_name, u.email
+      SELECT tef.*, t.name as tournament_name, u.id as user_id, u.name as member_name, u.email
       FROM tournament_entry_fees tef
       JOIN tournaments t ON t.id = tef.tournament_id
       JOIN members m ON m.id = tef.member_id
@@ -282,7 +336,7 @@ exports.remove = async (req, res) => {
     // not a live join, so they just keep showing as historical income).
     await db.query(`DELETE FROM member_availability WHERE event_type='tournament' AND event_id=?`, [tournament.id]);
     await db.query('DELETE FROM tournaments WHERE id=? AND club_id=?', [tournament.id, req.user.club_id]);
-    // tournament_teams/tournament_entry_fees CASCADE-delete with the tournament row.
+    // tournament_selections/tournament_entry_fees CASCADE-delete with the tournament row.
     res.json({ message: 'Turnir obrisan' });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });

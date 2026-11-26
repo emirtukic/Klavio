@@ -34,32 +34,28 @@
     <div class="page-header d-flex align-items-center gap-2">
       <a href="list.html" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
       <h4 class="mb-0" id="pageTitle">Turnir</h4>
-      <button class="btn btn-sm btn-outline-danger ms-auto" onclick="removeTournament()"><i class="bi bi-trash"></i> Obriši turnir</button>
+      <button class="btn btn-sm btn-outline-danger ms-auto d-none" id="deleteBtn" onclick="removeTournament()"><i class="bi bi-trash"></i> Obriši turnir</button>
     </div>
 
     <div class="card mb-3"><div class="card-body" id="infoCard"></div></div>
 
-    <div id="placeholderBanner" class="alert alert-warning d-none">
-      <i class="bi bi-exclamation-triangle me-1"></i>
-      <span id="placeholderText"></span>
-    </div>
-
     <div class="card mb-3">
-      <div class="card-header bg-white fw-bold"><i class="bi bi-trophy me-2 text-primary"></i>Utakmice turnira</div>
+      <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-trophy me-2 text-primary"></i>Utakmice turnira</span>
+        <button class="btn btn-sm btn-outline-primary d-none" id="addMatchBtn" onclick="openAddMatch()"><i class="bi bi-plus me-1"></i>Dodaj utakmicu</button>
+      </div>
       <div class="list-group list-group-flush" id="matchesList"></div>
     </div>
 
-    <div class="card mb-3">
-      <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-people me-2 text-primary"></i>Pozovi igrače</span>
-      </div>
+    <div class="card mb-3 d-none" id="inviteCard">
+      <div class="card-header bg-white fw-bold"><i class="bi bi-people me-2 text-primary"></i>Pozovi igrače</div>
       <div class="card-body">
         <div id="invitePicker" class="row g-2 mb-2"></div>
         <button class="btn btn-sm btn-primary" onclick="sendInvites()"><i class="bi bi-send me-1"></i>Pošalji pozivnice</button>
       </div>
     </div>
 
-    <div class="card mb-3">
+    <div class="card mb-3 d-none" id="rsvpCard">
       <div class="card-header bg-white fw-bold"><i class="bi bi-clipboard-check me-2 text-primary"></i>Dolazak i kotizacija</div>
       <div class="table-responsive">
         <table class="table table-hover mb-0 table-mobile-cards">
@@ -70,17 +66,64 @@
     </div>
   </div>
 </div>
+
+<!-- Add match modal -->
+<div class="modal fade" id="addMatchModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Dodaj utakmicu</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="row g-3">
+          <div class="col-12">
+            <label class="form-label">Selekcija *</label>
+            <select class="form-select" id="am_selection"></select>
+          </div>
+          <div class="col-12">
+            <label class="form-label">Protivnik *</label>
+            <input type="text" class="form-control" id="am_opponent" placeholder="npr. NK Sloboda">
+          </div>
+          <div class="col-12">
+            <label class="form-label">Lokacija</label>
+            <input type="text" class="form-control" id="am_location">
+          </div>
+          <div class="col-12">
+            <label class="form-label">Datum i vrijeme *</label>
+            <input type="datetime-local" class="form-control" id="am_date">
+          </div>
+          <div class="col-6">
+            <label class="form-label">Vrsta</label>
+            <select class="form-select" id="am_type">
+              <option value="cup" selected>Kup</option><option value="league">Liga</option><option value="friendly">Prijateljska</option>
+            </select>
+          </div>
+          <div class="col-6">
+            <label class="form-label">Domaćin / Gost</label>
+            <select class="form-select" id="am_homeaway">
+              <option value="neutral" selected>Neutralno</option><option value="home">Domaćin</option><option value="away">Gost</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
+        <button class="btn btn-primary" onclick="submitAddMatch()">Dodaj</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../../assets/js/auth.js"></script>
 <script src="../../assets/js/api.js"></script>
 <script src="../../assets/js/utils.js"></script>
 <script>
-const user = requireRole('super_admin', 'admin', 'coach');
+const user = requireRole('super_admin', 'admin', 'coach', 'member');
 setUserInfo(user); buildSidebar();
+const isStaff = user.role !== 'member';
 
 const params = new URLSearchParams(location.search);
 const tournamentId = params.get('id');
-if (!tournamentId) window.location.href = 'list.html';
+if (!tournamentId) window.location.href = isStaff ? 'list.html' : 'my.html';
 
 const RSVP_LABEL = { yes: 'Dolazi', maybe: 'Možda', no: 'Ne dolazi', pending: 'Čeka odgovor' };
 const RSVP_CLASS = { yes: 'rsvp-yes', maybe: 'rsvp-maybe', no: 'rsvp-no', pending: 'rsvp-pending' };
@@ -104,24 +147,22 @@ function render() {
 
   document.getElementById('infoCard').innerHTML = `
     <div class="row g-3">
-      <div class="col-md-3"><div class="small text-muted">Selekcija</div><div class="fw-semibold">${escHtml(tournament.selection_name)}</div></div>
+      <div class="col-md-3"><div class="small text-muted">Selekcije</div><div class="fw-semibold">${tournament.selections.map(s => escHtml(s.name)).join(', ') || '-'}</div></div>
       <div class="col-md-3"><div class="small text-muted">Mjesto</div><div class="fw-semibold">${escHtml(tournament.location || '-')}</div></div>
       <div class="col-md-3"><div class="small text-muted">Period</div><div class="fw-semibold">${fmtDate(tournament.date_start)} - ${fmtDate(tournament.date_end)}</div></div>
       <div class="col-md-3"><div class="small text-muted">Kotizacija</div><div class="fw-semibold">${tournament.entry_fee_amount ? Number(tournament.entry_fee_amount).toFixed(2) + ' KM' : 'Nema'}</div></div>
     </div>`;
 
-  const placeholderMatches = tournament.matches.filter(m => m.match_date === tournament.default_match_date);
-  if (placeholderMatches.length) {
-    document.getElementById('placeholderBanner').classList.remove('d-none');
-    document.getElementById('placeholderText').textContent =
-      `${placeholderMatches.length} utakmica još ima isto podrazumijevano vrijeme (${fmtDateTime(tournament.default_match_date)}) - podesite stvarni datum/vrijeme za svaku na stranici Utakmice.`;
-  }
-
   document.getElementById('matchesList').innerHTML = tournament.matches.map(m => `
-    <a href="../matches/detail.html?id=${m.id}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
-      <span>vs ${escHtml(m.opponent)}</span>
-      <span class="small text-muted">${fmtDateTime(m.match_date)}</span>
-    </a>`).join('') || '<div class="list-group-item text-muted small">Nema utakmica</div>';
+    <div class="list-group-item d-flex justify-content-between align-items-center">
+      <a href="../matches/detail.html?id=${m.id}" class="text-decoration-none flex-grow-1">
+        <span>vs ${escHtml(m.opponent)}</span>
+        <span class="small text-muted ms-2">${escHtml(m.selection_name || '')} · ${fmtDateTime(m.match_date)}</span>
+      </a>
+      ${isStaff ? `<button class="btn btn-sm btn-outline-danger" onclick="removeMatch(${m.id})"><i class="bi bi-trash"></i></button>` : ''}
+    </div>`).join('') || '<div class="list-group-item text-muted small">Nema utakmica</div>';
+
+  if (!isStaff) return;
 
   const invitedIds = new Set(tournament.invited.map(i => i.member_id));
   document.getElementById('invitePicker').innerHTML = (window.__roster || [])
@@ -132,7 +173,7 @@ function render() {
           <input class="form-check-input" type="checkbox" value="${m.id}" id="inv_${m.id}">
           <label class="form-check-label" for="inv_${m.id}">${escHtml(m.name)}</label>
         </div>
-      </div>`).join('') || '<div class="col-12 text-muted small">Svi članovi selekcije su već pozvani.</div>';
+      </div>`).join('') || '<div class="col-12 text-muted small">Svi članovi selekcija su već pozvani.</div>';
 
   document.getElementById('invitedTable').innerHTML = tournament.invited.map(i => {
     const rsvp = i.rsvp_status || 'pending';
@@ -157,10 +198,59 @@ function render() {
 async function load() {
   try {
     tournament = await apiGet('/tournaments/' + tournamentId);
-    const roster = await apiGet('/members?selection_id=' + tournament.selection_id);
-    window.__roster = roster;
+
+    if (isStaff) {
+      document.getElementById('deleteBtn').classList.remove('d-none');
+      document.getElementById('addMatchBtn').classList.remove('d-none');
+      document.getElementById('inviteCard').classList.remove('d-none');
+      document.getElementById('rsvpCard').classList.remove('d-none');
+
+      const rosters = await Promise.all(tournament.selections.map(s => apiGet('/members?selection_id=' + s.id)));
+      const merged = new Map();
+      rosters.flat().forEach(m => merged.set(m.id, m));
+      window.__roster = Array.from(merged.values());
+
+      const selSelect = document.getElementById('am_selection');
+      selSelect.innerHTML = tournament.selections.map(s => `<option value="${s.id}">${escHtml(s.name)}</option>`).join('');
+    }
+
     render();
   } catch (e) { showToast(e.message, 'error'); }
+}
+
+function openAddMatch() {
+  document.getElementById('am_opponent').value = '';
+  document.getElementById('am_location').value = tournament.location || '';
+  document.getElementById('am_date').value = '';
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('addMatchModal')).show();
+}
+
+async function submitAddMatch() {
+  const body = {
+    selection_id: Number(document.getElementById('am_selection').value),
+    opponent: document.getElementById('am_opponent').value.trim(),
+    location: document.getElementById('am_location').value.trim(),
+    match_date: document.getElementById('am_date').value,
+    match_type: document.getElementById('am_type').value,
+    home_away: document.getElementById('am_homeaway').value,
+  };
+  if (!body.opponent || !body.match_date) return showToast('Protivnik i datum/vrijeme su obavezni', 'error');
+  try {
+    await apiPost('/tournaments/' + tournamentId + '/matches', body);
+    bootstrap.Modal.getInstance(document.getElementById('addMatchModal')).hide();
+    showToast('Utakmica dodana', 'success');
+    load();
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+function removeMatch(matchId) {
+  confirmDelete(async () => {
+    try {
+      await apiDelete('/tournaments/' + tournamentId + '/matches/' + matchId);
+      showToast('Utakmica obrisana', 'success');
+      load();
+    } catch (e) { showToast(e.message, 'error'); }
+  }, 'Obrisati ovu utakmicu?');
 }
 
 async function sendInvites() {
@@ -188,7 +278,7 @@ function removeTournament() {
       showToast('Turnir obrisan', 'success');
       setTimeout(() => window.location.href = 'list.html', 800);
     } catch (e) { showToast(e.message, 'error'); }
-  }, 'Obrisati turnir? Generisane utakmice ostaju, samo gube vezu sa turnirom.');
+  }, 'Obrisati turnir? Utakmice ostaju, samo gube vezu sa turnirom. Već plaćene kotizacije ostaju u Finansijama.');
 }
 
 load();

@@ -455,32 +455,28 @@ CREATE TABLE IF NOT EXISTS email_templates (
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Turniri (migration 006)
+-- Turniri (migration 006, revised by migration 007 for multi-selection +
+-- individually-added matches instead of an auto-generated team list)
 CREATE TABLE IF NOT EXISTS tournaments (
   id INT AUTO_INCREMENT PRIMARY KEY,
   club_id INT NOT NULL,
-  selection_id INT NOT NULL,
   name VARCHAR(150) NOT NULL,
   location VARCHAR(200) NULL,
   date_start DATE NOT NULL,
   date_end DATE NOT NULL,
-  default_match_date DATETIME NOT NULL,
-  default_match_type ENUM('friendly','league','cup') NOT NULL DEFAULT 'cup',
-  default_home_away ENUM('home','away','neutral') NOT NULL DEFAULT 'neutral',
   entry_fee_amount DECIMAL(10,2) NULL,
   notes TEXT NULL,
   created_by INT NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (club_id) REFERENCES clubs(id) ON DELETE CASCADE,
-  FOREIGN KEY (selection_id) REFERENCES selections(id) ON DELETE CASCADE
+  FOREIGN KEY (club_id) REFERENCES clubs(id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS tournament_teams (
-  id INT AUTO_INCREMENT PRIMARY KEY,
+CREATE TABLE IF NOT EXISTS tournament_selections (
   tournament_id INT NOT NULL,
-  name VARCHAR(100) NOT NULL,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE
+  selection_id INT NOT NULL,
+  PRIMARY KEY (tournament_id, selection_id),
+  FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE,
+  FOREIGN KEY (selection_id) REFERENCES selections(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS tournament_entry_fees (

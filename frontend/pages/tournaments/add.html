@@ -38,49 +38,26 @@
               <label class="form-label">Mjesto</label>
               <input type="text" class="form-control" name="location" placeholder="npr. Gradski stadion">
             </div>
-            <div class="col-md-6" id="selectionWrap">
-              <label class="form-label">Selekcija *</label>
-              <select class="form-select" name="selection_id" id="selectionSelect" required>
-                <option value="">- Odaberite -</option>
-              </select>
-            </div>
-            <div class="col-md-3">
+            <div class="col-md-4">
               <label class="form-label">Iznos kotizacije (KM)</label>
               <input type="number" step="0.01" min="0" class="form-control" name="entry_fee_amount" placeholder="opciono">
             </div>
-            <div class="col-md-3">
-              <label class="form-label">Podrazumijevano vrijeme *</label>
-              <input type="time" class="form-control" name="default_time" required value="12:00">
-            </div>
-            <div class="col-md-3">
+            <div class="col-md-4">
               <label class="form-label">Period od *</label>
               <input type="date" class="form-control" name="date_start" required>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-4">
               <label class="form-label">Period do *</label>
               <input type="date" class="form-control" name="date_end" required>
             </div>
-            <div class="col-md-3">
-              <label class="form-label">Vrsta utakmica</label>
-              <select class="form-select" name="match_type">
-                <option value="cup" selected>Kup</option><option value="league">Liga</option><option value="friendly">Prijateljska</option>
-              </select>
-            </div>
-            <div class="col-md-3">
-              <label class="form-label">Domaćin / Gost</label>
-              <select class="form-select" name="home_away">
-                <option value="neutral" selected>Neutralno</option><option value="home">Domaćin</option><option value="away">Gost</option>
-              </select>
-            </div>
-            <div class="col-12">
-              <p class="small text-muted mb-1">Podrazumijevano vrijeme/vrsta/domaćin-gost se upisuju na SVAKU generisanu utakmicu - poslije ih možeš pojedinačno izmijeniti na stranici Utakmice.</p>
+
+            <div class="col-12" id="selectionWrap">
+              <label class="form-label">Selekcije *</label>
+              <div id="selectionList" class="row g-2"></div>
             </div>
 
             <div class="col-12">
-              <label class="form-label">Timovi koji učestvuju *</label>
-              <div id="teamsWrap"></div>
-              <button type="button" class="btn btn-sm btn-outline-primary mt-1" onclick="addTeamRow()"><i class="bi bi-plus"></i> Dodaj tim</button>
-              <p class="small text-muted mt-1 mb-0">Za svaki tim se generiše jedna utakmica: vaša selekcija protiv njih.</p>
+              <p class="small text-muted mb-0">Utakmice se dodaju pojedinačno, nakon kreiranja turnira, na stranici turnira.</p>
             </div>
 
             <div class="col-12">
@@ -104,41 +81,22 @@ const user = requireRole('super_admin', 'admin', 'coach');
 setUserInfo(user); buildSidebar();
 
 const isCoach = user.role === 'coach';
-const selWrap = document.getElementById('selectionWrap');
+
+function renderSelections(sels) {
+  document.getElementById('selectionList').innerHTML = sels.map(s => `
+    <div class="col-md-4 col-sm-6">
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" value="${s.id}" id="sel_${s.id}" ${sels.length === 1 ? 'checked' : ''}>
+        <label class="form-check-label" for="sel_${s.id}">${escHtml(s.name)}</label>
+      </div>
+    </div>`).join('') || '<div class="col-12 text-muted small">Nema dostupnih selekcija.</div>';
+}
 
 if (isCoach) {
-  apiGet('/selections/mine').then(mine => {
-    if (mine.length > 1) {
-      selWrap.innerHTML = `<label class="form-label">Selekcija *</label><select class="form-select" name="selection_id" required></select>`;
-      const sel = selWrap.querySelector('select');
-      mine.forEach(s => sel.insertAdjacentHTML('beforeend', `<option value="${s.id}">${escHtml(s.name)}</option>`));
-    } else if (mine.length === 1) {
-      selWrap.innerHTML = `<label class="form-label">Selekcija</label>
-        <input type="text" class="form-control" value="${escHtml(mine[0].name)}" disabled>
-        <input type="hidden" name="selection_id" value="${mine[0].id}">`;
-    } else {
-      selWrap.innerHTML = `<label class="form-label">Selekcija</label>
-        <div class="alert alert-warning py-2 small mb-0">Niste dodijeljeni nijednoj selekciji.</div>`;
-    }
-  }).catch(() => {});
+  apiGet('/selections/mine').then(renderSelections).catch(() => {});
 } else {
-  apiGet('/selections').then(sels => {
-    const sel = document.getElementById('selectionSelect');
-    sels.forEach(s => sel.insertAdjacentHTML('beforeend', `<option value="${s.id}">${escHtml(s.name)}</option>`));
-  }).catch(() => {});
+  apiGet('/selections').then(renderSelections).catch(() => {});
 }
-
-function addTeamRow(value) {
-  const wrap = document.getElementById('teamsWrap');
-  const row = document.createElement('div');
-  row.className = 'input-group mb-2';
-  row.innerHTML = `
-    <input type="text" class="form-control" placeholder="Naziv tima" value="${value ? escHtml(value) : ''}">
-    <button type="button" class="btn btn-outline-danger" onclick="this.closest('.input-group').remove()"><i class="bi bi-trash"></i></button>`;
-  wrap.appendChild(row);
-}
-addTeamRow();
-addTeamRow();
 
 document.getElementById('form').addEventListener('submit', async e => {
   e.preventDefault();
@@ -150,11 +108,10 @@ document.getElementById('form').addEventListener('submit', async e => {
   const fd = new FormData(e.target);
   const body = Object.fromEntries(fd.entries());
   Object.keys(body).forEach(k => { if (!body[k]) delete body[k]; });
-  if (body.selection_id) body.selection_id = parseInt(body.selection_id);
-  body.teams = Array.from(document.querySelectorAll('#teamsWrap input')).map(i => i.value.trim()).filter(Boolean);
+  body.selection_ids = Array.from(document.querySelectorAll('#selectionList input:checked')).map(i => Number(i.value));
 
-  if (!body.teams.length) {
-    alertEl.textContent = 'Dodajte bar jedan tim'; alertEl.classList.remove('d-none');
+  if (!body.selection_ids.length) {
+    alertEl.textContent = 'Odaberite bar jednu selekciju'; alertEl.classList.remove('d-none');
     btn.disabled = false; spinner.classList.add('d-none');
     return;
   }
