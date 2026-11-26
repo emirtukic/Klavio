@@ -37,7 +37,7 @@ exports.setAvailability = async (req, res) => {
     // them to stumble onto it by opening the RSVP list themselves.
     // event_type is validated against this exact allowlist before it's ever
     // used to pick a table name below - never interpolate it unchecked.
-    const EVENT_TABLES = { training: 'training_sessions', match: 'matches' };
+    const EVENT_TABLES = { training: 'training_sessions', match: 'matches', tournament: 'tournaments' };
     if (status === 'no' && note && EVENT_TABLES[event_type]) {
       (async () => {
         const table = EVENT_TABLES[event_type];

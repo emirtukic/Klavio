@@ -239,14 +239,31 @@ async function notifyMatchTask(match, { key, vars, title, msg, link }) {
  */
 exports.notifyRsvpDecline = async (eventType, event, memberName, note) => {
   try {
-    const isTraining = eventType === 'training';
-    const title = isTraining ? 'Otkazano prisustvo na treningu' : 'Otkazano prisustvo na utakmicu';
-    const whatLabel = isTraining ? `trening "${event.title}"` : `utakmicu vs ${event.opponent}`;
-    const when = isTraining
-      ? fmtDate(event.session_date + 'T' + event.start_time)
-      : fmtDate(event.match_date);
+    const titleByType = {
+      training: 'Otkazano prisustvo na treningu',
+      match: 'Otkazano prisustvo na utakmicu',
+      tournament: 'Otkazano prisustvo na turniru',
+    };
+    const whatLabelByType = {
+      training: `trening "${event.title}"`,
+      match: `utakmicu vs ${event.opponent}`,
+      tournament: `turnir "${event.name}"`,
+    };
+    const whenByType = {
+      training: fmtDate(event.session_date + 'T' + event.start_time),
+      match: fmtDate(event.match_date),
+      tournament: fmtDate(event.date_start),
+    };
+    const linkByType = {
+      training: '/pages/training/schedule.html',
+      match: '/pages/matches/list.html',
+      tournament: '/pages/tournaments/list.html',
+    };
+    const title = titleByType[eventType];
+    const whatLabel = whatLabelByType[eventType];
+    const when = whenByType[eventType];
     const msg = `${memberName} neće doći na ${whatLabel} (${when}). Razlog: ${note}`;
-    const link = isTraining ? '/pages/training/schedule.html' : '/pages/matches/list.html';
+    const link = linkByType[eventType];
 
     const recipients = await getSelectionTaskRecipients(event.club_id, event.selection_id);
     const r = await renderEmail('rsvp_decline', { ime: memberName, sta: whatLabel, datum: when, razlog: note, __link: `${APP_URL}${link}` });

@@ -48,6 +48,7 @@ app.use('/api/members', require('./routes/members'));
 app.use('/api/fees', require('./routes/fees'));
 app.use('/api/training', require('./routes/training'));
 app.use('/api/matches', require('./routes/matches'));
+app.use('/api/tournaments', require('./routes/tournaments'));
 app.use('/api/coaches', require('./routes/coaches'));
 app.use('/api/appointments', require('./routes/appointments'));
 app.use('/api/reports', require('./routes/reports'));

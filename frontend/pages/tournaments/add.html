@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-v3.png"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="theme-color" content="#2563eb">
+  <script src="/assets/js/cookie-consent.js" defer></script>
+  <title>Novi turnir | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Novi turnir</span>
+    <div class="d-flex align-items-center gap-2"><span class="badge bg-primary" id="userRole"></span><span class="fw-semibold small" id="userName"></span></div>
+  </div>
+  <div class="page-body">
+    <div class="page-header d-flex align-items-center gap-2">
+      <a href="list.html" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i></a>
+      <h4 class="mb-0">Novi turnir</h4>
+    </div>
+    <div class="card form-card">
+      <div class="card-body p-4">
+        <div id="alert" class="alert alert-danger d-none"></div>
+        <form id="form">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">Naziv turnira *</label>
+              <input type="text" class="form-control" name="name" required placeholder="npr. Ljetni kup 2026">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Mjesto</label>
+              <input type="text" class="form-control" name="location" placeholder="npr. Gradski stadion">
+            </div>
+            <div class="col-md-6" id="selectionWrap">
+              <label class="form-label">Selekcija *</label>
+              <select class="form-select" name="selection_id" id="selectionSelect" required>
+                <option value="">- Odaberite -</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Iznos kotizacije (KM)</label>
+              <input type="number" step="0.01" min="0" class="form-control" name="entry_fee_amount" placeholder="opciono">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Podrazumijevano vrijeme *</label>
+              <input type="time" class="form-control" name="default_time" required value="12:00">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Period od *</label>
+              <input type="date" class="form-control" name="date_start" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Period do *</label>
+              <input type="date" class="form-control" name="date_end" required>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Vrsta utakmica</label>
+              <select class="form-select" name="match_type">
+                <option value="cup" selected>Kup</option><option value="league">Liga</option><option value="friendly">Prijateljska</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Domaćin / Gost</label>
+              <select class="form-select" name="home_away">
+                <option value="neutral" selected>Neutralno</option><option value="home">Domaćin</option><option value="away">Gost</option>
+              </select>
+            </div>
+            <div class="col-12">
+              <p class="small text-muted mb-1">Podrazumijevano vrijeme/vrsta/domaćin-gost se upisuju na SVAKU generisanu utakmicu - poslije ih možeš pojedinačno izmijeniti na stranici Utakmice.</p>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label">Timovi koji učestvuju *</label>
+              <div id="teamsWrap"></div>
+              <button type="button" class="btn btn-sm btn-outline-primary mt-1" onclick="addTeamRow()"><i class="bi bi-plus"></i> Dodaj tim</button>
+              <p class="small text-muted mt-1 mb-0">Za svaki tim se generiše jedna utakmica: vaša selekcija protiv njih.</p>
+            </div>
+
+            <div class="col-12">
+              <button type="submit" class="btn btn-primary me-2">
+                <span class="spinner-border spinner-border-sm d-none me-1" id="spinner"></span>Kreiraj turnir
+              </button>
+              <a href="list.html" class="btn btn-outline-secondary">Odustani</a>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+const user = requireRole('super_admin', 'admin', 'coach');
+setUserInfo(user); buildSidebar();
+
+const isCoach = user.role === 'coach';
+const selWrap = document.getElementById('selectionWrap');
+
+if (isCoach) {
+  apiGet('/selections/mine').then(mine => {
+    if (mine.length > 1) {
+      selWrap.innerHTML = `<label class="form-label">Selekcija *</label><select class="form-select" name="selection_id" required></select>`;
+      const sel = selWrap.querySelector('select');
+      mine.forEach(s => sel.insertAdjacentHTML('beforeend', `<option value="${s.id}">${escHtml(s.name)}</option>`));
+    } else if (mine.length === 1) {
+      selWrap.innerHTML = `<label class="form-label">Selekcija</label>
+        <input type="text" class="form-control" value="${escHtml(mine[0].name)}" disabled>
+        <input type="hidden" name="selection_id" value="${mine[0].id}">`;
+    } else {
+      selWrap.innerHTML = `<label class="form-label">Selekcija</label>
+        <div class="alert alert-warning py-2 small mb-0">Niste dodijeljeni nijednoj selekciji.</div>`;
+    }
+  }).catch(() => {});
+} else {
+  apiGet('/selections').then(sels => {
+    const sel = document.getElementById('selectionSelect');
+    sels.forEach(s => sel.insertAdjacentHTML('beforeend', `<option value="${s.id}">${escHtml(s.name)}</option>`));
+  }).catch(() => {});
+}
+
+function addTeamRow(value) {
+  const wrap = document.getElementById('teamsWrap');
+  const row = document.createElement('div');
+  row.className = 'input-group mb-2';
+  row.innerHTML = `
+    <input type="text" class="form-control" placeholder="Naziv tima" value="${value ? escHtml(value) : ''}">
+    <button type="button" class="btn btn-outline-danger" onclick="this.closest('.input-group').remove()"><i class="bi bi-trash"></i></button>`;
+  wrap.appendChild(row);
+}
+addTeamRow();
+addTeamRow();
+
+document.getElementById('form').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = e.target.querySelector('button[type=submit]');
+  const spinner = document.getElementById('spinner');
+  const alertEl = document.getElementById('alert');
+  btn.disabled = true; spinner.classList.remove('d-none'); alertEl.classList.add('d-none');
+
+  const fd = new FormData(e.target);
+  const body = Object.fromEntries(fd.entries());
+  Object.keys(body).forEach(k => { if (!body[k]) delete body[k]; });
+  if (body.selection_id) body.selection_id = parseInt(body.selection_id);
+  body.teams = Array.from(document.querySelectorAll('#teamsWrap input')).map(i => i.value.trim()).filter(Boolean);
+
+  if (!body.teams.length) {
+    alertEl.textContent = 'Dodajte bar jedan tim'; alertEl.classList.remove('d-none');
+    btn.disabled = false; spinner.classList.add('d-none');
+    return;
+  }
+
+  try {
+    const res = await apiPost('/tournaments', body);
+    showToast('Turnir kreiran');
+    setTimeout(() => window.location.href = 'detail.html?id=' + res.id, 800);
+  } catch (err) {
+    alertEl.textContent = err.message; alertEl.classList.remove('d-none');
+    btn.disabled = false; spinner.classList.add('d-none');
+  }
+});
+</script>
+</body>
+</html>

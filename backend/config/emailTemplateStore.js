@@ -157,6 +157,30 @@ const DEFAULTS = {
     button_label: 'Pogledaj termin',
     enabled: 1, always_send: 0,
   },
+  tournament_invite: {
+    subject: 'Pozvani ste na turnir {{turnir}}',
+    heading: 'Pozvani ste na turnir',
+    intro_text: 'Pozdrav {{ime}}, pozvani ste da učestvujete na turniru "{{turnir}}" sa selekcijom {{selekcija}} ({{datum_od}} - {{datum_do}}, {{lokacija}}). Potvrdite dolazak.',
+    secondary_note: null, info_title: null, info_body: null,
+    button_label: 'Potvrdi dolazak',
+    enabled: 1, always_send: 0,
+  },
+  tournament_fee_created: {
+    subject: 'Kotizacija za turnir {{turnir}}',
+    heading: 'Kotizacija za turnir',
+    intro_text: 'Kotizacija za turnir "{{turnir}}" iznosi {{iznos}} KM.',
+    secondary_note: null, info_title: null, info_body: null,
+    button_label: 'Pogledaj turnir',
+    enabled: 1, always_send: 0,
+  },
+  tournament_fee_paid: {
+    subject: 'Kotizacija plaćena - {{turnir}}',
+    heading: 'Kotizacija plaćena',
+    intro_text: 'Vaša kotizacija od {{iznos}} KM za turnir "{{turnir}}" je zabilježena kao plaćena.',
+    secondary_note: null, info_title: null, info_body: null,
+    button_label: 'Pogledaj turnir',
+    enabled: 1, always_send: 0,
+  },
 };
 
 const TEMPLATE_KEYS = Object.keys(DEFAULTS);
@@ -181,6 +205,9 @@ const SAMPLE_VARS = {
   result_reminder_2h: { protivnik: 'Hajduk', datum: '24.12.2026. 18:00' },
   result_reminder_1d: { protivnik: 'Hajduk', datum: '24.12.2026. 18:00' },
   appointment_created: { naziv: 'Individualni trening', osoba: 'Emir Tukić', datum: '24.12.2026. 17:00', napomena: 'Donijeti opremu' },
+  tournament_invite: { ime: 'Emir', turnir: 'Ljetni kup 2026', selekcija: 'Kadeti', datum_od: '10.07.2026.', datum_do: '12.07.2026.', lokacija: 'Gradski stadion' },
+  tournament_fee_created: { turnir: 'Ljetni kup 2026', iznos: '20' },
+  tournament_fee_paid: { turnir: 'Ljetni kup 2026', iznos: '20' },
 };
 
 // Sample detail-rows per key, for the test-send preview only - mirrors what

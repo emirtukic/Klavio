@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-v3.png"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="theme-color" content="#2563eb">
+  <script src="/assets/js/cookie-consent.js" defer></script>
+  <title>Moji turniri | Klavio</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="../../assets/css/style.css" rel="stylesheet">
+  <style>
+    .rsvp-group { display: flex; gap: 4px; }
+    .rsvp-btn { padding: 4px 10px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; cursor: pointer; border: 1.5px solid; transition: all .12s; }
+    .rsvp-yes  { background:#f0fdf4; border-color:#86efac; color:#166534; }
+    .rsvp-yes.active, .rsvp-yes:hover  { background:#16a34a; border-color:#16a34a; color:#fff; }
+    .rsvp-maybe{ background:#fefce8; border-color:#fde68a; color:#854d0e; }
+    .rsvp-maybe.active, .rsvp-maybe:hover { background:#d97706; border-color:#d97706; color:#fff; }
+    .rsvp-no   { background:#fef2f2; border-color:#fca5a5; color:#991b1b; }
+    .rsvp-no.active, .rsvp-no:hover   { background:#dc2626; border-color:#dc2626; color:#fff; }
+  </style>
+</head>
+<body>
+<div class="sidebar"></div>
+<div class="main-content">
+  <div class="topbar">
+    <span class="topbar-title">Moji turniri</span>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-primary" id="userRole"></span>
+      <span class="fw-semibold small" id="userName"></span>
+    </div>
+  </div>
+  <div class="page-body">
+    <div class="page-header"><h4>Moji turniri</h4><p class="text-muted mb-0">Turniri na koje si pozvan/a - potvrdi dolazak i pogledaj status kotizacije.</p></div>
+
+    <div id="emptyState" class="empty-state d-none">
+      <i class="bi bi-trophy empty-state-icon"></i>
+      <p class="text-muted">Trenutno nisi pozvan/a na nijedan turnir.</p>
+    </div>
+
+    <div class="row g-3" id="cards"></div>
+  </div>
+</div>
+
+<!-- Decline reason modal -->
+<div class="modal fade" id="declineModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title">Razlog otkazivanja</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <label class="form-label">Zašto ne možeš doći? *</label>
+        <textarea class="form-control" id="declineNote" rows="3"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" data-bs-dismiss="modal">Odustani</button>
+        <button class="btn btn-danger" onclick="confirmDecline()">Potvrdi</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../../assets/js/auth.js"></script>
+<script src="../../assets/js/api.js"></script>
+<script src="../../assets/js/utils.js"></script>
+<script>
+const user = requireRole('member', 'super_admin', 'admin', 'coach');
+setUserInfo(user); buildSidebar();
+
+function fmtDate(d) { return d ? new Date(d).toLocaleDateString('bs-BA') : '-'; }
+
+let declinePending = null;
+
+function cardHtml(t) {
+  const rsvp = t.rsvp_status || 'pending';
+  const fee = t.fee_status
+    ? `<span class="badge ${t.fee_status === 'paid' ? 'bg-success-subtle text-success-emphasis' : 'bg-warning-subtle text-warning-emphasis'}">${t.fee_status === 'paid' ? 'Kotizacija plaćena' : 'Kotizacija na čekanju'} (${Number(t.fee_amount).toFixed(2)} KM)</span>`
+    : '';
+  return `
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h6 class="fw-bold mb-1">${escHtml(t.name)}</h6>
+          <p class="small text-muted mb-2">${escHtml(t.selection_name)} ${t.location ? '· ' + escHtml(t.location) : ''}</p>
+          <p class="small text-muted mb-3"><i class="bi bi-calendar3 me-1"></i>${fmtDate(t.date_start)} - ${fmtDate(t.date_end)}</p>
+          <div class="rsvp-group mb-2">
+            <div class="rsvp-btn rsvp-yes ${rsvp === 'yes' ? 'active' : ''}" onclick="setRsvp(${t.id}, 'yes')">Dolazim</div>
+            <div class="rsvp-btn rsvp-maybe ${rsvp === 'maybe' ? 'active' : ''}" onclick="setRsvp(${t.id}, 'maybe')">Možda</div>
+            <div class="rsvp-btn rsvp-no ${rsvp === 'no' ? 'active' : ''}" onclick="setRsvp(${t.id}, 'no')">Ne dolazim</div>
+          </div>
+          ${fee}
+        </div>
+      </div>
+    </div>`;
+}
+
+async function load() {
+  try {
+    const rows = await apiGet('/tournaments/mine');
+    document.getElementById('emptyState').classList.toggle('d-none', rows.length > 0);
+    document.getElementById('cards').innerHTML = rows.map(cardHtml).join('');
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+function setRsvp(tournamentId, status) {
+  if (status === 'no') {
+    declinePending = tournamentId;
+    document.getElementById('declineNote').value = '';
+    bootstrap.Modal.getOrCreateInstance(document.getElementById('declineModal')).show();
+    return;
+  }
+  applyRsvp(tournamentId, status, null);
+}
+
+async function confirmDecline() {
+  const note = document.getElementById('declineNote').value.trim();
+  if (!note) return showToast('Unesite razlog', 'error');
+  bootstrap.Modal.getInstance(document.getElementById('declineModal')).hide();
+  await applyRsvp(declinePending, 'no', note);
+}
+
+async function applyRsvp(tournamentId, status, note) {
+  try {
+    await apiPost('/availability/tournament/' + tournamentId, { status, note });
+    showToast('Odgovor sačuvan', 'success');
+    load();
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+load();
+</script>
+</body>
+</html>

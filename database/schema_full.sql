@@ -134,6 +134,7 @@ CREATE TABLE IF NOT EXISTS matches (
   id INT AUTO_INCREMENT PRIMARY KEY,
   club_id INT NOT NULL DEFAULT 1,
   selection_id INT NULL,
+  tournament_id INT NULL,
   opponent VARCHAR(100) NOT NULL,
   location VARCHAR(200),
   match_date DATETIME NOT NULL,
@@ -146,6 +147,7 @@ CREATE TABLE IF NOT EXISTS matches (
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (club_id) REFERENCES clubs(id),
   FOREIGN KEY (selection_id) REFERENCES selections(id) ON DELETE SET NULL
+  -- tournament_id's FK is added further below, after the tournaments table is defined
 );
 
 CREATE TABLE IF NOT EXISTS appointments (
@@ -183,9 +185,9 @@ CREATE TABLE IF NOT EXISTS member_medical (
 CREATE TABLE IF NOT EXISTS member_availability (
   id INT AUTO_INCREMENT PRIMARY KEY,
   member_id INT NOT NULL,
-  event_type ENUM('training','match') NOT NULL,
+  event_type ENUM('training','match','tournament') NOT NULL,
   event_id INT NOT NULL,
-  status ENUM('pending','available','unavailable') DEFAULT 'pending',
+  status ENUM('pending','yes','maybe','no') DEFAULT 'pending',
   note TEXT,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   UNIQUE KEY uq_availability (member_id, event_type, event_id),
@@ -452,3 +454,48 @@ CREATE TABLE IF NOT EXISTS email_templates (
   always_send TINYINT(1) NOT NULL DEFAULT 0,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+-- Turniri (migration 006)
+CREATE TABLE IF NOT EXISTS tournaments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  club_id INT NOT NULL,
+  selection_id INT NOT NULL,
+  name VARCHAR(150) NOT NULL,
+  location VARCHAR(200) NULL,
+  date_start DATE NOT NULL,
+  date_end DATE NOT NULL,
+  default_match_date DATETIME NOT NULL,
+  default_match_type ENUM('friendly','league','cup') NOT NULL DEFAULT 'cup',
+  default_home_away ENUM('home','away','neutral') NOT NULL DEFAULT 'neutral',
+  entry_fee_amount DECIMAL(10,2) NULL,
+  notes TEXT NULL,
+  created_by INT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (club_id) REFERENCES clubs(id) ON DELETE CASCADE,
+  FOREIGN KEY (selection_id) REFERENCES selections(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS tournament_teams (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  tournament_id INT NOT NULL,
+  name VARCHAR(100) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS tournament_entry_fees (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  tournament_id INT NOT NULL,
+  member_id INT NOT NULL,
+  amount DECIMAL(10,2) NOT NULL,
+  status ENUM('pending','paid') NOT NULL DEFAULT 'pending',
+  paid_date DATE NULL,
+  payment_method VARCHAR(50) NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_tournament_member (tournament_id, member_id),
+  FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE CASCADE,
+  FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE
+);
+
+ALTER TABLE matches
+  ADD CONSTRAINT fk_matches_tournament FOREIGN KEY (tournament_id) REFERENCES tournaments(id) ON DELETE SET NULL;
