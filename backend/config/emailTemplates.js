@@ -300,4 +300,25 @@ function feeReminderEmailHtml(name, clubName, amount, dueDateStr, isOverdue) {
   return emailWrap(`${heading} - ${amountStr} KM`, bodyHtml);
 }
 
-module.exports = { verifyEmailHtml, welcomeEmailHtml, inviteEmailHtml, resetPasswordEmailHtml, newClubNotificationHtml, newTicketNotificationHtml, ticketReplyEmailHtml, feeReminderEmailHtml };
+/* ── 9. Generic club-event notification (match/training created, reminders, tasks) ──
+   Shared by every match/training notification so they all look like the rest
+   of the app's emails instead of the old plain dark-header box. ── */
+function eventNotificationHtml(heading, introText, detailRows, ctaLink, ctaLabel) {
+  const rowsHtml = (detailRows && detailRows.length) ? `
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:20px 0;">
+              ${detailRows.map(([label, value]) => `
+              <tr><td style="padding:8px 0;border-bottom:1px solid #e2e8f0;"><span style="font-size:13px;color:#94a3b8;font-family:${FONT};">${escapeHtml(label)}</span><br><span style="font-size:15px;color:#0f172a;font-weight:600;font-family:${FONT};">${escapeHtml(String(value))}</span></td></tr>`).join('')}
+            </table>` : '';
+
+  const bodyHtml = `
+            <h1 class="heading" style="margin:0 0 14px;font-size:26px;font-weight:800;color:#0f172a;letter-spacing:-0.4px;line-height:1.25;text-align:center;font-family:${FONT};">
+              ${escapeHtml(heading)}
+            </h1>
+            ${introText ? `<p style="margin:0 0 8px;font-size:15px;color:#475569;line-height:1.7;text-align:center;font-family:${FONT};">${escapeHtml(introText)}</p>` : ''}
+            ${rowsHtml}
+            ${ctaButton(ctaLink, ctaLabel)}`;
+
+  return emailWrap(heading, bodyHtml);
+}
+
+module.exports = { verifyEmailHtml, welcomeEmailHtml, inviteEmailHtml, resetPasswordEmailHtml, newClubNotificationHtml, newTicketNotificationHtml, ticketReplyEmailHtml, feeReminderEmailHtml, eventNotificationHtml };

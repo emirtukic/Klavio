@@ -1,26 +1,12 @@
 const db     = require('../config/db');
 const mailer = require('../config/mailer');
+const { eventNotificationHtml } = require('../config/emailTemplates');
 
 const MATCH_TYPE_LABEL = { friendly: 'Prijateljska', league: 'Liga', cup: 'Kup' };
 const HOME_AWAY_LABEL  = { home: 'Domaćin', away: 'Gost', neutral: 'Neutralno' };
+const APP_URL = process.env.APP_URL || 'http://localhost:3000';
 
 const MAIL_ENABLED = !!(process.env.MAIL_USER && process.env.BREVO_API_KEY);
-
-function matchEmailHtml(subject, details) {
-  return `
-    <div style="font-family:sans-serif;max-width:520px;margin:0 auto;background:#fff;border-radius:10px;border:1px solid #e2e8f0;overflow:hidden;">
-      <div style="background:#1e3a5f;padding:20px 24px;">
-        <img src="https://klavioclub.com/assets/img/favicon-192.png" alt="Klavio" style="height:32px;width:32px;" onerror="this.style.display='none'">
-        <h2 style="color:#fff;margin:12px 0 0;font-size:1.1rem;">⚽ ${subject}</h2>
-      </div>
-      <div style="padding:20px 24px;color:#1e293b;font-size:0.95rem;line-height:1.6;">
-        ${details}
-      </div>
-      <div style="padding:12px 24px;background:#f8fafc;font-size:0.78rem;color:#94a3b8;border-top:1px solid #e2e8f0;">
-        Klavio - Platforma za upravljanje sportskim klubom
-      </div>
-    </div>`;
-}
 
 async function sendEmail(to, subject, html) {
   if (!MAIL_ENABLED || !to) return;
@@ -66,11 +52,10 @@ exports.notifyMatchCreated = async (match, clubId, selectionId, creatorUserId) =
       [clubId, selectionId, creatorUserId]
     );
 
-    const emailHtml = matchEmailHtml(title,
-      `<p><strong>Protivnik:</strong> ${match.opponent}</p>
-       <p><strong>Datum:</strong> ${fmtDate(match.match_date)}</p>
-       <p><strong>Lokacija:</strong> ${match.location || 'TBD'}</p>
-       <p style="margin-top:16px;"><a href="${process.env.APP_URL || 'http://localhost:3000'}/pages/matches/list.html" style="background:#3b82f6;color:#fff;padding:8px 18px;border-radius:6px;text-decoration:none;font-weight:600;">Pogledaj raspored</a></p>`
+    const emailHtml = eventNotificationHtml(
+      'Nova utakmica zakazana', null,
+      [['Protivnik', match.opponent], ['Datum', fmtDate(match.match_date)], ['Lokacija', match.location || 'TBD']],
+      `${APP_URL}/pages/matches/list.html`, 'Pogledaj raspored'
     );
 
     for (const u of [...members, ...coaches]) {
@@ -109,13 +94,16 @@ exports.notifyTrainingCreated = async (session, clubId, selectionId, creatorUser
       [clubId, selectionId, creatorUserId]
     );
 
-    const emailHtml = matchEmailHtml(title,
-      `<p><strong>Selekcija:</strong> ${selName}</p>
-       <p><strong>Naziv:</strong> ${session.title}</p>
-       <p><strong>Datum i vrijeme:</strong> ${when} - ${session.end_time || ''}</p>
-       <p><strong>Lokacija:</strong> ${session.location || 'TBD'}</p>
-       ${session.description ? `<p><strong>Opis:</strong> ${session.description}</p>` : ''}
-       <p style="margin-top:16px;"><a href="${process.env.APP_URL || 'http://localhost:3000'}/pages/training/schedule.html" style="background:#3b82f6;color:#fff;padding:8px 18px;border-radius:6px;text-decoration:none;font-weight:600;">Pogledaj raspored</a></p>`
+    const emailHtml = eventNotificationHtml(
+      'Novi trening zakazan', null,
+      [
+        ['Selekcija', selName],
+        ['Naziv', session.title],
+        ['Datum i vrijeme', `${when} - ${session.end_time || ''}`],
+        ['Lokacija', session.location || 'TBD'],
+        ...(session.description ? [['Opis', session.description]] : []),
+      ],
+      `${APP_URL}/pages/training/schedule.html`, 'Pogledaj raspored'
     );
 
     for (const u of [...members, ...coaches]) {
@@ -149,13 +137,10 @@ exports.sendDayBeforeReminders = async () => {
       const selName = match.selection_name || 'Selekcija';
 
       const matchEmailBody = (intro) =>
-        matchEmailHtml('Utakmica sutra - podsjetnik',
-          `<p>${intro}</p>
-           <p><strong>Protivnik:</strong> ${match.opponent}</p>
-           <p><strong>Datum:</strong> ${dtStr}</p>
-           <p><strong>Lokacija:</strong> ${loc}</p>
-           <p><strong>Domaćin/Gost:</strong> ${HOME_AWAY_LABEL[match.home_away] || match.home_away}</p>
-           <p style="margin-top:16px;"><a href="${process.env.APP_URL || 'http://localhost:3000'}/pages/matches/list.html" style="background:#3b82f6;color:#fff;padding:8px 18px;border-radius:6px;text-decoration:none;font-weight:600;">Pogledaj detalje</a></p>`
+        eventNotificationHtml(
+          'Utakmica sutra - podsjetnik', intro,
+          [['Protivnik', match.opponent], ['Datum', dtStr], ['Lokacija', loc], ['Domaćin/Gost', HOME_AWAY_LABEL[match.home_away] || match.home_away]],
+          `${APP_URL}/pages/matches/list.html`, 'Pogledaj detalje'
         );
 
       // ── Members ──
@@ -232,10 +217,7 @@ async function notifyMatchTask(match, { title, msg, emailSubject, emailIntro, li
   );
   recipients.push(...admins);
 
-  const emailHtml = matchEmailHtml(emailSubject,
-    `<p>${emailIntro}</p>
-     <p style="margin-top:16px;"><a href="${process.env.APP_URL || 'http://localhost:3000'}${link}" style="background:#3b82f6;color:#fff;padding:8px 18px;border-radius:6px;text-decoration:none;font-weight:600;">Otvori</a></p>`
-  );
+  const emailHtml = eventNotificationHtml(emailSubject, emailIntro, null, `${APP_URL}${link}`, 'Otvori');
 
   const seen = new Set();
   for (const u of recipients) {
