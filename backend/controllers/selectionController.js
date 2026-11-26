@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { SELECTION_LIMIT } = require('../config/planLimits');
 
 exports.getAll = async (req, res) => {
   if (!req.user.club_id) return res.status(400).json({ message: 'Club context required' });
@@ -57,6 +58,16 @@ exports.create = async (req, res) => {
   const { name, description } = req.body;
   if (!name) return res.status(400).json({ message: 'Naziv selekcije je obavezan' });
   try {
+    if (req.user.role !== 'super_admin') {
+      const limit = SELECTION_LIMIT[req.user.plan] ?? SELECTION_LIMIT.starter;
+      const [[{ count }]] = await db.query('SELECT COUNT(*) as count FROM selections WHERE club_id = ?', [req.user.club_id]);
+      if (count >= limit) {
+        return res.status(403).json({
+          code: 'PLAN_LIMIT_REACHED',
+          message: `Dostigli ste limit od ${limit} selekcij${limit === 1 ? 'e' : 'a'} za vaš plan. Nadogradite plan za više selekcija.`
+        });
+      }
+    }
     const [result] = await db.query(
       'INSERT INTO selections (club_id, name, description) VALUES (?, ?, ?)',
       [req.user.club_id, name, description || null]

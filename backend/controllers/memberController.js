@@ -3,6 +3,7 @@ const crypto = require('crypto');
 const db = require('../config/db');
 const { send: sendMail } = require('../config/mailer');
 const { inviteEmailHtml } = require('../config/emailTemplateStore');
+const { MEMBER_LIMIT } = require('../config/planLimits');
 
 function selScopeWhere(req, alias) {
   const a = alias ? alias + '.' : '';
@@ -81,6 +82,16 @@ exports.create = async (req, res) => {
   const allSelIds = requestedSelIds.length
     ? (await db.query('SELECT id FROM selections WHERE id IN (?) AND club_id = ?', [requestedSelIds, club_id]))[0].map(r => r.id)
     : [];
+  if (req.user.role !== 'super_admin') {
+    const limit = MEMBER_LIMIT[req.user.plan] ?? MEMBER_LIMIT.starter;
+    const [[{ count }]] = await db.query('SELECT COUNT(*) as count FROM members WHERE club_id = ?', [club_id]);
+    if (count >= limit) {
+      return res.status(403).json({
+        code: 'PLAN_LIMIT_REACHED',
+        message: `Dostigli ste limit od ${limit} članova za vaš plan. Nadogradite plan za više članova.`
+      });
+    }
+  }
   const conn = await db.getConnection();
   try {
     await conn.beginTransaction();

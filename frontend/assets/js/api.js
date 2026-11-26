@@ -13,7 +13,7 @@ async function api(path, options = {}) {
   if (res.status === 401) { logout(); return; }
   let data;
   try { data = await res.json(); } catch { throw new Error('Server error (' + res.status + ')'); }
-  if (res.status === 403 && data.code) { showAccessBlock(data); return; }
+  if (res.status === 403 && (data.code === 'CLUB_INACTIVE' || data.code === 'SUBSCRIPTION_EXPIRED')) { showAccessBlock(data); return; }
   if (!res.ok) throw new Error(data.message || 'Request failed');
   return data;
 }
