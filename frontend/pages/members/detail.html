@@ -634,7 +634,7 @@
 
       /* Page header */
       document.getElementById('pageTitle').textContent        = m.name;
-      document.getElementById('pageStatusBadge').innerHTML    = statusBadge(m.status);
+      document.getElementById('pageStatusBadge').innerHTML    = memberStatusBadge(m);
       document.getElementById('addFeeBtn').href               = '../fees/add.html?member_id=' + id;
 
       /* Profile card */

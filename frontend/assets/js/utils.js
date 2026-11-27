@@ -45,6 +45,15 @@ function statusBadge(status) {
   const label = labels[status] || status;
   return `<span class="badge ${cls}">${label}</span>`;
 }
+// A member stays "Aktivan" in name only until they've actually set a password
+// via their invite link - show that waiting state instead, so an admin
+// doesn't think someone's already using the account when they haven't.
+function memberStatusBadge(m) {
+  if (m.status === 'active' && !m.email_verified) {
+    return `<span class="badge badge-pending">Čeka potvrdu e-maila</span>`;
+  }
+  return statusBadge(m.status);
+}
 function showToast(message, type = 'success') {
   let c = document.querySelector('.toast-container');
   if (!c) {

@@ -296,7 +296,7 @@
         <td data-label="Telefon">${m.phone || '-'}</td>
         <td data-label="Selekcija"><span class="badge bg-secondary bg-opacity-10 text-secondary">${selName}</span></td>
         <td data-label="Učlanjen">${formatDate(m.join_date)}</td>
-        <td data-label="Status">${statusBadge(m.status)}</td>
+        <td data-label="Status">${memberStatusBadge(m)}</td>
         <td>
           <a href="detail.html?id=${m.id}" class="btn btn-sm btn-outline-secondary me-1" title="Profil"><i class="bi bi-eye"></i></a>
           <a href="../players/stats.html?id=${m.id}&name=${encodeURIComponent(m.name)}" class="btn btn-sm btn-outline-primary me-1" title="Statistike"><i class="bi bi-bar-chart-line"></i></a>
