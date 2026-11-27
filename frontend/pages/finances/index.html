@@ -179,6 +179,24 @@
       </div>
     </div>
 
+    <!-- Kotizacije po članovima -->
+    <div class="card table-card mt-3 d-none" id="feesOverviewCard">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-semibold"><i class="bi bi-trophy me-2 text-warning"></i>Kotizacije po članovima</span>
+        <span class="badge bg-light text-dark" id="feesOverviewSummary">-</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover table-sm mb-0 table-mobile-cards">
+          <thead>
+            <tr><th>Član</th><th>Turnir</th><th>Iznos</th><th>Status</th><th>Datum plaćanja</th></tr>
+          </thead>
+          <tbody id="feesOverviewBody">
+            <tr><td colspan="5" class="text-center py-3 text-muted">Nema kotizacija</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   </div><!-- /page-body -->
 </div><!-- /main-content -->
 
@@ -346,6 +364,35 @@
   }
 
   function applyFilters() { load(); }
+
+  const FEE_STATUS_BADGE = {
+    paid:    '<span class="badge bg-success-subtle text-success-emphasis">Plaćeno</span>',
+    pending: '<span class="badge bg-warning-subtle text-warning-emphasis">Nije plaćeno</span>'
+  };
+
+  async function loadFeesOverview() {
+    try {
+      const rows = await apiGet('/tournaments/fees-overview');
+      const card = document.getElementById('feesOverviewCard');
+      card.classList.remove('d-none');
+      const paid = rows.filter(r => r.status === 'paid').length;
+      document.getElementById('feesOverviewSummary').textContent = `${paid} / ${rows.length} plaćeno`;
+      document.getElementById('feesOverviewBody').innerHTML = rows.length
+        ? rows.map(r => `
+            <tr>
+              <td data-label="Član">${escHtmlF(r.member_name)}</td>
+              <td data-label="Turnir">${escHtmlF(r.tournament_name)}</td>
+              <td data-label="Iznos">${parseFloat(r.amount).toFixed(2)} KM</td>
+              <td data-label="Status">${FEE_STATUS_BADGE[r.status] || r.status}</td>
+              <td data-label="Datum plaćanja" class="small">${r.paid_date ? formatDate(r.paid_date) : '-'}</td>
+            </tr>`).join('')
+        : '<tr><td colspan="5" class="text-center py-3 text-muted">Nema kotizacija</td></tr>';
+    } catch (e) {
+      // Starter-plan club (no Turniri) or nothing to show yet - just leave the card hidden.
+    }
+  }
+
+  function escHtmlF(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c])); }
 
   /* ── Stats ── */
   function renderStats(stats) {
@@ -616,6 +663,7 @@
   buildYearFilter();
   load();
   loadGoals();
+  loadFeesOverview();
 </script>
 
 <!-- Goal modal -->

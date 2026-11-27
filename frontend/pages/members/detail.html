@@ -105,6 +105,11 @@
         </button>
       </li>
       <li class="nav-item" role="presentation">
+        <button class="nav-link" id="tab-fees-btn" data-bs-toggle="tab" data-bs-target="#tab-fees" type="button" role="tab">
+          <i class="bi bi-trophy me-1"></i>Kotizacije
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
         <button class="nav-link" id="tab-dev-btn" data-bs-toggle="tab" data-bs-target="#tab-dev" type="button" role="tab">
           <i class="bi bi-person-lines-fill me-1"></i>Razvoj
         </button>
@@ -352,6 +357,26 @@
         </div>
       </div>
 
+      <!-- ═══ TAB: Kotizacije ═══ -->
+      <div class="tab-pane fade" id="tab-fees" role="tabpanel">
+        <div class="tab-loading" id="feesTabLoading"><i class="bi bi-arrow-repeat me-2"></i>Učitavanje...</div>
+        <div id="feesTabContent" class="d-none">
+          <div class="card table-card">
+            <div class="card-header fw-semibold"><i class="bi bi-trophy me-1 text-warning"></i>Kotizacije za turnire</div>
+            <div class="table-responsive">
+              <table class="table table-hover table-sm table-mobile-cards mb-0">
+                <thead>
+                  <tr><th>Turnir</th><th>Datum</th><th>Iznos</th><th>Status</th><th>Datum plaćanja</th></tr>
+                </thead>
+                <tbody id="feesTabTable">
+                  <tr><td colspan="5" class="text-center py-3 text-muted">Nema podataka</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- ═══ TAB: Razvoj ═══ -->
       <div class="tab-pane fade" id="tab-dev" role="tabpanel">
         <div class="tab-loading" id="devLoading"><i class="bi bi-arrow-repeat me-2"></i>Učitavanje...</div>
@@ -593,7 +618,7 @@
   /* ─────────────────────────────────────────────
      Track which tabs have already been loaded
   ───────────────────────────────────────────── */
-  const tabLoaded = { medical: false, stats: false, dev: false, history: false, docs: false };
+  const tabLoaded = { medical: false, stats: false, fees: false, dev: false, history: false, docs: false };
   let memberData = null, medicalData = null;
 
   /* ─────────────────────────────────────────────
@@ -875,6 +900,36 @@
   }
 
   /* ─────────────────────────────────────────────
+     TAB: Kotizacije
+  ───────────────────────────────────────────── */
+  const FEE_STATUS_BADGE_M = {
+    paid:    '<span class="badge bg-success-subtle text-success-emphasis">Plaćeno</span>',
+    pending: '<span class="badge bg-warning-subtle text-warning-emphasis">Nije plaćeno</span>'
+  };
+
+  async function loadFeesTab() {
+    if (tabLoaded.fees) return;
+    tabLoaded.fees = true;
+    try {
+      const rows = await apiGet('/tournaments/member/' + id + '/fees');
+      document.getElementById('feesTabTable').innerHTML = rows.length
+        ? rows.map(r => `
+            <tr>
+              <td data-label="Turnir">${r.tournament_name}</td>
+              <td data-label="Datum" class="small">${formatDate(r.date_start)}</td>
+              <td data-label="Iznos">${parseFloat(r.amount).toFixed(2)} KM</td>
+              <td data-label="Status">${FEE_STATUS_BADGE_M[r.status] || r.status}</td>
+              <td data-label="Datum plaćanja" class="small">${r.paid_date ? formatDate(r.paid_date) : '-'}</td>
+            </tr>`).join('')
+        : '<tr><td colspan="5" class="text-center text-muted py-3">Nema kotizacija</td></tr>';
+      document.getElementById('feesTabLoading').classList.add('d-none');
+      document.getElementById('feesTabContent').classList.remove('d-none');
+    } catch (e) {
+      document.getElementById('feesTabLoading').innerHTML = '<span class="text-danger">Greška pri učitavanju kotizacija.</span>';
+    }
+  }
+
+  /* ─────────────────────────────────────────────
      TAB: Razvoj
   ───────────────────────────────────────────── */
   function starsHtml(rating) {
@@ -1072,6 +1127,7 @@
   ───────────────────────────────────────────── */
   document.getElementById('tab-medical-btn').addEventListener('shown.bs.tab', loadMedical);
   document.getElementById('tab-stats-btn').addEventListener('shown.bs.tab', loadStats);
+  document.getElementById('tab-fees-btn').addEventListener('shown.bs.tab', loadFeesTab);
   document.getElementById('tab-dev-btn').addEventListener('shown.bs.tab', loadDev);
   document.getElementById('tab-docs-btn').addEventListener('shown.bs.tab', loadDocs);
   document.getElementById('tab-history-btn').addEventListener('shown.bs.tab', loadHistory);

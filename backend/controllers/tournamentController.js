@@ -117,6 +117,51 @@ exports.getOne = async (req, res) => {
   }
 };
 
+// Club-wide "who paid their kotizacija" list, across every tournament -
+// the per-tournament detail page already shows this one tournament at a
+// time; this is the consolidated view for Finansije.
+exports.getFeesOverview = async (req, res) => {
+  try {
+    const ids = req.user.selection_ids || [];
+    const coachFilter = req.user.role === 'coach'
+      ? (ids.length ? ' AND EXISTS (SELECT 1 FROM tournament_selections ts WHERE ts.tournament_id=t.id AND ts.selection_id IN (?))' : ' AND 1=0')
+      : '';
+    const params = [req.user.club_id];
+    if (req.user.role === 'coach' && ids.length) params.push(ids);
+    const [rows] = await db.query(`
+      SELECT tef.id, tef.tournament_id, t.name as tournament_name, t.date_start,
+        tef.member_id, u.name as member_name,
+        tef.amount, tef.status, tef.paid_date
+      FROM tournament_entry_fees tef
+      JOIN tournaments t ON t.id = tef.tournament_id
+      JOIN members m ON m.id = tef.member_id
+      JOIN users u ON u.id = m.user_id
+      WHERE t.club_id = ?${coachFilter}
+      ORDER BY t.date_start DESC, u.name
+    `, params);
+    res.json(rows);
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
+};
+
+// One member's kotizacija history across every tournament - the member
+// profile page's "Kotizacije" tab.
+exports.getMemberFees = async (req, res) => {
+  try {
+    const memberId = req.params.memberId;
+    const [[member]] = await db.query('SELECT id FROM members WHERE id=? AND club_id=?', [memberId, req.user.club_id]);
+    if (!member) return res.status(404).json({ message: 'Član nije pronađen' });
+    const [rows] = await db.query(`
+      SELECT tef.id, tef.tournament_id, t.name as tournament_name, t.date_start,
+        tef.amount, tef.status, tef.paid_date
+      FROM tournament_entry_fees tef
+      JOIN tournaments t ON t.id = tef.tournament_id
+      WHERE tef.member_id = ? AND t.club_id = ?
+      ORDER BY t.date_start DESC
+    `, [memberId, req.user.club_id]);
+    res.json(rows);
+  } catch (err) { res.status(500).json({ message: 'Server error' }); }
+};
+
 exports.create = async (req, res) => {
   const { selection_ids, name, location, date_start, date_end, entry_fee_amount } = req.body;
   if (!name || !date_start || !date_end) return res.status(400).json({ message: 'Naziv i period su obavezni' });
