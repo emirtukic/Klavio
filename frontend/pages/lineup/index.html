@@ -858,22 +858,18 @@ function matchLabel(m) {
   return `${m.opponent} - ${formatDate(m.match_date)}${ha?' ('+ha+')':''}`;
 }
 
-// Rebuild the match dropdown, optionally restricted to one selection. Without
-// a filter, only the ~20 nearest-in-time matches are offered (same as before);
-// picking a selection shows every match for it instead, since that list is
-// already small.
+// Rebuild the match dropdown, optionally restricted to one selection. Only
+// matches that haven't been played yet are offered - there's no lineup left
+// to pick for a match that's already finished. Without a filter, only the
+// ~20 soonest upcoming matches are offered; picking a selection shows every
+// upcoming match for it instead, since that list is already small.
 function populateMatchSelect(filterSelId) {
   const sel = document.getElementById('matchSelect');
   sel.innerHTML = '<option value="">- Odaberi utakmicu -</option>';
-  let list = filterSelId
-    ? allMatches.filter(m => String(m.selection_id) === String(filterSelId))
-    : allMatches;
-  const now = Date.now(), w = 60*864e5;
-  if (!filterSelId) {
-    const windowed = list.filter(m => Math.abs(new Date(m.match_date)-now) <= w);
-    list = windowed.length ? windowed : list.slice(0,20);
-  }
-  list = [...list].sort((a,b) => Math.abs(new Date(a.match_date)-now) - Math.abs(new Date(b.match_date)-now));
+  let list = allMatches.filter(m => !m.result || m.result === 'pending');
+  if (filterSelId) list = list.filter(m => String(m.selection_id) === String(filterSelId));
+  list = [...list].sort((a,b) => new Date(a.match_date) - new Date(b.match_date));
+  if (!filterSelId) list = list.slice(0, 20);
   list.forEach(m => sel.add(new Option(matchLabel(m), m.id)));
 }
 
