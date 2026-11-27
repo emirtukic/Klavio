@@ -96,15 +96,25 @@ app.use((err, req, res, next) => {
   res.status(400).json({ message: err.message || 'Greška pri obradi zahtjeva' });
 });
 
+// Render keeps an old instance alive alongside a new one during (and
+// sometimes after) every deploy; each instance registers its own in-process
+// cron.schedule timer below, so without claimCronRun every job here would
+// fire once per still-alive instance instead of once total. See
+// utils/cronLock.js for how the claim works.
+const { claimCronRun } = require('./utils/cronLock');
+const todayKey = () => new Date().toISOString().slice(0, 10);
+
 // Daily 08:00 - send day-before match reminders
 const { sendDayBeforeReminders } = require('./services/matchNotificationService');
-cron.schedule('0 8 * * *', () => {
+cron.schedule('0 8 * * *', async () => {
+  if (!(await claimCronRun('day_before_reminders', todayKey()))) return;
   console.log('[cron] Running day-before match reminder job...');
   sendDayBeforeReminders();
 });
 
 // Daily midnight - mark expired subscriptions as overdue
 cron.schedule('0 0 * * *', async () => {
+  if (!(await claimCronRun('subscription_expiry', todayKey()))) return;
   try {
     const [result] = await db.query(`
       UPDATE club_subscriptions
@@ -123,7 +133,8 @@ cron.schedule('0 0 * * *', async () => {
 
 // Daily 03:00 - full database backup to R2 (private bucket, not the public uploads one)
 const { runFullBackupSafely } = require('./services/dbBackupService');
-cron.schedule('0 3 * * *', () => {
+cron.schedule('0 3 * * *', async () => {
+  if (!(await claimCronRun('nightly_backup', todayKey()))) return;
   console.log('[cron] Running nightly full DB backup...');
   runFullBackupSafely().catch(() => {}); // already logged + alerted inside
 });
@@ -131,7 +142,9 @@ cron.schedule('0 3 * * *', () => {
 // Every 5 min - auto-end live matches nobody closed after 90 minutes
 const { autoEndStaleMatches } = require('./controllers/liveMatchController');
 const { checkLineupReminders, checkResultReminders } = require('./services/matchNotificationService');
-cron.schedule('*/5 * * * *', () => {
+cron.schedule('*/5 * * * *', async () => {
+  const runKey = String(Math.floor(Date.now() / 300000));
+  if (!(await claimCronRun('five_min_checks', runKey))) return;
   autoEndStaleMatches();
   checkLineupReminders();
   checkResultReminders();
