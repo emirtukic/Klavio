@@ -43,7 +43,7 @@
         <button class="btn btn-outline-primary btn-sm" id="duplicateFeesBtn" onclick="openDuplicateModal()">
           <i class="bi bi-copy me-1"></i>Dupliraj prošli mjesec
         </button>
-        <a href="add.html" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i>Dodaj</a>
+        <a href="add.html" class="btn btn-primary" id="addFeeLink"><i class="bi bi-plus-lg me-1"></i>Dodaj</a>
       </div>
     </div>
 
@@ -336,9 +336,12 @@ buildSidebar();
 const isAdmin = ['super_admin','admin'].includes(user.role);
 const canManage = isAdmin || user.role === 'coach';
 if (!isAdmin) {
-  // Coaches get the same fee management options as admin, scoped on the
-  // backend to members of their own selection(s).
+  // A coach can only mark fees paid/unpaid and send reminders - generating,
+  // duplicating or adding a membership fee is admin-only.
   document.getElementById('pageSubtitle').textContent = 'Praćenje uplata članova vaše selekcije';
+  document.getElementById('bulkGenerateBtn').classList.add('d-none');
+  document.getElementById('duplicateFeesBtn').classList.add('d-none');
+  document.getElementById('addFeeLink').classList.add('d-none');
 }
 
 let allFees = [];
@@ -433,8 +436,8 @@ function renderTable() {
   `<tr><td colspan="${canManage ? 9 : 8}" class="text-center py-5">
     <i class="bi bi-${anyFilter ? 'search' : 'cash-coin'} fs-2 d-block mb-2 text-muted opacity-25"></i>
     <div class="fw-semibold text-muted mb-1">${anyFilter ? 'Nema pronađenih članarina' : 'Još nema unesenih članarina'}</div>
-    <div class="small text-muted">${anyFilter ? 'Prilagodite filtere za pretragu.' : (canManage ? 'Dodajte prvu članarinu kluba.' : '')}</div>
-    ${!anyFilter && canManage ? '<a href="add.html" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg me-1"></i>Dodaj članarinu</a>' : ''}
+    <div class="small text-muted">${anyFilter ? 'Prilagodite filtere za pretragu.' : (isAdmin ? 'Dodajte prvu članarinu kluba.' : '')}</div>
+    ${!anyFilter && isAdmin ? '<a href="add.html" class="btn btn-sm btn-primary mt-2"><i class="bi bi-plus-lg me-1"></i>Dodaj članarinu</a>' : ''}
   </td></tr>`;
   syncFeeSelectAll();
   renderFeePagination(pages);
