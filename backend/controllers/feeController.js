@@ -281,6 +281,30 @@ exports.markPaid = async (req, res) => {
   }
 };
 
+// Admin-only cleanup for fees that were marked paid before paid_by existed
+// (or were paid by an admin, not a coach) - lets them retroactively say
+// which coach actually collected it, for the "Po treneru" overview.
+exports.reassignPaidBy = async (req, res) => {
+  const { member_id, period_start, period_end, user_id } = req.body;
+  if (!member_id || !period_start || !period_end) return res.status(400).json({ message: 'Nedostaju podaci' });
+  try {
+    if (!(await assertClubOwned('members', member_id, req.user.club_id))) return res.status(404).json({ message: 'Član nije pronađen' });
+    if (user_id) {
+      const [[u]] = await db.query('SELECT id FROM users WHERE id=? AND club_id=?', [user_id, req.user.club_id]);
+      if (!u) return res.status(400).json({ message: 'Korisnik nije pronađen' });
+    }
+    await db.query(
+      `UPDATE membership_fees mf JOIN members m ON mf.member_id = m.id
+       SET mf.paid_by = ?
+       WHERE mf.member_id=? AND m.club_id=? AND mf.period_start=? AND mf.period_end=? AND mf.status='paid'`,
+      [user_id || null, member_id, req.user.club_id, period_start, period_end]
+    );
+    res.json({ message: 'Ažurirano' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
 async function autoAddIncome(fee, date, userId) {
   // Avoid duplicates - skip if a finance entry already references this fee
   const [exists] = await db.query(
@@ -482,8 +506,14 @@ exports.getOverview = async (req, res) => {
     const membersBySelection = {};
     for (const m of memberRows) {
       (membersBySelection[m.selection_id] = membersBySelection[m.selection_id] || []).push({
-        id: m.member_id, name: m.member_name, status: m.fee_status || 'no_fee', amount: m.fee_amount, due_date: m.fee_due_date, paid_by: m.paid_by,
+        id: m.member_id, name: m.member_name, status: m.fee_status || 'no_fee', amount: m.fee_amount, due_date: m.fee_due_date, paid_by: m.paid_by, selection_id: m.selection_id,
       });
+    }
+    // So the UI can offer "which coach actually collected this" for fees
+    // paid before paid_by existed (or paid by an admin).
+    const selectionCoaches = {};
+    for (const [selId, list] of Object.entries(coachesBySelection)) {
+      selectionCoaches[selId] = list.map(c => ({ user_id: c.coach_user_id, name: c.coach_name }));
     }
     const sumAmount = (members, statusFilter) =>
       members.filter(m => (statusFilter ? m.status === statusFilter : true))
@@ -548,7 +578,7 @@ exports.getOverview = async (req, res) => {
       };
     }).sort((a, b) => a.coach_name.localeCompare(b.coach_name));
 
-    res.json({ period_start: periodStart, period_end: periodEnd, selections, coaches });
+    res.json({ period_start: periodStart, period_end: periodEnd, selections, coaches, selection_coaches: selectionCoaches });
   } catch (err) {
     console.error('Fee overview error:', err.message);
     res.status(500).json({ message: 'Server error' });

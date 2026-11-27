@@ -164,7 +164,10 @@ async function loadOverview() {
   } catch (e) { showToast(e.message, 'error'); }
 }
 
+let detailViewId = null;
+
 function openDetail(id) {
+  detailViewId = id;
   const rows = currentView === 'selection' ? overviewData.selections : overviewData.coaches;
   const raw = rows.find(x => String(currentView === 'selection' ? x.selection_id : x.coach_id) === id);
   if (!raw) return;
@@ -172,11 +175,22 @@ function openDetail(id) {
   document.getElementById('detailTitle').textContent = r.name + ' - ' + fmtDate(overviewData.period_start) + ' do ' + fmtDate(overviewData.period_end);
   const paid = r.members.filter(m => m.status === 'paid');
   const unpaid = r.members.filter(m => m.status !== 'paid');
-  document.getElementById('paidList').innerHTML = paid.map(m => `
-    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+  document.getElementById('paidList').innerHTML = paid.map(m => {
+    const coachOptions = (overviewData.selection_coaches && overviewData.selection_coaches[m.selection_id]) || [];
+    const picker = currentView === 'coach' ? `
+      <select class="form-select form-select-sm d-inline-block w-auto" style="font-size:0.75rem;" onchange="onReassignPaidBy(${m.id}, this.value)">
+        <option value="">Nepoznato ko je naplatio</option>
+        ${coachOptions.map(c => `<option value="${c.user_id}" ${String(m.paid_by) === String(c.user_id) ? 'selected' : ''}>${escHtml(c.name)}</option>`).join('')}
+      </select>` : '';
+    return `
+    <li class="list-group-item d-flex justify-content-between align-items-center px-0 flex-wrap gap-1">
       <span>${escHtml(m.name)}</span>
-      <span class="small text-muted">${m.amount ? Number(m.amount).toFixed(2) + ' KM' : ''}</span>
-    </li>`).join('') || '<li class="list-group-item px-0 text-muted small">Nema</li>';
+      <span class="d-flex align-items-center gap-2">
+        <span class="small text-muted">${m.amount ? Number(m.amount).toFixed(2) + ' KM' : ''}</span>
+        ${picker}
+      </span>
+    </li>`;
+  }).join('') || '<li class="list-group-item px-0 text-muted small">Nema</li>';
   document.getElementById('unpaidList').innerHTML = unpaid.map(m => `
     <li class="list-group-item d-flex justify-content-between align-items-center px-0">
       <span>${escHtml(m.name)}</span>
@@ -192,6 +206,21 @@ function openDetail(id) {
     <div class="col-md-6"><span class="small text-muted">Naplaćeno ukupno:</span> <span class="fw-bold text-success">${paidSum.toFixed(2)} KM</span></div>
     <div class="col-md-6"><span class="small text-muted">Duguje se:</span> <span class="fw-bold text-danger">${unpaidSum.toFixed(2)} KM</span></div>`;
   bootstrap.Modal.getOrCreateInstance(document.getElementById('detailModal')).show();
+}
+
+async function onReassignPaidBy(memberId, userId) {
+  try {
+    await apiPut('/fees/reassign-paid-by', {
+      member_id: memberId,
+      period_start: overviewData.period_start,
+      period_end: overviewData.period_end,
+      user_id: userId || null,
+    });
+    showToast('Sačuvano', 'success');
+    const keepOpen = detailViewId;
+    await loadOverview();
+    if (keepOpen) openDetail(keepOpen);
+  } catch (e) { showToast(e.message, 'error'); }
 }
 
 loadOverview();
