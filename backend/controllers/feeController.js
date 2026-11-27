@@ -264,9 +264,9 @@ exports.markPaid = async (req, res) => {
 
     await db.query(
       `UPDATE membership_fees mf JOIN members m ON mf.member_id = m.id
-       SET mf.status='paid', mf.paid_date=CURDATE(), mf.payment_method=?
+       SET mf.status='paid', mf.paid_date=CURDATE(), mf.payment_method=?, mf.paid_by=?
        WHERE mf.id=? AND m.club_id=?`,
-      [payment_method || 'cash', req.params.id, req.user.club_id]
+      [payment_method || 'cash', req.user.id, req.params.id, req.user.club_id]
     );
 
     if (fee && fee.status !== 'paid') {
@@ -437,7 +437,7 @@ exports.getOverview = async (req, res) => {
     );
 
     const [selCoachRows] = await db.query(`
-      SELECT cs.selection_id, c.id as coach_id, cu.name as coach_name
+      SELECT cs.selection_id, c.id as coach_id, c.user_id as coach_user_id, cu.name as coach_name
       FROM coach_selections cs
       JOIN coaches c ON c.id = cs.coach_id
       JOIN users cu ON cu.id = c.user_id
@@ -448,9 +448,12 @@ exports.getOverview = async (req, res) => {
     // duplicated/split charges) - collapse those into one status per member
     // first, so they're never double-counted. "paid" only if every row for
     // the period is paid; "overdue" if any row is overdue; else "pending".
+    // paid_by picks whichever row happens to be paid (fine for the normal
+    // one-row-per-member-per-period case) so a coach's "collected" total can
+    // be attributed to whoever actually marked it paid.
     const [memberRows] = await db.query(`
       SELECT ms.selection_id, m.id as member_id, u.name as member_name,
-        mf.agg_status as fee_status, mf.total_amount as fee_amount, mf.due_date as fee_due_date
+        mf.agg_status as fee_status, mf.total_amount as fee_amount, mf.due_date as fee_due_date, mf.paid_by as paid_by
       FROM member_selections ms
       JOIN members m ON m.id = ms.member_id AND m.status = 'active'
       JOIN users u ON u.id = m.user_id
@@ -463,7 +466,8 @@ exports.getOverview = async (req, res) => {
             ELSE 'pending'
           END as agg_status,
           SUM(amount) as total_amount,
-          MAX(due_date) as due_date
+          MAX(due_date) as due_date,
+          MAX(CASE WHEN status = 'paid' THEN paid_by END) as paid_by
         FROM membership_fees
         WHERE period_start = ? AND period_end = ?
         GROUP BY member_id
@@ -473,19 +477,23 @@ exports.getOverview = async (req, res) => {
 
     const coachesBySelection = {};
     for (const r of selCoachRows) {
-      (coachesBySelection[r.selection_id] = coachesBySelection[r.selection_id] || []).push({ coach_id: r.coach_id, coach_name: r.coach_name });
+      (coachesBySelection[r.selection_id] = coachesBySelection[r.selection_id] || []).push({ coach_id: r.coach_id, coach_user_id: r.coach_user_id, coach_name: r.coach_name });
     }
     const membersBySelection = {};
     for (const m of memberRows) {
       (membersBySelection[m.selection_id] = membersBySelection[m.selection_id] || []).push({
-        id: m.member_id, name: m.member_name, status: m.fee_status || 'no_fee', amount: m.fee_amount, due_date: m.fee_due_date,
+        id: m.member_id, name: m.member_name, status: m.fee_status || 'no_fee', amount: m.fee_amount, due_date: m.fee_due_date, paid_by: m.paid_by,
       });
     }
+    const sumAmount = (members, statusFilter) =>
+      members.filter(m => (statusFilter ? m.status === statusFilter : true))
+        .reduce((sum, m) => sum + Number(m.amount || 0), 0);
 
     const selections = selRows.map(s => {
       const members = membersBySelection[s.selection_id] || [];
       const coachList = coachesBySelection[s.selection_id] || [];
       const paid = members.filter(m => m.status === 'paid').length;
+      const collected_amount = sumAmount(members, 'paid');
       return {
         selection_id: s.selection_id,
         selection_name: s.selection_name,
@@ -493,24 +501,40 @@ exports.getOverview = async (req, res) => {
         total: members.length,
         paid,
         percent_paid: members.length ? Math.round((paid / members.length) * 100) : 0,
+        collected_amount,
+        owed_amount: sumAmount(members) - collected_amount,
         members,
       };
     });
 
+    // Every coach of a selection shares its unpaid members (nobody's claimed
+    // them yet) - but a paid fee only stays attributed to whichever one of
+    // THIS selection's own coaches actually collected it (paid_by), so two
+    // coaches sharing a selection each see only the money they personally
+    // took in. A fee paid by someone who isn't one of this selection's
+    // coaches (an admin, or a legacy row from before paid_by existed) falls
+    // back to the old shared behaviour.
     const coachBuckets = {};
     for (const s of selRows) {
       const members = membersBySelection[s.selection_id] || [];
       const coachList = coachesBySelection[s.selection_id] || [];
-      const targets = coachList.length ? coachList : [{ coach_id: 'none', coach_name: 'Nema trenera' }];
+      const targets = coachList.length ? coachList : [{ coach_id: 'none', coach_user_id: null, coach_name: 'Nema trenera' }];
+      const coachUserIds = new Set(coachList.map(c => c.coach_user_id));
       for (const c of targets) {
         if (!coachBuckets[c.coach_id]) coachBuckets[c.coach_id] = { coach_id: c.coach_id, coach_name: c.coach_name, selectionNames: new Set(), membersMap: new Map() };
         coachBuckets[c.coach_id].selectionNames.add(s.selection_name);
-        for (const m of members) coachBuckets[c.coach_id].membersMap.set(m.id, m);
+        for (const m of members) {
+          const claimedByAnotherCoachOfThisSelection =
+            m.status === 'paid' && m.paid_by && coachUserIds.has(m.paid_by) && m.paid_by !== c.coach_user_id;
+          if (claimedByAnotherCoachOfThisSelection) continue;
+          coachBuckets[c.coach_id].membersMap.set(m.id, m);
+        }
       }
     }
     const coaches = Object.values(coachBuckets).map(b => {
       const members = Array.from(b.membersMap.values());
       const paid = members.filter(m => m.status === 'paid').length;
+      const collected_amount = sumAmount(members, 'paid');
       return {
         coach_id: b.coach_id,
         coach_name: b.coach_name,
@@ -518,6 +542,8 @@ exports.getOverview = async (req, res) => {
         total: members.length,
         paid,
         percent_paid: members.length ? Math.round((paid / members.length) * 100) : 0,
+        collected_amount,
+        owed_amount: sumAmount(members) - collected_amount,
         members,
       };
     }).sort((a, b) => a.coach_name.localeCompare(b.coach_name));

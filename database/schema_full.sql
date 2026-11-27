@@ -94,11 +94,13 @@ CREATE TABLE IF NOT EXISTS membership_fees (
   paid_date DATE,
   status ENUM('pending','paid','overdue') DEFAULT 'pending',
   payment_method VARCHAR(50),
+  paid_by INT NULL,
   notes TEXT,
   created_by INT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (member_id) REFERENCES members(id) ON DELETE CASCADE,
-  FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+  FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL,
+  FOREIGN KEY (paid_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
 CREATE TABLE IF NOT EXISTS training_sessions (

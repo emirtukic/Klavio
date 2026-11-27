@@ -41,8 +41,8 @@
         </div>
         <button class="btn btn-sm btn-primary" onclick="loadOverview()"><i class="bi bi-search me-1"></i>Prikaži</button>
         <div class="btn-group ms-auto" role="group">
-          <button type="button" class="btn btn-sm btn-outline-primary active" id="viewBtn_selection" onclick="setView('selection')">Po selekciji</button>
-          <button type="button" class="btn btn-sm btn-outline-primary" id="viewBtn_coach" onclick="setView('coach')">Po treneru</button>
+          <button type="button" class="btn btn-sm btn-outline-primary" id="viewBtn_selection" onclick="setView('selection')">Po selekciji</button>
+          <button type="button" class="btn btn-sm btn-outline-primary active" id="viewBtn_coach" onclick="setView('coach')">Po treneru</button>
         </div>
       </div>
     </div>
@@ -75,6 +75,8 @@
             <ul class="list-group list-group-flush mb-3" id="unpaidList"></ul>
           </div>
         </div>
+        <hr>
+        <div class="row" id="detailTotals"></div>
       </div>
     </div>
   </div>
@@ -93,7 +95,7 @@ const STATUS_LABEL = { paid: 'Plaćeno', pending: 'Na čekanju', overdue: 'Zaka�
 const STATUS_BADGE = { paid: 'success', pending: 'warning', overdue: 'danger', no_fee: 'secondary' };
 
 let overviewData = { selections: [], coaches: [] };
-let currentView = 'selection';
+let currentView = 'coach';
 
 function escHtml(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c])); }
 function fmtDate(d) { return d ? new Date(d).toLocaleDateString('bs-BA') : '-'; }
@@ -108,19 +110,24 @@ function setView(view) {
 // Normalizes either a selection-row or coach-row into the same shape the card/modal need.
 function normalize(row) {
   return currentView === 'selection'
-    ? { id: row.selection_id, name: row.selection_name, subtitle: row.coach_names || 'Nema dodijeljenog trenera', total: row.total, paid: row.paid, percent_paid: row.percent_paid, members: row.members }
-    : { id: row.coach_id, name: row.coach_name, subtitle: row.selection_names || '-', total: row.total, paid: row.paid, percent_paid: row.percent_paid, members: row.members };
+    ? { id: row.selection_id, name: row.selection_name, subtitle: row.coach_names || 'Nema dodijeljenog trenera', total: row.total, paid: row.paid, percent_paid: row.percent_paid, collected_amount: row.collected_amount, owed_amount: row.owed_amount, members: row.members }
+    : { id: row.coach_id, name: row.coach_name, subtitle: row.selection_names || '-', total: row.total, paid: row.paid, percent_paid: row.percent_paid, collected_amount: row.collected_amount, owed_amount: row.owed_amount, members: row.members };
 }
 
 function cardHtml(row) {
   const r = normalize(row);
   const barColor = r.percent_paid >= 80 ? 'bg-success' : r.percent_paid >= 50 ? 'bg-warning' : 'bg-danger';
+  const collectedLabel = currentView === 'coach' ? 'Lično naplatio' : 'Naplaćeno';
   return `
     <div class="col-md-6 col-lg-4">
       <div class="card h-100" style="cursor:pointer;" onclick='openDetail(${JSON.stringify(String(r.id))})'>
         <div class="card-body">
           <h6 class="fw-bold mb-1">${escHtml(r.name)}</h6>
           <p class="small text-muted mb-2">${escHtml(r.subtitle)}</p>
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="small text-muted">${collectedLabel}</span>
+            <span class="fw-bold text-success">${Number(r.collected_amount || 0).toFixed(2)} KM</span>
+          </div>
           <div class="progress mb-2" style="height:8px;">
             <div class="progress-bar ${barColor}" style="width:${r.percent_paid}%"></div>
           </div>
@@ -173,8 +180,17 @@ function openDetail(id) {
   document.getElementById('unpaidList').innerHTML = unpaid.map(m => `
     <li class="list-group-item d-flex justify-content-between align-items-center px-0">
       <span>${escHtml(m.name)}</span>
-      <span class="badge bg-${STATUS_BADGE[m.status]}-subtle text-${STATUS_BADGE[m.status]}-emphasis small">${STATUS_LABEL[m.status]}</span>
+      <span class="d-flex align-items-center gap-2">
+        <span class="small text-muted">${m.amount ? Number(m.amount).toFixed(2) + ' KM' : ''}</span>
+        <span class="badge bg-${STATUS_BADGE[m.status]}-subtle text-${STATUS_BADGE[m.status]}-emphasis small">${STATUS_LABEL[m.status]}</span>
+      </span>
     </li>`).join('') || '<li class="list-group-item px-0 text-muted small">Nema</li>';
+
+  const paidSum = paid.reduce((s, m) => s + Number(m.amount || 0), 0);
+  const unpaidSum = unpaid.reduce((s, m) => s + Number(m.amount || 0), 0);
+  document.getElementById('detailTotals').innerHTML = `
+    <div class="col-md-6"><span class="small text-muted">Naplaćeno ukupno:</span> <span class="fw-bold text-success">${paidSum.toFixed(2)} KM</span></div>
+    <div class="col-md-6"><span class="small text-muted">Duguje se:</span> <span class="fw-bold text-danger">${unpaidSum.toFixed(2)} KM</span></div>`;
   bootstrap.Modal.getOrCreateInstance(document.getElementById('detailModal')).show();
 }
 
