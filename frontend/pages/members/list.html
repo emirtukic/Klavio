@@ -300,6 +300,7 @@
         <td>
           <a href="detail.html?id=${m.id}" class="btn btn-sm btn-outline-secondary me-1" title="Profil"><i class="bi bi-eye"></i></a>
           <a href="../players/stats.html?id=${m.id}&name=${encodeURIComponent(m.name)}" class="btn btn-sm btn-outline-primary me-1" title="Statistike"><i class="bi bi-bar-chart-line"></i></a>
+          ${isAdmin && m.status === 'active' && !m.email_verified ? `<button class="btn btn-sm btn-outline-warning me-1" onclick="resendInvite(${m.id})" title="Ponovo pošalji pozivnicu"><i class="bi bi-envelope-arrow-up"></i></button>` : ''}
           ${canEditRow ? `<button class="btn btn-sm btn-outline-secondary me-1" onclick="quickEditMember(${m.id})" title="Brza izmjena"><i class="bi bi-pencil"></i></button>` : ''}
           ${canEdit ? `<button class="btn btn-sm btn-outline-danger" onclick="deleteMember(${m.id})"><i class="bi bi-trash"></i></button>` : ''}
         </td>
@@ -420,6 +421,13 @@
       try { await apiDelete('/members/' + id); showToast('Član obrisan'); load(); }
       catch(e) { showToast(e.message, 'error'); }
     });
+  }
+
+  async function resendInvite(id) {
+    try {
+      await apiPost('/members/' + id + '/resend-invite', {});
+      showToast('Pozivnica ponovo poslana');
+    } catch (e) { showToast(e.message, 'error'); }
   }
 
   /* ── Quick edit member ── */

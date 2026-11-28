@@ -137,6 +137,46 @@ exports.create = async (req, res) => {
   }
 };
 
+// Re-sends the invite email to a member who hasn't set a password yet -
+// generates a fresh 7-day token rather than trusting the original one is
+// still valid, and actually reports send failures back to the admin instead
+// of swallowing them like the original create() mail does.
+exports.resendInvite = async (req, res) => {
+  try {
+    const [rows] = await db.query(
+      'SELECT m.id, u.id as user_id, u.name, u.email, u.email_verified FROM members m JOIN users u ON m.user_id = u.id WHERE m.id = ? AND m.club_id = ?',
+      [req.params.id, req.user.club_id]
+    );
+    const member = rows[0];
+    if (!member) return res.status(404).json({ message: 'Član nije pronađen' });
+    if (member.email_verified) return res.status(400).json({ message: 'Član je već potvrdio e-mail' });
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    await db.query(
+      "UPDATE users SET verification_token=?, verification_expires=?, token_purpose='invite' WHERE id=?",
+      [token, expires, member.user_id]
+    );
+
+    const appUrl = process.env.APP_URL || 'http://localhost:3000';
+    const link = `${appUrl}/app/set-password.html?token=${token}`;
+    const [[club]] = await db.query('SELECT name FROM clubs WHERE id = ?', [req.user.club_id]);
+    const clubName = club?.name || 'Klavio';
+    const html = await inviteEmailHtml(member.name, 'member', clubName, link);
+    await sendMail({
+      to: member.email,
+      subject: `Dobrodošli u ${clubName} - Aktivirajte nalog`,
+      text: `Pozdrav ${member.name},\n\nAdministrator kluba "${clubName}" je kreirao vaš članski nalog na Klavio platformi.\n\nKliknite na link ispod da postavite lozinku i aktivirate nalog:\n\n${link}\n\nLink je valjan 7 dana.\n\n© 2026 Klavio`,
+      html,
+    });
+
+    res.json({ message: 'Pozivnica ponovo poslana' });
+  } catch (err) {
+    console.error('Resend invite error:', err.message);
+    res.status(500).json({ message: 'Slanje mejla nije uspjelo - pokušajte ponovo kasnije' });
+  }
+};
+
 exports.update = async (req, res) => {
   const { name, email, phone, date_of_birth, address, status, is_active, position, jersey_number, selection_id, membership_number, join_date } = req.body;
   // A coach never reassigns which selection a member belongs to - only admins

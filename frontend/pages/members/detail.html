@@ -44,6 +44,9 @@
       </a>
       <h4 class="mb-0 flex-grow-1" id="pageTitle">Detalji člana</h4>
       <span id="pageStatusBadge"></span>
+      <button id="resendInviteBtn" type="button" class="btn btn-sm btn-outline-warning d-none" onclick="resendInvite()">
+        <i class="bi bi-envelope-arrow-up me-1"></i>Ponovo pošalji pozivnicu
+      </button>
       <button id="editBtn" type="button" class="btn btn-sm btn-primary" onclick="openMemberEdit()">
         <i class="bi bi-pencil me-1"></i>Uredi
       </button>
@@ -614,6 +617,13 @@
     finally { btn.disabled = false; sp.classList.add('d-none'); }
   }
 
+  async function resendInvite() {
+    try {
+      await apiPost('/members/' + id + '/resend-invite', {});
+      showToast('Pozivnica ponovo poslana');
+    } catch (e) { showToast(e.message, 'error'); }
+  }
+
   /* ─────────────────────────────────────────────
      Track which tabs have already been loaded
   ───────────────────────────────────────────── */
@@ -635,6 +645,7 @@
       /* Page header */
       document.getElementById('pageTitle').textContent        = m.name;
       document.getElementById('pageStatusBadge').innerHTML    = memberStatusBadge(m);
+      document.getElementById('resendInviteBtn').classList.toggle('d-none', !(isAdmin && m.status === 'active' && !m.email_verified));
       document.getElementById('addFeeBtn').href               = '../fees/add.html?member_id=' + id;
 
       /* Profile card */
